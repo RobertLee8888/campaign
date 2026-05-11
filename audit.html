@@ -1,0 +1,1339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ALVA · Audit Your KOL Feed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+<style>
+  :root {
+    /* light-theme page surfaces */
+    --bg:        #f5f5f7;
+    --bg-soft:   #ffffff;
+    --text:      #1a1a1e;
+    --muted:     #6b7280;
+    --muted-2:   #9ca3af;
+    --line:      #e5e5ea;
+    /* dark card surfaces (cards are dark on a light page) */
+    --card:      #0a0a10;
+    --card-line: rgba(255,255,255,0.06);
+    /* ALVA brand color — from the logo (#49A3A6, teal). every "green"
+       on this page is this. */
+    --alva:      #49A3A6;
+    --alva-hi:   #5cb9bc;
+    --alva-dim:  rgba(73,163,166,0.18);
+    /* signal-matrix accent palette */
+    --orange:    #ff8a4c;
+    --purple:    #b388ff;
+    --font:      "Inter", system-ui, sans-serif;
+    --font-display: "Space Grotesk", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    cursor: none;
+  }
+  a { color: inherit; text-decoration: none; cursor: none; }
+  button, .interactive { font-family: inherit; cursor: none; }
+
+  /* ---------- custom cursor ----------
+     Two layered elements with `mix-blend-mode: difference`, so the cursor
+     automatically inverts on light vs. dark backgrounds (works over the
+     light page and the dark cards / closing section without configuration).
+     On hover over interactive targets, the ring scales up and tints teal,
+     the dot collapses, and a small label slides in. */
+  #cursor-dot, #cursor-ring, #cursor-label {
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    will-change: transform, width, height, opacity;
+  }
+  #cursor-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    mix-blend-mode: difference;
+    z-index: 10001;
+    transition: width .2s ease, height .2s ease;
+  }
+  #cursor-ring {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid #fff;
+    mix-blend-mode: difference;
+    opacity: 0.7;
+    z-index: 10000;
+    transition: width .25s cubic-bezier(.2,.8,.2,1),
+                height .25s cubic-bezier(.2,.8,.2,1),
+                border-color .25s, background .25s, opacity .25s;
+  }
+  #cursor-label {
+    background: var(--text);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    white-space: nowrap;
+    transform: translate(12px, 12px) scale(0.8);
+    opacity: 0;
+    z-index: 10002;
+    transition: opacity .2s ease, transform .2s cubic-bezier(.2,.8,.2,1);
+  }
+  body.hovering #cursor-dot { width: 0; height: 0; }
+  body.hovering #cursor-ring {
+    width: 72px; height: 72px;
+    background: rgba(73,163,166,0.18);
+    border-color: var(--alva);
+    mix-blend-mode: normal;
+    opacity: 1;
+  }
+  body.has-label #cursor-label { opacity: 1; transform: translate(20px, 20px) scale(1); }
+  /* pressed state — quick squish */
+  body.pressing #cursor-ring { width: 56px; height: 56px; }
+  /* coarse pointer — turn the custom one off entirely */
+  @media (hover: none), (pointer: coarse) {
+    body, a, button, .interactive { cursor: auto; }
+    #cursor-dot, #cursor-ring, #cursor-label { display: none; }
+  }
+
+  /* ---------- nav ---------- */
+  header.nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 50;
+    backdrop-filter: blur(14px);
+    background: rgba(245,245,247,0.72);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    max-width: 1440px; margin: 0 auto;
+    height: 64px;
+    padding: 0 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark { width: 22px; height: 22px; display: grid; place-items: center; }
+  .brand-mark svg { width: 22px; height: 22px; display: block; }
+  /* re-tint the inline SVG: white paths → dark text colour; brand path stays brand */
+  .brand-mark .lg-fg { fill: var(--text); }
+  .brand-mark .lg-bg { fill: var(--alva); }
+  .brand-text .name {
+    font-weight: 700; letter-spacing: 0.04em; font-size: 14px;
+    line-height: 1.1; color: var(--text);
+  }
+  .brand-text .sub {
+    font-size: 10px; color: var(--muted);
+    letter-spacing: 0.2em; text-transform: uppercase;
+    margin-top: 2px; font-weight: 500;
+  }
+  .nav-links {
+    display: flex; align-items: center; gap: 28px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .nav-links a {
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: color .15s;
+  }
+  .nav-links a i { font-size: 14px; color: var(--muted-2); transition: color .15s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a:hover i { color: var(--alva); }
+  .nav-cta {
+    font-size: 13px; font-weight: 600;
+    color: #fff;
+    background: var(--text);
+    border: 0;
+    padding: 10px 22px;
+    border-radius: 9999px;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: transform .15s, background .15s;
+  }
+  .nav-cta:hover { background: #000; transform: translateY(-1px); }
+
+  /* ---------- hero stage ---------- */
+  .stage {
+    position: relative;
+    height: 86vh;
+    min-height: 720px;
+    overflow: hidden;
+    padding-top: 64px;
+  }
+
+  /* horizontal auto-scroll rail. NO overflow:hidden so card shadows can
+     bleed out vertically; horizontal clipping happens via .stage. */
+  .cards-rail {
+    position: absolute;
+    top: 50%; left: 0; right: 0;
+    transform: translateY(-50%);
+    z-index: 1;
+    padding: 40px 0;          /* room for shadow above & below */
+  }
+  .cards-track {
+    display: flex; gap: 32px;
+    width: max-content;
+    padding-left: 42vw;
+    animation: scrollCards 75s linear infinite;
+  }
+  .cards-track:hover { animation-play-state: paused; }
+  @keyframes scrollCards {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* left veil — light translucent + backdrop blur */
+  .hero-veil {
+    position: absolute;
+    top: 64px; left: 0; bottom: 0;
+    width: 60%;
+    z-index: 2;
+    pointer-events: none;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: linear-gradient(to right,
+      rgba(245,245,247,0.96) 0%,
+      rgba(245,245,247,0.92) 60%,
+      rgba(245,245,247,0.55) 86%,
+      rgba(245,245,247,0.0)  100%);
+    mask-image: linear-gradient(to right, black 0%, black 72%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 0%, black 72%, transparent 100%);
+  }
+
+  .hero-content {
+    position: absolute;
+    top: 50%; left: 0;
+    transform: translateY(-50%);
+    z-index: 3;
+    width: 60%; max-width: 820px;
+    padding: 0 24px 0 56px;
+  }
+  .tag {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 11px; font-weight: 600;
+    color: var(--alva);
+    letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    background: var(--alva-dim);
+    border: 1px solid rgba(73,163,166,0.3);
+    margin-bottom: 28px;
+  }
+  .tag::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--alva);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(1.5); }
+  }
+  h1.hero-title {
+    font-weight: 800;
+    font-size: 76px;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    text-transform: uppercase;
+    margin: 0 0 24px;
+    color: var(--text);
+  }
+  .hero-sub {
+    color: var(--muted);
+    font-size: 17px; line-height: 1.6;
+    max-width: 540px; margin: 0 0 36px;
+  }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 15px; font-weight: 700;
+    color: #fff;
+    background: var(--alva);
+    border: 0;
+    padding: 16px 32px;
+    border-radius: 8px;
+    transition: transform .15s, box-shadow .15s, background .15s;
+  }
+  .btn-primary i {
+    transition: transform .2s cubic-bezier(.2,.8,.2,1);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    background: var(--alva-hi);
+    box-shadow: 0 12px 28px rgba(73,163,166,0.32);
+  }
+  .btn-primary:hover i { transform: translateX(3px); }
+  /* secondary CTA — same footprint as primary, but visually quieter. */
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 15px; font-weight: 600;
+    color: #4b5563;
+    background: transparent;
+    border: 1px solid #d1d5db;
+    padding: 15px 30px;        /* + 1px border ≈ 16px primary height */
+    border-radius: 8px;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .btn-secondary::after {
+    content: "→";
+    display: inline-block;
+    font-size: 15px; line-height: 1;
+    opacity: 0.6;
+    transition: transform .2s cubic-bezier(.2,.8,.2,1), opacity .15s;
+  }
+  .btn-secondary:hover {
+    color: var(--text);
+    border-color: #9ca3af;
+    background: rgba(0,0,0,0.03);
+  }
+  .btn-secondary:hover::after { transform: translateX(3px); opacity: 1; }
+  .btn-secondary:active { background: rgba(0,0,0,0.06); }
+  .perms {
+    margin-top: 28px;
+    display: flex; flex-wrap: wrap; gap: 18px;
+    font-size: 12px; color: var(--muted); font-weight: 500;
+  }
+  .perms span { display: inline-flex; align-items: center; gap: 6px; }
+  .perms span i { color: var(--alva); font-size: 14px; }
+
+  /* ---------- profile card (matches index.html design, recoloured ALVA teal) ---------- */
+  .perspective-wrap {
+    flex-shrink: 0;
+    perspective: 1500px;
+    width: 380px;
+  }
+  .card {
+    width: 100%; aspect-ratio: 4 / 5;
+    container-type: inline-size;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--card-line);
+    position: relative;
+    overflow: hidden;
+    transition: transform .25s ease, box-shadow .25s ease;
+    will-change: transform;
+    box-shadow:
+      0 12px 28px -10px rgba(20,20,30,0.18),
+      0 4px 10px -2px rgba(20,20,30,0.08);
+  }
+  /* faint diagonal colour tint per card — 5 variants, very subtle so the
+     dark card UI stays readable */
+  .card.c-1 { background: linear-gradient(135deg, rgba(73,163,166,0.22), rgba(10,10,16,0) 55%), var(--card); }
+  .card.c-2 { background: linear-gradient(135deg, rgba(179,136,255,0.22), rgba(10,10,16,0) 55%), var(--card); }
+  .card.c-3 { background: linear-gradient(135deg, rgba(255,138,76,0.20),  rgba(10,10,16,0) 55%), var(--card); }
+  .card.c-4 { background: linear-gradient(135deg, rgba(244,114,182,0.20), rgba(10,10,16,0) 55%), var(--card); }
+  .card.c-5 { background: linear-gradient(135deg, rgba(96,165,250,0.22),  rgba(10,10,16,0) 55%), var(--card); }
+  .card { transition: transform .25s ease, box-shadow .25s ease; }
+  .card:hover {
+    transform: scale(1.05);
+    box-shadow:
+      0 30px 64px -16px rgba(20,20,30,0.45),
+      0 12px 24px -6px rgba(20,20,30,0.22);
+    z-index: 5;
+  }
+  /* fan / arc layout — JS reads each card's distance from viewport center
+     every frame and writes --tilt / --lift custom properties; CSS turns
+     those into a rotate + translateY. Center of rotation lands at the
+     horizontal center of the viewport regardless of scroll position. */
+  .cards-track > .perspective-wrap {
+    position: relative; z-index: 1;
+    transform: rotate(var(--tilt, 0deg)) translateY(var(--lift, 0px));
+  }
+  .cards-track > .perspective-wrap:hover {
+    --tilt: 0deg;
+    --lift: -10px;
+    z-index: 10;
+    transition: transform .25s cubic-bezier(.2,.8,.2,1);
+  }
+  .card-inner {
+    position: relative;
+    width: 100%; height: 100%;
+    border-radius: 10px;
+    padding: 1.71em;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    color: #fff;
+    font-size: clamp(10px, 3.685cqi, 14px);
+  }
+  /* card content — same shape as index.html profile card,
+     recoloured to ALVA teal. X avatar instead of icon. */
+  .pc-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 1.57em;
+  }
+  .pc-id { display: flex; align-items: center; gap: 0.86em; }
+  .avatar {
+    width: 3.14em; height: 3.14em;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--card);
+    flex-shrink: 0;
+  }
+  .pc-name {
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 1.21em;
+    color: #fff; line-height: 1.1;
+  }
+  .pc-handle {
+    font-family: var(--font-mono);
+    font-size: 0.79em; color: var(--muted);
+    margin-top: 0.21em;
+  }
+  .pc-badge {
+    font-family: var(--font-mono);
+    font-size: 0.64em; font-weight: 600;
+    color: var(--muted-2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.36em 0.57em;
+    border: 1px solid var(--card-line);
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+  }
+
+  /* Score + rank-ring row */
+  .pc-score {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.57em;
+  }
+  .pc-score .label {
+    font-family: var(--font-mono);
+    font-size: 0.71em; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.29em;
+  }
+  .pc-score .val {
+    font-family: var(--font-display);
+    font-size: 4.57em; font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--alva);
+    text-shadow: 0 0 18px rgba(73,163,166,0.55);
+  }
+  .pc-score .type {
+    font-family: var(--font-mono);
+    font-size: 0.79em; font-weight: 700;
+    color: var(--alva);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 0.57em;
+    display: inline-flex; align-items: center; gap: 0.57em;
+  }
+  .pc-score .type::before {
+    content: ""; width: 0.43em; height: 0.43em; border-radius: 50%;
+    background: var(--alva);
+    box-shadow: 0 0 8px var(--alva);
+    animation: pingDot 2s ease-in-out infinite;
+  }
+  @keyframes pingDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(1.6); }
+  }
+  .pc-rank {
+    width: 6.29em; height: 6.29em;
+    position: relative;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .pc-rank svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .pc-rank .ring-track { stroke: rgba(255,255,255,0.06); }
+  .pc-rank .ring-fill  { stroke: var(--alva); filter: drop-shadow(0 0 6px rgba(73,163,166,0.7)); }
+  .pc-rank .ring-text {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+  }
+  .pc-rank .ring-text .l {
+    font-size: 0.64em; color: var(--muted);
+    letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .pc-rank .ring-text .v {
+    font-family: var(--font-display);
+    font-size: 1em; font-weight: 700;
+    color: #fff;
+  }
+
+  .pc-matrix { margin-bottom: 1.29em; }
+  .pc-matrix .row {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.71em; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.71em;
+  }
+  .pc-matrix .dots {
+    display: grid; grid-template-columns: repeat(10, 1fr);
+    grid-auto-rows: 0.57em;
+    gap: 0.21em;
+  }
+  .pc-matrix .dots i {
+    display: block;
+    border-radius: 1px;
+    background: rgba(255,255,255,0.05);
+  }
+  .pc-matrix .dots i.g { background: var(--alva);   box-shadow: 0 0 4px rgba(73,163,166,0.6); }
+  .pc-matrix .dots i.o { background: var(--orange); box-shadow: 0 0 4px rgba(255,138,76,0.5); }
+  .pc-matrix .dots i.p { background: var(--purple); box-shadow: 0 0 4px rgba(179,136,255,0.5); }
+  .pc-matrix .legend {
+    display: flex; gap: 1em;
+    margin-top: 0.71em;
+    font-family: var(--font-mono);
+    font-size: 0.64em;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .pc-matrix .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .pc-matrix .legend span::before {
+    content: ""; width: 0.89em; height: 0.33em; border-radius: 1px;
+  }
+  .pc-matrix .legend span.lg-g::before { background: var(--alva); }
+  .pc-matrix .legend span.lg-o::before { background: var(--orange); }
+  .pc-matrix .legend span.lg-p::before { background: var(--purple); }
+
+  /* Top Signal Providers — 2 mini-bars at the bottom of the card */
+  .pc-providers {
+    margin-top: auto;
+  }
+  .pc-providers .head {
+    font-family: var(--font-mono);
+    font-size: 0.71em; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--card-line);
+    padding-bottom: 0.57em;
+    margin-bottom: 0.86em;
+  }
+  .pc-providers .prv { margin-bottom: 0.71em; }
+  .pc-providers .prv:last-child { margin-bottom: 0; }
+  .pc-providers .prv .meta {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    margin-bottom: 0.43em;
+  }
+  .pc-providers .prv .meta .handle { color: #fff; }
+  .pc-providers .prv .meta .stat.alva   { color: var(--alva); }
+  .pc-providers .prv .meta .stat.purple { color: var(--purple); }
+  .pc-providers .prv .track {
+    height: 0.29em;
+    background: rgba(255,255,255,0.05);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+  .pc-providers .prv .track .fill {
+    height: 100%; border-radius: 9999px;
+  }
+  .pc-providers .prv.alva   .track .fill { background: var(--alva);   box-shadow: 0 0 8px rgba(73,163,166,0.7); }
+  .pc-providers .prv.purple .track .fill { background: var(--purple); box-shadow: 0 0 8px rgba(179,136,255,0.7); }
+
+
+  /* ---------- feature section (below hero) ---------- */
+  .features {
+    position: relative;
+    z-index: 4;
+    margin-top: -96px;        /* covers the bottom of the card row without
+                                 reaching up into the hero buttons */
+    padding: 132px 48px 80px;
+    background: linear-gradient(to bottom,
+      rgba(245,245,247,0.45) 0%,
+      rgba(245,245,247,0.88) 32%,
+      rgba(245,245,247,1)    62%);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  .features-wrap { max-width: 1440px; margin: 0 auto; padding: 0 48px; }
+  .features-head { margin-bottom: 36px; }
+  .features-head .eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    color: var(--alva);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 10px;
+  }
+  .features-head .eyebrow::before {
+    content: ""; width: 24px; height: 1px; background: currentColor;
+  }
+  .features-head h2 {
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin: 0;
+    color: var(--text);
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  .feat {
+    padding: 32px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid var(--line);
+    transition: box-shadow .25s ease;
+  }
+  .feat:hover {
+    box-shadow: 0 12px 28px -10px rgba(20,20,30,0.18);
+  }
+  .feat .ic {
+    width: 48px; height: 48px;
+    background: var(--bg);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    color: var(--text);
+    font-size: 22px;
+    margin-bottom: 24px;
+    transition: background .25s, color .25s;
+  }
+  .feat:hover .ic { background: rgba(73,163,166,0.10); color: var(--alva); }
+  .feat h3 {
+    font-size: 18px; font-weight: 700;
+    margin: 0 0 12px;
+    color: var(--text);
+  }
+  .feat p {
+    color: var(--muted);
+    font-size: 14px; line-height: 1.6;
+    margin: 0;
+  }
+
+  /* ---------- closing CTA section (inverted — dark theme) ---------- */
+  .closing {
+    padding: 96px 32px;
+    background: #0a0a10;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .closing-wrap {
+    max-width: 1024px; width: 100%;
+    text-align: center;
+    position: relative; z-index: 1;
+  }
+  .closing h2 {
+    font-weight: 800;
+    font-size: 60px;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin: 0 0 24px;
+    color: #fff;
+    text-transform: uppercase;
+  }
+  .closing h2 .alva { color: var(--alva); }
+  .closing > .closing-wrap > p {
+    color: rgba(255,255,255,0.55);
+    font-size: 18px;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto 32px;
+  }
+  .closing .actions {
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 0;
+  }
+  /* primary CTA on dark bg — white pill with dark text */
+  .btn-dark {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-size: 18px; font-weight: 700;
+    color: var(--text); background: #fff;
+    border: 0;
+    padding: 18px 44px;
+    border-radius: 10px;
+    box-shadow: 0 18px 38px -12px rgba(0,0,0,0.5);
+    transition: transform .15s, background .15s;
+  }
+  .btn-dark:hover { background: #f5f5f7; transform: translateY(-1px) scale(1.02); }
+  .btn-outline {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 18px; font-weight: 700;
+    color: rgba(255,255,255,0.75);
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.18);
+    padding: 16px 40px;
+    border-radius: 10px;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .btn-outline:hover {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    border-color: rgba(255,255,255,0.32);
+  }
+  .stats {
+    margin-top: 56px;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 28px;
+  }
+  .stat .v {
+    font-weight: 900;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .stat .l {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* ---------- footer (dark, continues closing's palette) ---------- */
+  footer.f {
+    padding: 28px 32px;
+    background: #0a0a10;
+    color: rgba(255,255,255,0.45);
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .f-inner {
+    max-width: 1440px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+    font-size: 12px;
+  }
+  .f-inner a { color: inherit; }
+  .f-inner a:hover { color: #fff; }
+
+  /* ---------- responsive (Tailwind 640 / 768 / 1024 breakpoints) ---------- */
+
+  /* lg (<1024) — stack hero, cards become a horizontal row below */
+  @media (max-width: 1023px) {
+    .stage { height: auto; min-height: 0; padding-top: 64px; }
+    .hero-content {
+      position: relative;
+      top: auto; left: auto; transform: none;
+      width: 100%; max-width: none;
+      padding: 48px 32px 24px;
+    }
+    .hero-veil { display: none; }
+    .cards-rail {
+      position: relative;
+      top: auto; left: auto; transform: none;
+      padding: 32px 0 64px;
+    }
+    .cards-track { padding-left: 32px; animation-duration: 65s; }
+    .perspective-wrap { width: 320px; }
+    h1.hero-title { font-size: 56px; }
+    .hero-sub { font-size: 16px; }
+    .features { margin-top: -90px; padding: 120px 32px 72px; }
+    .features-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .closing { padding: 80px 28px; }
+    .closing h2 { font-size: 48px; }
+  }
+
+  /* md (<768) — phone landscape & small tablets */
+  @media (max-width: 767px) {
+    header.nav { backdrop-filter: blur(10px); }
+    .nav-inner { padding: 0 16px; height: 56px; }
+    .brand-text .sub { display: none; }
+    .brand-text .name { font-size: 13px; }
+    /* keep nav entries visible — just shrink them and drop the icons */
+    .nav-links { gap: 14px; font-size: 12px; }
+    .nav-links a { gap: 4px; }
+    .nav-links a i { display: none; }
+    .nav-cta { padding: 8px 14px; font-size: 11px; }
+    .stage { padding-top: 56px; }
+    .hero-content { padding: 36px 20px 20px; }
+    .tag { font-size: 10px; padding: 5px 12px; margin-bottom: 20px; }
+    h1.hero-title { font-size: 40px; margin-bottom: 18px; }
+    .hero-sub { font-size: 14px; margin-bottom: 24px; }
+    .btn-primary, .btn-secondary { font-size: 14px; padding: 12px 22px; }
+    .perms { font-size: 11px; gap: 12px; margin-top: 20px; }
+    .cards-rail { padding: 24px 0 48px; }
+    .cards-track { padding-left: 20px; gap: 20px; animation-duration: 55s; }
+    .perspective-wrap { width: 260px; }
+    /* flatten the JS-driven fan on phones so cards don't lean too far */
+    .cards-track { --fan-max-deg: 5; --fan-max-lift: 8; }
+    .features { margin-top: -72px; padding: 92px 20px 56px; }
+    .features-wrap { padding: 0; }
+    .features-head { margin-bottom: 24px; }
+    .features-head .eyebrow { font-size: 10px; margin-bottom: 6px; }
+    .features-head .eyebrow::before { width: 18px; }
+    .features-head h2 { font-size: 22px; }
+    .features-grid { grid-template-columns: 1fr; gap: 12px; }
+    .feat { padding: 20px; }
+    .feat .ic { width: 40px; height: 40px; font-size: 18px; margin-bottom: 16px; }
+    .feat h3 { font-size: 16px; margin-bottom: 8px; }
+    .feat p { font-size: 13px; }
+    .closing { padding: 64px 20px 48px; }
+    .closing h2 { font-size: 34px; margin-bottom: 18px; }
+    .closing > .closing-wrap > p { font-size: 15px; margin-bottom: 24px; }
+    .closing .actions { flex-direction: column; align-items: stretch; gap: 10px; }
+    .btn-dark, .btn-outline { width: 100%; justify-content: center; padding: 14px 24px; font-size: 15px; }
+    .stats { margin-top: 36px; gap: 20px; padding-top: 22px; }
+    .stat .v { font-size: 24px; }
+    .stat .l { font-size: 11px; }
+    footer.f { padding: 22px 20px; }
+  }
+
+  /* sm (<640) — single-col stats, smallest type scale */
+  @media (max-width: 639px) {
+    .nav-links { gap: 10px; font-size: 11px; }
+    .perspective-wrap { width: 240px; }
+    h1.hero-title { font-size: 34px; }
+    .features-head h2 { font-size: 20px; }
+    .closing h2 { font-size: 30px; }
+    .stats { grid-template-columns: 1fr; gap: 16px; text-align: center; }
+    .stat .v { font-size: 22px; }
+    .f-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+
+  /* extra-narrow phones — hide secondary nav entries to leave room for CTA */
+  @media (max-width: 459px) {
+    .nav-links a:nth-child(n+2) { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div id="cursor-ring"></div>
+  <div id="cursor-dot"></div>
+  <div id="cursor-label"></div>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand">
+        <div class="brand-mark">
+          <!-- inline logo (recoloured for light theme) -->
+          <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-label="ALVA">
+            <path class="lg-bg" fill-rule="evenodd" clip-rule="evenodd" d="M34.4684 0.397058C38.1369 -0.132341 41.8624 -0.132364 45.5309 0.397058C45.8246 0.439446 46.1194 0.486373 46.7086 0.580652C46.9049 0.612064 47.0035 0.628453 47.0914 0.648035C48.2192 0.899298 49.1009 1.77999 49.3522 2.9078C49.3717 2.99576 49.3872 3.09432 49.4186 3.29061C49.5129 3.8799 49.5598 4.17464 49.6022 4.46835C50.1316 8.13701 50.1316 11.8632 49.6022 15.5318C49.5598 15.8255 49.5128 16.1204 49.4186 16.7096C49.3871 16.906 49.3718 17.0044 49.3522 17.0924C49.1009 18.2202 48.2192 19.1009 47.0914 19.3521C47.0035 19.3717 46.9049 19.3871 46.7086 19.4185C46.1193 19.5128 45.8246 19.5607 45.5309 19.6031C43.6966 19.8678 41.8481 19.9996 39.9996 19.9996C28.9548 20.0001 20.0013 28.9538 20.0006 39.9986H19.9996C19.9997 41.8476 19.8679 43.6971 19.6031 45.5318C19.5608 45.8255 19.5128 46.1203 19.4186 46.7096C19.3871 46.906 19.3718 47.0043 19.3522 47.0924C19.1009 48.2202 18.2202 49.1009 17.0924 49.3521C17.0044 49.3717 16.906 49.3871 16.7096 49.4185C16.1203 49.5128 15.8255 49.5607 15.5318 49.6031C11.8632 50.1326 8.13701 50.1326 4.46837 49.6031C4.17464 49.5607 3.88002 49.5128 3.29064 49.4185C3.0942 49.3871 2.99583 49.3717 2.90783 49.3521C1.78005 49.1009 0.899342 48.2201 0.64806 47.0924C0.628444 47.0043 0.612121 46.9061 0.580677 46.7096C0.486402 46.1203 0.439464 45.8255 0.397083 45.5318C-0.132361 41.8632 -0.132361 38.137 0.397083 34.4683C0.439471 34.1746 0.486392 33.8799 0.580677 33.2906C0.612101 33.0942 0.628467 32.9958 0.64806 32.9078C0.899321 31.78 1.78002 30.8993 2.90783 30.648C2.99585 30.6284 3.09415 30.6121 3.29064 30.5807C3.87992 30.4864 4.17468 30.4394 4.46837 30.3971C6.30257 30.1324 8.15117 29.9996 9.99962 29.9996V29.9976C20.8724 29.9974 29.7188 21.322 29.9928 10.5152L29.9996 9.99862C29.9997 8.15047 30.1314 6.30225 30.3961 4.46835C30.4385 4.1746 30.4864 3.87999 30.5807 3.29061C30.6121 3.09428 30.6275 2.99577 30.6471 2.9078C30.8983 1.7801 31.7792 0.899397 32.9068 0.648035C32.9949 0.628428 33.0933 0.612069 33.2897 0.580652C33.8791 0.486335 34.1746 0.439454 34.4684 0.397058Z"/>
+            <path class="lg-fg" fill-rule="evenodd" clip-rule="evenodd" d="M45.5312 30.3971C41.8626 29.8677 38.1372 29.8677 34.4687 30.3971C34.1749 30.4395 33.8794 30.4864 33.29 30.5807C33.0936 30.6121 32.9952 30.6275 32.9071 30.6471C31.7795 30.8984 30.8988 31.7793 30.6474 32.9069C30.6278 32.9949 30.6124 33.0941 30.581 33.2906C30.4867 33.8799 30.4388 34.1747 30.3964 34.4684C29.867 38.1368 29.867 41.8624 30.3964 45.5309C30.4388 45.8246 30.4867 46.1201 30.581 46.7096C30.6124 46.9059 30.6278 47.0044 30.6474 47.0924C30.8987 48.2201 31.7795 49.1009 32.9071 49.3522C32.9952 49.3718 33.0936 49.3872 33.29 49.4186C33.8794 49.5129 34.1749 49.5607 34.4687 49.6031C38.1371 50.1325 41.8627 50.1326 45.5312 49.6031C45.8249 49.5608 46.1196 49.5129 46.7089 49.4186C46.9052 49.3872 47.0038 49.3717 47.0917 49.3522C48.2195 49.1009 49.1012 48.2202 49.3525 47.0924C49.3721 47.0044 49.3874 46.906 49.4189 46.7096C49.5132 46.1201 49.5601 45.8246 49.6025 45.5309C50.1319 41.8624 50.1319 38.1369 49.6025 34.4684C49.5601 34.1747 49.5131 33.8799 49.4189 33.2906C49.3874 33.0941 49.3721 32.9949 49.3525 32.9069C49.1011 31.7792 48.2194 30.8983 47.0917 30.6471C47.0038 30.6275 46.9051 30.6121 46.7089 30.5807C46.1196 30.4864 45.8249 30.4395 45.5312 30.3971ZM15.5322 0.397086C11.8635 -0.132362 8.13731 -0.132362 4.46867 0.397086C4.17498 0.439473 3.88023 0.486393 3.29094 0.580679C3.09461 0.612093 2.9961 0.627503 2.90813 0.647086C1.78049 0.898312 0.899769 1.77928 0.648361 2.90685C0.628742 2.99491 0.612434 3.09405 0.580978 3.29064C0.486706 3.87984 0.43977 4.17467 0.397385 4.46837C-0.132023 8.13688 -0.132004 11.8624 0.397385 15.5309C0.439781 15.8246 0.48666 16.1201 0.580978 16.7096C0.6124 16.906 0.628754 17.0044 0.648361 17.0924C0.899708 18.2201 1.78042 19.1009 2.90813 19.3522C2.99611 19.3718 3.09457 19.3871 3.29094 19.4186C3.88032 19.5129 4.17493 19.5607 4.46867 19.6031C8.13731 20.1326 11.8635 20.1326 15.5322 19.6031C15.8258 19.5608 16.1207 19.5128 16.7099 19.4186C16.9063 19.3871 17.0047 19.3718 17.0927 19.3522C18.2204 19.1009 19.1011 18.2201 19.3525 17.0924C19.3721 17.0044 19.3875 16.9059 19.4189 16.7096C19.5132 16.1201 19.561 15.8246 19.6034 15.5309C20.1328 11.8624 20.1328 8.13685 19.6034 4.46837C19.5611 4.17466 19.5131 3.8799 19.4189 3.29064C19.3874 3.09405 19.3721 2.99491 19.3525 2.90685C19.1011 1.77924 18.2204 0.898318 17.0927 0.647086C17.0047 0.627474 16.9063 0.612111 16.7099 0.580679C16.1207 0.486415 15.8258 0.439463 15.5322 0.397086Z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="name">ALVA</div>
+          <div class="sub">Live Audit Engine</div>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="#" data-cursor-label="Board"><i class="ph ph-chart-line"></i> Leaderboard</a>
+        <a href="#" data-cursor-label="Search"><i class="ph ph-magnifying-glass"></i> Search KOL</a>
+        <a href="#" data-cursor-label="Read"><i class="ph ph-file-text"></i> Docs</a>
+      </nav>
+      <button class="nav-cta" data-cursor-label="Scan">Initialize Scan</button>
+    </div>
+  </header>
+
+  <section class="stage">
+    <!-- horizontal card rail (sits behind veil + content) -->
+    <div class="cards-rail">
+      <div class="cards-track" id="cards-track">
+
+        <!-- card 1 -->
+        <div class="perspective-wrap">
+          <article class="card c-1" data-cursor-label="View Profile">
+            <div class="card-inner">
+              <div class="pc-head">
+                <div class="pc-id">
+                  <img class="avatar" src="https://i.pravatar.cc/80?img=12" alt="@furycom avatar" />
+                  <div>
+                    <div class="pc-name">furycom</div>
+                    <div class="pc-handle">@furycom</div>
+                  </div>
+                </div>
+                <div class="pc-badge">ALVA_PNL_IDX</div>
+              </div>
+              <div class="pc-score">
+                <div>
+                  <div class="label">Algorithmic Score</div>
+                  <div class="val">82</div>
+                  <div class="type">Alpha Hunter</div>
+                </div>
+                <div class="pc-rank">
+                  <svg viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle>
+                    <circle class="ring-fill"  cx="50" cy="50" r="45" fill="none" stroke-width="4"
+                            stroke-dasharray="283" stroke-dashoffset="51"></circle>
+                  </svg>
+                  <div class="ring-text"><span class="l">Rank</span><span class="v">Top 5%</span></div>
+                </div>
+              </div>
+              <div class="pc-matrix">
+                <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
+                <div class="dots">
+                  <i class="g"></i><i class="g"></i><i class="g"></i><i></i><i class="o"></i><i class="g"></i><i class="g"></i><i></i><i class="p"></i><i class="g"></i>
+                  <i class="g"></i><i></i><i class="o"></i><i class="o"></i><i></i><i class="g"></i><i class="g"></i><i class="g"></i><i></i><i class="p"></i>
+                  <i></i><i class="g"></i><i class="g"></i><i></i><i class="p"></i><i class="p"></i><i></i><i class="g"></i><i class="g"></i><i class="g"></i>
+                </div>
+                <div class="legend">
+                  <span class="lg-g">Profit</span><span class="lg-o">Noise</span><span class="lg-p">Early</span>
+                </div>
+              </div>
+              <div class="pc-providers">
+                <div class="head">Top Signal Providers</div>
+                <div class="prv alva">
+                  <div class="meta"><span class="handle">@aleabito</span><span class="stat alva">68% WR</span></div>
+                  <div class="track"><div class="fill" style="width:68%"></div></div>
+                </div>
+                <div class="prv purple">
+                  <div class="meta"><span class="handle">@macroalpha</span><span class="stat purple">+21% EDGE</span></div>
+                  <div class="track"><div class="fill" style="width:55%"></div></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- card 2 -->
+        <div class="perspective-wrap">
+          <article class="card c-2" data-cursor-label="View Profile">
+            <div class="card-inner">
+              <div class="pc-head">
+                <div class="pc-id">
+                  <img class="avatar" src="https://i.pravatar.cc/80?img=33" alt="@cryptowiz avatar" />
+                  <div>
+                    <div class="pc-name">cryptowiz</div>
+                    <div class="pc-handle">@cryptowiz</div>
+                  </div>
+                </div>
+                <div class="pc-badge">ALVA_PNL_IDX</div>
+              </div>
+              <div class="pc-score">
+                <div>
+                  <div class="label">Algorithmic Score</div>
+                  <div class="val">91</div>
+                  <div class="type">Gem Hunter</div>
+                </div>
+                <div class="pc-rank">
+                  <svg viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle>
+                    <circle class="ring-fill"  cx="50" cy="50" r="45" fill="none" stroke-width="4"
+                            stroke-dasharray="283" stroke-dashoffset="25"></circle>
+                  </svg>
+                  <div class="ring-text"><span class="l">Rank</span><span class="v">Top 1%</span></div>
+                </div>
+              </div>
+              <div class="pc-matrix">
+                <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
+                <div class="dots">
+                  <i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i>
+                  <i class="g"></i><i class="g"></i><i class="g"></i><i></i><i class="p"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i></i>
+                  <i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i class="g"></i>
+                </div>
+                <div class="legend">
+                  <span class="lg-g">Profit</span><span class="lg-o">Noise</span><span class="lg-p">Early</span>
+                </div>
+              </div>
+              <div class="pc-providers">
+                <div class="head">Top Signal Providers</div>
+                <div class="prv alva">
+                  <div class="meta"><span class="handle">@gemfinder</span><span class="stat alva">75% WR</span></div>
+                  <div class="track"><div class="fill" style="width:75%"></div></div>
+                </div>
+                <div class="prv purple">
+                  <div class="meta"><span class="handle">@altseeker</span><span class="stat purple">+33% EDGE</span></div>
+                  <div class="track"><div class="fill" style="width:62%"></div></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- card 3 -->
+        <div class="perspective-wrap">
+          <article class="card c-3" data-cursor-label="View Profile">
+            <div class="card-inner">
+              <div class="pc-head">
+                <div class="pc-id">
+                  <img class="avatar" src="https://i.pravatar.cc/80?img=15" alt="@alphaseeker avatar" />
+                  <div>
+                    <div class="pc-name">alphaseeker</div>
+                    <div class="pc-handle">@alphaseeker</div>
+                  </div>
+                </div>
+                <div class="pc-badge">ALVA_PNL_IDX</div>
+              </div>
+              <div class="pc-score">
+                <div>
+                  <div class="label">Algorithmic Score</div>
+                  <div class="val">78</div>
+                  <div class="type">Trend Strategist</div>
+                </div>
+                <div class="pc-rank">
+                  <svg viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle>
+                    <circle class="ring-fill"  cx="50" cy="50" r="45" fill="none" stroke-width="4"
+                            stroke-dasharray="283" stroke-dashoffset="62"></circle>
+                  </svg>
+                  <div class="ring-text"><span class="l">Rank</span><span class="v">Top 12%</span></div>
+                </div>
+              </div>
+              <div class="pc-matrix">
+                <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
+                <div class="dots">
+                  <i class="g"></i><i></i><i class="g"></i><i class="o"></i><i></i><i class="g"></i><i class="o"></i><i class="g"></i><i></i><i class="g"></i>
+                  <i></i><i class="g"></i><i class="o"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="p"></i><i class="g"></i><i></i>
+                  <i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="o"></i><i></i><i class="g"></i><i class="p"></i><i></i><i class="g"></i>
+                </div>
+                <div class="legend">
+                  <span class="lg-g">Profit</span><span class="lg-o">Noise</span><span class="lg-p">Early</span>
+                </div>
+              </div>
+              <div class="pc-providers">
+                <div class="head">Top Signal Providers</div>
+                <div class="prv alva">
+                  <div class="meta"><span class="handle">@trendlens</span><span class="stat alva">62% WR</span></div>
+                  <div class="track"><div class="fill" style="width:62%"></div></div>
+                </div>
+                <div class="prv purple">
+                  <div class="meta"><span class="handle">@signalops</span><span class="stat purple">+14% EDGE</span></div>
+                  <div class="track"><div class="fill" style="width:48%"></div></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- card 4 -->
+        <div class="perspective-wrap">
+          <article class="card c-4" data-cursor-label="View Profile">
+            <div class="card-inner">
+              <div class="pc-head">
+                <div class="pc-id">
+                  <img class="avatar" src="https://i.pravatar.cc/80?img=22" alt="@moonhunter avatar" />
+                  <div>
+                    <div class="pc-name">moonhunter</div>
+                    <div class="pc-handle">@moonhunter</div>
+                  </div>
+                </div>
+                <div class="pc-badge">ALVA_PNL_IDX</div>
+              </div>
+              <div class="pc-score">
+                <div>
+                  <div class="label">Algorithmic Score</div>
+                  <div class="val">85</div>
+                  <div class="type">Macro Analyst</div>
+                </div>
+                <div class="pc-rank">
+                  <svg viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle>
+                    <circle class="ring-fill"  cx="50" cy="50" r="45" fill="none" stroke-width="4"
+                            stroke-dasharray="283" stroke-dashoffset="42"></circle>
+                  </svg>
+                  <div class="ring-text"><span class="l">Rank</span><span class="v">Top 3%</span></div>
+                </div>
+              </div>
+              <div class="pc-matrix">
+                <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
+                <div class="dots">
+                  <i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i>
+                  <i class="g"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i class="p"></i><i></i><i class="g"></i>
+                  <i class="g"></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i class="g"></i><i></i>
+                </div>
+                <div class="legend">
+                  <span class="lg-g">Profit</span><span class="lg-o">Noise</span><span class="lg-p">Early</span>
+                </div>
+              </div>
+              <div class="pc-providers">
+                <div class="head">Top Signal Providers</div>
+                <div class="prv alva">
+                  <div class="meta"><span class="handle">@cyclepro</span><span class="stat alva">71% WR</span></div>
+                  <div class="track"><div class="fill" style="width:71%"></div></div>
+                </div>
+                <div class="prv purple">
+                  <div class="meta"><span class="handle">@macroking</span><span class="stat purple">+19% EDGE</span></div>
+                  <div class="track"><div class="fill" style="width:54%"></div></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- card 5 -->
+        <div class="perspective-wrap">
+          <article class="card c-5" data-cursor-label="View Profile">
+            <div class="card-inner">
+              <div class="pc-head">
+                <div class="pc-id">
+                  <img class="avatar" src="https://i.pravatar.cc/80?img=51" alt="@whalewatcher avatar" />
+                  <div>
+                    <div class="pc-name">whalewatcher</div>
+                    <div class="pc-handle">@whalewatcher</div>
+                  </div>
+                </div>
+                <div class="pc-badge">ALVA_PNL_IDX</div>
+              </div>
+              <div class="pc-score">
+                <div>
+                  <div class="label">Algorithmic Score</div>
+                  <div class="val">94</div>
+                  <div class="type">Flow Specialist</div>
+                </div>
+                <div class="pc-rank">
+                  <svg viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle>
+                    <circle class="ring-fill"  cx="50" cy="50" r="45" fill="none" stroke-width="4"
+                            stroke-dasharray="283" stroke-dashoffset="17"></circle>
+                  </svg>
+                  <div class="ring-text"><span class="l">Rank</span><span class="v">Top 0.5%</span></div>
+                </div>
+              </div>
+              <div class="pc-matrix">
+                <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
+                <div class="dots">
+                  <i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i class="g"></i>
+                  <i class="g"></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i>
+                  <i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i>
+                </div>
+                <div class="legend">
+                  <span class="lg-g">Profit</span><span class="lg-o">Noise</span><span class="lg-p">Early</span>
+                </div>
+              </div>
+              <div class="pc-providers">
+                <div class="head">Top Signal Providers</div>
+                <div class="prv alva">
+                  <div class="meta"><span class="handle">@smartmoney</span><span class="stat alva">81% WR</span></div>
+                  <div class="track"><div class="fill" style="width:81%"></div></div>
+                </div>
+                <div class="prv purple">
+                  <div class="meta"><span class="handle">@flowqueen</span><span class="stat purple">+27% EDGE</span></div>
+                  <div class="track"><div class="fill" style="width:65%"></div></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="hero-veil"></div>
+
+    <div class="hero-content">
+      <div class="tag">Live Backtest Engine</div>
+      <h1 class="hero-title">Do Your KOLs<br/>Really Profit?</h1>
+      <p class="hero-sub">
+        Hand us your X feed — we backtest every signal, entry, and exit against
+        15,000+ indexed sources, then return one score showing exactly which
+        follows are alpha and which are noise.
+      </p>
+      <div class="actions">
+        <button class="btn-primary" data-cursor-label="Connect">Connect X Graph <i class="ph-bold ph-arrow-right"></i></button>
+        <button class="btn-secondary" data-cursor-label="Board">View Public Leaderboard</button>
+      </div>
+      <div class="perms">
+        <span><i class="ph-fill ph-check-circle"></i> Read-only X scope</span>
+        <span><i class="ph-fill ph-check-circle"></i> No auto-posting</span>
+        <span><i class="ph-fill ph-check-circle"></i> Private results</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- feature row ---------- -->
+  <section class="features">
+    <div class="features-wrap">
+      <div class="features-head">
+        <div class="eyebrow">Deliverables Matrix</div>
+        <h2>System Output</h2>
+      </div>
+      <div class="features-grid">
+        <div class="feat" data-cursor-label="Detail">
+          <div class="ic"><i class="ph ph-chart-bar"></i></div>
+          <h3>AI-Powered Audits</h3>
+          <p>Advanced neural networks analyze sentiment vs. actual trade results across all socials.</p>
+        </div>
+        <div class="feat" data-cursor-label="Detail">
+          <div class="ic"><i class="ph ph-check-circle"></i></div>
+          <h3>Cross-Source Verified</h3>
+          <p>Zero-trust verification by matching claims against public market data and indexed historical prints.</p>
+        </div>
+        <div class="feat" data-cursor-label="Detail">
+          <div class="ic"><i class="ph ph-pulse"></i></div>
+          <h3>Real-Time Monitoring</h3>
+          <p>Your feed is re-scored continuously. New calls, repositions, and silent edits show up the moment they land.</p>
+        </div>
+        <div class="feat" data-cursor-label="Detail">
+          <div class="ic"><i class="ph ph-bell"></i></div>
+          <h3>Customizable Alerts</h3>
+          <p>Set thresholds for who to mute, who to surface, and which sectors to track. We ping you when reality shifts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- closing CTA + stats ---------- -->
+  <section class="closing">
+    <div class="closing-wrap">
+      <h2>Stop Trading On<br/><span class="alva">Blind Hype.</span></h2>
+      <p>Join 25,000+ readers using ALVA to separate the signal from the noise. The data doesn't lie.</p>
+      <div class="actions">
+        <button class="btn-dark" data-cursor-label="Audit">Audit My Feed <i class="ph-bold ph-arrow-right"></i></button>
+        <button class="btn-outline" data-cursor-label="Board">View Public Leaderboard</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="v">$420M+</div><div class="l">Audit Volume</div></div>
+        <div class="stat"><div class="v">15,402</div><div class="l">Tracked KOLs</div></div>
+        <div class="stat"><div class="v">0.2s</div><div class="l">Audit Latency</div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="f">
+    <div class="f-inner">
+      <div>© 2026 ALVA Live Audit Engine</div>
+      <div>
+        <a href="#">Methodology</a> &nbsp;·&nbsp;
+        <a href="#">Leaderboard</a> &nbsp;·&nbsp;
+        <a href="#">Privacy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* clone the card set so translateX(-50%) loops seamlessly at any width */
+    (() => {
+      const track = document.getElementById('cards-track');
+      if (!track) return;
+      const originals = [...track.children];
+      const ORIG = originals.length;
+      const fit = () => {
+        track.replaceChildren(...originals);
+        const need = innerWidth * 2 + 600;
+        let safety = 30;
+        while (track.scrollWidth < need && safety-- > 0) {
+          originals.forEach(c => track.appendChild(c.cloneNode(true)));
+        }
+        const sets = track.children.length / ORIG;
+        if (Math.floor(sets) % 2 === 1) {
+          originals.forEach(c => track.appendChild(c.cloneNode(true)));
+        }
+      };
+      fit();
+      let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(fit, 120); });
+    })();
+
+    /* ---- viewport-centred fan ----
+       Each frame, walk every card in the rail, measure its current centre-x
+       relative to the viewport centre, and write --tilt / --lift CSS
+       custom properties. CSS turns those into rotate + translateY.
+       Cards near the centre stand upright; cards on either side lean out. */
+    (() => {
+      const track = document.getElementById('cards-track');
+      if (!track) return;
+      let hovered = null;
+      track.addEventListener('pointerover', e => {
+        const c = e.target.closest('.perspective-wrap');
+        if (c) hovered = c;
+      });
+      track.addEventListener('pointerout', e => {
+        const c = e.target.closest('.perspective-wrap');
+        if (c && c === hovered) hovered = null;
+      });
+
+      const tick = () => {
+        const cs = getComputedStyle(track);
+        const MAX_DEG  = parseFloat(cs.getPropertyValue('--fan-max-deg'))  || 9;
+        const MAX_LIFT = parseFloat(cs.getPropertyValue('--fan-max-lift')) || 18;
+        const vcx = innerWidth / 2;
+        const half = innerWidth / 2;
+        const cards = track.children;
+        for (let i = 0; i < cards.length; i++) {
+          const c = cards[i];
+          if (c === hovered) continue;
+          const r = c.getBoundingClientRect();
+          const dx = (r.left + r.width / 2 - vcx) / half; // -1..1
+          const k  = Math.max(-1.4, Math.min(1.4, dx));
+          c.style.setProperty('--tilt',  (k * MAX_DEG)  + 'deg');
+          c.style.setProperty('--lift',  (Math.abs(k) * MAX_LIFT) + 'px');
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    })();
+
+    /* ---- custom cursor ----
+       Dot tracks pointer exactly; ring trails with easing.
+       Over anything matching SELECTOR (interactive targets), body gains
+       .hovering — CSS handles the grow + tint. If the target carries
+       data-cursor-label, body also gets .has-label and the bubble shows. */
+    (() => {
+      const dot   = document.getElementById('cursor-dot');
+      const ring  = document.getElementById('cursor-ring');
+      const label = document.getElementById('cursor-label');
+      if (!dot) return;
+
+      const SELECTOR = 'a, button, .card, .feat, .interactive';
+      let tx = innerWidth / 2, ty = innerHeight / 2;
+      let rx = tx, ry = ty;
+
+      addEventListener('pointermove', e => {
+        tx = e.clientX; ty = e.clientY;
+        dot.style.left = tx + 'px';
+        dot.style.top  = ty + 'px';
+        label.style.left = tx + 'px';
+        label.style.top  = ty + 'px';
+      }, { passive: true });
+
+      addEventListener('pointerdown', () => document.body.classList.add('pressing'));
+      addEventListener('pointerup',   () => document.body.classList.remove('pressing'));
+      addEventListener('pointerleave',() => document.body.classList.remove('pressing'));
+
+      addEventListener('pointerover', e => {
+        const hit = e.target.closest && e.target.closest(SELECTOR);
+        if (!hit) return;
+        document.body.classList.add('hovering');
+        const txt = hit.dataset.cursorLabel;
+        if (txt) {
+          label.textContent = txt;
+          document.body.classList.add('has-label');
+        }
+      }, true);
+
+      addEventListener('pointerout', e => {
+        const hit = e.target.closest && e.target.closest(SELECTOR);
+        if (!hit) return;
+        const toHit = e.relatedTarget?.closest?.(SELECTOR);
+        if (toHit === hit) return;
+        if (!toHit) {
+          document.body.classList.remove('hovering');
+          document.body.classList.remove('has-label');
+        } else {
+          // moved to a different hover target — refresh label
+          const txt = toHit.dataset.cursorLabel;
+          if (txt) { label.textContent = txt; document.body.classList.add('has-label'); }
+          else     { document.body.classList.remove('has-label'); }
+        }
+      }, true);
+
+      const tick = () => {
+        rx += (tx - rx) * 0.18;
+        ry += (ty - ry) * 0.18;
+        ring.style.left = rx + 'px';
+        ring.style.top  = ry + 'px';
+        requestAnimationFrame(tick);
+      };
+      tick();
+    })();
+  </script>
+</body>
+</html>
