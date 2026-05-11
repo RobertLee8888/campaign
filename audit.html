@@ -156,6 +156,29 @@
   .nav-links a i { font-size: 14px; color: var(--muted-2); transition: color .15s; }
   .nav-links a:hover { color: var(--text); }
   .nav-links a:hover i { color: var(--alva); }
+
+  /* hamburger — hidden by default, shown on small screens via media query */
+  .nav-burger {
+    display: none;
+    width: 36px; height: 36px;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    flex-direction: column;
+    justify-content: center; align-items: center;
+    gap: 5px;
+  }
+  .nav-burger span {
+    display: block;
+    width: 18px; height: 2px;
+    background: var(--text);
+    border-radius: 1px;
+    transition: transform .2s ease, opacity .2s ease;
+    transform-origin: center;
+  }
+  header.nav.open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  header.nav.open .nav-burger span:nth-child(2) { opacity: 0; }
+  header.nav.open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
   .nav-cta {
     font-size: 13px; font-weight: 600;
     color: #fff;
@@ -178,13 +201,17 @@
   }
 
   /* horizontal auto-scroll rail. NO overflow:hidden so card shadows can
-     bleed out vertically; horizontal clipping happens via .stage. */
+     bleed out vertically; horizontal clipping happens via .stage.
+     A soft bottom mask lets the cards visually dissolve into the next
+     section without features needing to climb up into the hero area. */
   .cards-rail {
     position: absolute;
     top: 50%; left: 0; right: 0;
     transform: translateY(-50%);
     z-index: 1;
-    padding: 40px 0;          /* room for shadow above & below */
+    padding: 40px 0;
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 65%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 0%, black 65%, transparent 100%);
   }
   .cards-track {
     display: flex; gap: 32px;
@@ -354,12 +381,11 @@
     position: relative; z-index: 1;
     transform: rotate(var(--tilt, 0deg)) translateY(var(--lift, 0px));
   }
-  .cards-track > .perspective-wrap:hover {
-    --tilt: 0deg;
-    --lift: -10px;
-    z-index: 10;
-    transition: transform .25s cubic-bezier(.2,.8,.2,1);
-  }
+  /* hover does NOT touch the wrap's transform — JS still owns its
+     tilt/lift per-frame. trying to flatten via CSS :hover here clashed
+     with the inline custom-property values and produced a visible jump
+     at the moment of hover. only z-index changes, no positional move. */
+  .cards-track > .perspective-wrap:hover { z-index: 10; }
   .card-inner {
     position: relative;
     width: 100%; height: 100%;
@@ -554,29 +580,22 @@
   .features {
     position: relative;
     z-index: 4;
-    margin-top: -96px;        /* covers the bottom of the card row without
-                                 reaching up into the hero buttons */
-    padding: 132px 48px 80px;
-    background: linear-gradient(to bottom,
-      rgba(245,245,247,0.45) 0%,
-      rgba(245,245,247,0.88) 32%,
-      rgba(245,245,247,1)    62%);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    padding: 152px 48px 96px;
+    background: #ffffff;
+    /* skip rendering when offscreen — big win on long scrolls */
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 720px;
   }
   .features-wrap { max-width: 1440px; margin: 0 auto; padding: 0 48px; }
   .features-head { margin-bottom: 36px; }
   .features-head .eyebrow {
-    display: inline-flex; align-items: center; gap: 10px;
+    display: block;
     font-family: var(--font-mono);
     font-size: 11px; font-weight: 600;
-    color: var(--alva);
+    color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.2em;
     margin-bottom: 10px;
-  }
-  .features-head .eyebrow::before {
-    content: ""; width: 24px; height: 1px; background: currentColor;
   }
   .features-head h2 {
     font-weight: 700;
@@ -631,6 +650,8 @@
     display: flex; align-items: center; justify-content: center;
     position: relative;
     overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 640px;
   }
   .closing-wrap {
     max-width: 1024px; width: 100%;
@@ -740,13 +761,13 @@
     .cards-rail {
       position: relative;
       top: auto; left: auto; transform: none;
-      padding: 32px 0 64px;
+      padding: 32px 0 24px;
     }
     .cards-track { padding-left: 32px; animation-duration: 65s; }
     .perspective-wrap { width: 320px; }
     h1.hero-title { font-size: 56px; }
     .hero-sub { font-size: 16px; }
-    .features { margin-top: -90px; padding: 120px 32px 72px; }
+    .features { padding: 96px 32px 80px; }
     .features-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
     .closing { padding: 80px 28px; }
     .closing h2 { font-size: 48px; }
@@ -755,13 +776,40 @@
   /* md (<768) — phone landscape & small tablets */
   @media (max-width: 767px) {
     header.nav { backdrop-filter: blur(10px); }
-    .nav-inner { padding: 0 16px; height: 56px; }
+    .nav-inner { padding: 0 16px; height: 56px; gap: 8px; }
     .brand-text .sub { display: none; }
     .brand-text .name { font-size: 13px; }
-    /* keep nav entries visible — just shrink them and drop the icons */
-    .nav-links { gap: 14px; font-size: 12px; }
-    .nav-links a { gap: 4px; }
-    .nav-links a i { display: none; }
+    /* nav-links collapse into a dropdown panel triggered by .nav-burger */
+    .nav-links {
+      position: absolute;
+      top: 100%; left: 0; right: 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      background: rgba(245,245,247,0.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding: 8px 16px 16px;
+      border-bottom: 1px solid var(--line);
+      transform: translateY(-8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .nav-links a {
+      gap: 10px;
+      font-size: 14px;
+      padding: 12px 4px;
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-links a:last-child { border-bottom: 0; }
+    .nav-links a i { display: inline-flex; font-size: 16px; color: var(--muted); }
+    header.nav.open .nav-links {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .nav-burger { display: inline-flex; margin-left: auto; }
     .nav-cta { padding: 8px 14px; font-size: 11px; }
     .stage { padding-top: 56px; }
     .hero-content { padding: 36px 20px 20px; }
@@ -770,12 +818,12 @@
     .hero-sub { font-size: 14px; margin-bottom: 24px; }
     .btn-primary, .btn-secondary { font-size: 14px; padding: 12px 22px; }
     .perms { font-size: 11px; gap: 12px; margin-top: 20px; }
-    .cards-rail { padding: 24px 0 48px; }
+    .cards-rail { padding: 24px 0 20px; }
     .cards-track { padding-left: 20px; gap: 20px; animation-duration: 55s; }
     .perspective-wrap { width: 260px; }
     /* flatten the JS-driven fan on phones so cards don't lean too far */
     .cards-track { --fan-max-deg: 5; --fan-max-lift: 8; }
-    .features { margin-top: -72px; padding: 92px 20px 56px; }
+    .features { padding: 72px 20px 64px; }
     .features-wrap { padding: 0; }
     .features-head { margin-bottom: 24px; }
     .features-head .eyebrow { font-size: 10px; margin-bottom: 6px; }
@@ -799,7 +847,6 @@
 
   /* sm (<640) — single-col stats, smallest type scale */
   @media (max-width: 639px) {
-    .nav-links { gap: 10px; font-size: 11px; }
     .perspective-wrap { width: 240px; }
     h1.hero-title { font-size: 34px; }
     .features-head h2 { font-size: 20px; }
@@ -807,11 +854,6 @@
     .stats { grid-template-columns: 1fr; gap: 16px; text-align: center; }
     .stat .v { font-size: 22px; }
     .f-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
-  }
-
-  /* extra-narrow phones — hide secondary nav entries to leave room for CTA */
-  @media (max-width: 459px) {
-    .nav-links a:nth-child(n+2) { display: none; }
   }
 </style>
 </head>
@@ -835,11 +877,14 @@
           <div class="sub">Live Audit Engine</div>
         </div>
       </div>
-      <nav class="nav-links">
-        <a href="#" data-cursor-label="Board"><i class="ph ph-chart-line"></i> Leaderboard</a>
-        <a href="#" data-cursor-label="Search"><i class="ph ph-magnifying-glass"></i> Search KOL</a>
-        <a href="#" data-cursor-label="Read"><i class="ph ph-file-text"></i> Docs</a>
+      <nav class="nav-links" id="nav-links">
+        <a href="#"><i class="ph ph-chart-line"></i> Leaderboard</a>
+        <a href="#"><i class="ph ph-magnifying-glass"></i> Search KOL</a>
+        <a href="#"><i class="ph ph-file-text"></i> Docs</a>
       </nav>
+      <button class="nav-burger" id="nav-burger" aria-label="Menu" aria-expanded="false" data-cursor-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
       <button class="nav-cta" data-cursor-label="Scan">Initialize Scan</button>
     </div>
   </header>
@@ -851,11 +896,11 @@
 
         <!-- card 1 -->
         <div class="perspective-wrap">
-          <article class="card c-1" data-cursor-label="View Profile">
+          <article class="card c-1">
             <div class="card-inner">
               <div class="pc-head">
                 <div class="pc-id">
-                  <img class="avatar" src="https://i.pravatar.cc/80?img=12" alt="@furycom avatar" />
+                  <img class="avatar" loading="lazy" decoding="async" src="https://i.pravatar.cc/80?img=12" alt="@furycom avatar" />
                   <div>
                     <div class="pc-name">furycom</div>
                     <div class="pc-handle">@furycom</div>
@@ -906,11 +951,11 @@
 
         <!-- card 2 -->
         <div class="perspective-wrap">
-          <article class="card c-2" data-cursor-label="View Profile">
+          <article class="card c-2">
             <div class="card-inner">
               <div class="pc-head">
                 <div class="pc-id">
-                  <img class="avatar" src="https://i.pravatar.cc/80?img=33" alt="@cryptowiz avatar" />
+                  <img class="avatar" loading="lazy" decoding="async" src="https://i.pravatar.cc/80?img=33" alt="@cryptowiz avatar" />
                   <div>
                     <div class="pc-name">cryptowiz</div>
                     <div class="pc-handle">@cryptowiz</div>
@@ -961,11 +1006,11 @@
 
         <!-- card 3 -->
         <div class="perspective-wrap">
-          <article class="card c-3" data-cursor-label="View Profile">
+          <article class="card c-3">
             <div class="card-inner">
               <div class="pc-head">
                 <div class="pc-id">
-                  <img class="avatar" src="https://i.pravatar.cc/80?img=15" alt="@alphaseeker avatar" />
+                  <img class="avatar" loading="lazy" decoding="async" src="https://i.pravatar.cc/80?img=15" alt="@alphaseeker avatar" />
                   <div>
                     <div class="pc-name">alphaseeker</div>
                     <div class="pc-handle">@alphaseeker</div>
@@ -1016,11 +1061,11 @@
 
         <!-- card 4 -->
         <div class="perspective-wrap">
-          <article class="card c-4" data-cursor-label="View Profile">
+          <article class="card c-4">
             <div class="card-inner">
               <div class="pc-head">
                 <div class="pc-id">
-                  <img class="avatar" src="https://i.pravatar.cc/80?img=22" alt="@moonhunter avatar" />
+                  <img class="avatar" loading="lazy" decoding="async" src="https://i.pravatar.cc/80?img=22" alt="@moonhunter avatar" />
                   <div>
                     <div class="pc-name">moonhunter</div>
                     <div class="pc-handle">@moonhunter</div>
@@ -1071,11 +1116,11 @@
 
         <!-- card 5 -->
         <div class="perspective-wrap">
-          <article class="card c-5" data-cursor-label="View Profile">
+          <article class="card c-5">
             <div class="card-inner">
               <div class="pc-head">
                 <div class="pc-id">
-                  <img class="avatar" src="https://i.pravatar.cc/80?img=51" alt="@whalewatcher avatar" />
+                  <img class="avatar" loading="lazy" decoding="async" src="https://i.pravatar.cc/80?img=51" alt="@whalewatcher avatar" />
                   <div>
                     <div class="pc-name">whalewatcher</div>
                     <div class="pc-handle">@whalewatcher</div>
@@ -1157,22 +1202,22 @@
         <h2>System Output</h2>
       </div>
       <div class="features-grid">
-        <div class="feat" data-cursor-label="Detail">
+        <div class="feat">
           <div class="ic"><i class="ph ph-chart-bar"></i></div>
           <h3>AI-Powered Audits</h3>
           <p>Advanced neural networks analyze sentiment vs. actual trade results across all socials.</p>
         </div>
-        <div class="feat" data-cursor-label="Detail">
+        <div class="feat">
           <div class="ic"><i class="ph ph-check-circle"></i></div>
           <h3>Cross-Source Verified</h3>
           <p>Zero-trust verification by matching claims against public market data and indexed historical prints.</p>
         </div>
-        <div class="feat" data-cursor-label="Detail">
+        <div class="feat">
           <div class="ic"><i class="ph ph-pulse"></i></div>
           <h3>Real-Time Monitoring</h3>
           <p>Your feed is re-scored continuously. New calls, repositions, and silent edits show up the moment they land.</p>
         </div>
-        <div class="feat" data-cursor-label="Detail">
+        <div class="feat">
           <div class="ic"><i class="ph ph-bell"></i></div>
           <h3>Customizable Alerts</h3>
           <p>Set thresholds for who to mute, who to surface, and which sectors to track. We ping you when reality shifts.</p>
@@ -1233,13 +1278,20 @@
     })();
 
     /* ---- viewport-centred fan ----
-       Each frame, walk every card in the rail, measure its current centre-x
-       relative to the viewport centre, and write --tilt / --lift CSS
-       custom properties. CSS turns those into rotate + translateY.
-       Cards near the centre stand upright; cards on either side lean out. */
+       Walks every card in the rail, measures its centre-x against the
+       viewport centre, and writes --tilt / --lift inline. CSS turns those
+       into rotate + translateY.
+       Perf:
+         · only ticks while the stage is in view (IntersectionObserver)
+         · pauses while document.hidden (background tabs)
+         · CSS-var lookups cached + refreshed on resize
+         · skipped entirely if the rail's transform hasn't changed since
+           the last frame (covers the hover-paused state) */
     (() => {
       const track = document.getElementById('cards-track');
-      if (!track) return;
+      const stage = document.querySelector('.stage');
+      if (!track || !stage) return;
+
       let hovered = null;
       track.addEventListener('pointerover', e => {
         const c = e.target.closest('.perspective-wrap');
@@ -1250,25 +1302,74 @@
         if (c && c === hovered) hovered = null;
       });
 
-      const tick = () => {
+      let MAX_DEG = 9, MAX_LIFT = 18;
+      const readVars = () => {
         const cs = getComputedStyle(track);
-        const MAX_DEG  = parseFloat(cs.getPropertyValue('--fan-max-deg'))  || 9;
-        const MAX_LIFT = parseFloat(cs.getPropertyValue('--fan-max-lift')) || 18;
-        const vcx = innerWidth / 2;
-        const half = innerWidth / 2;
-        const cards = track.children;
-        for (let i = 0; i < cards.length; i++) {
-          const c = cards[i];
-          if (c === hovered) continue;
-          const r = c.getBoundingClientRect();
-          const dx = (r.left + r.width / 2 - vcx) / half; // -1..1
-          const k  = Math.max(-1.4, Math.min(1.4, dx));
-          c.style.setProperty('--tilt',  (k * MAX_DEG)  + 'deg');
-          c.style.setProperty('--lift',  (Math.abs(k) * MAX_LIFT) + 'px');
-        }
-        requestAnimationFrame(tick);
+        MAX_DEG  = parseFloat(cs.getPropertyValue('--fan-max-deg'))  || 9;
+        MAX_LIFT = parseFloat(cs.getPropertyValue('--fan-max-lift')) || 18;
       };
-      requestAnimationFrame(tick);
+      readVars();
+      addEventListener('resize', readVars, { passive: true });
+
+      let stageInView = true;
+      new IntersectionObserver(([entry]) => { stageInView = entry.isIntersecting; },
+        { threshold: 0, rootMargin: '100px' }).observe(stage);
+
+      let rafId = 0, lastTrackTransform = '';
+      const tick = () => {
+        rafId = 0;
+        if (!stageInView || document.hidden) { schedule(); return; }
+        const trackT = getComputedStyle(track).transform;
+        if (trackT !== lastTrackTransform || hovered) {
+          lastTrackTransform = trackT;
+          const vcx  = innerWidth / 2;
+          const half = vcx;
+          const cards = track.children;
+          for (let i = 0; i < cards.length; i++) {
+            const c = cards[i];
+            if (c === hovered) continue;
+            const r = c.getBoundingClientRect();
+            // skip cards that are fully off-screen (no point updating them)
+            if (r.right < -200 || r.left > innerWidth + 200) continue;
+            const dx = (r.left + r.width / 2 - vcx) / half;
+            const k  = dx < -1.4 ? -1.4 : dx > 1.4 ? 1.4 : dx;
+            c.style.setProperty('--tilt',  (k * MAX_DEG)  + 'deg');
+            c.style.setProperty('--lift',  ((k < 0 ? -k : k) * MAX_LIFT) + 'px');
+          }
+        }
+        schedule();
+      };
+      const schedule = () => { if (!rafId) rafId = requestAnimationFrame(tick); };
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) schedule(); });
+      schedule();
+    })();
+
+    /* ---- mobile hamburger ----
+       Click the burger button to slide the nav-links panel down from the
+       header. Closes on link click, outside click, Esc, or resize ≥ 768. */
+    (() => {
+      const nav    = document.querySelector('header.nav');
+      const burger = document.getElementById('nav-burger');
+      const links  = document.getElementById('nav-links');
+      if (!nav || !burger || !links) return;
+      const close = () => {
+        nav.classList.remove('open');
+        burger.setAttribute('aria-expanded', 'false');
+      };
+      const toggle = () => {
+        const open = !nav.classList.contains('open');
+        nav.classList.toggle('open', open);
+        burger.setAttribute('aria-expanded', String(open));
+      };
+      burger.addEventListener('click', e => { e.stopPropagation(); toggle(); });
+      links.addEventListener('click', e => { if (e.target.closest('a')) close(); });
+      document.addEventListener('click', e => {
+        if (!nav.classList.contains('open')) return;
+        if (!e.target.closest('header.nav')) close();
+      });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+      let mq = matchMedia('(min-width: 768px)');
+      mq.addEventListener('change', e => { if (e.matches) close(); });
     })();
 
     /* ---- custom cursor ----
@@ -1325,14 +1426,20 @@
         }
       }, true);
 
+      let cRaf = 0;
       const tick = () => {
-        rx += (tx - rx) * 0.18;
-        ry += (ty - ry) * 0.18;
+        cRaf = 0;
+        const ex = tx - rx, ey = ty - ry;
+        rx += ex * 0.18;
+        ry += ey * 0.18;
         ring.style.left = rx + 'px';
         ring.style.top  = ry + 'px';
-        requestAnimationFrame(tick);
+        // stop rAF once the ring has settled — resume on next pointermove
+        if (ex * ex + ey * ey > 0.25) cRaf = requestAnimationFrame(tick);
       };
-      tick();
+      const schedule = () => { if (!cRaf) cRaf = requestAnimationFrame(tick); };
+      addEventListener('pointermove', schedule, { passive: true });
+      schedule();
     })();
   </script>
 </body>
