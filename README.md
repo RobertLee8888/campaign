@@ -1,20 +1,26 @@
 # Campaign
 
-ALVA campaign landing page — static clone of the Variant shared design.
+Two parallel landing-page directions for the ALVA project, cloned from
+Variant shared designs and tuned for production.
 
-**🔗 Live page: https://RobertLee8888.github.io/campaign/**
+## Live pages
 
-Click the link above to open the page.
+- **Direction A** — Intelligence Engine (dark cyber theme)
+  → https://RobertLee8888.github.io/campaign/
+
+- **Direction B** — Audit Your KOL Feed (light theme, dark cards, dark
+  inverted closing) → https://RobertLee8888.github.io/campaign/audit.html
+
+The two pages are alternative explorations of the same product story,
+not a parent / sub-page pair.
 
 ## What's in here
 
-- `index.html` — single-file landing page (HTML + CSS + a small JS spotlight loop)
-
-## Fixes vs. the original Variant export
-
-1. **Cursor visible** — original used `cursor: none` on `<body>`; this build keeps the system cursor and adds a soft purple/teal spotlight that trails it.
-2. **Seamless marquee** — the first section's status ticker now uses a duplicated track translated by exactly `-50%`, so the second copy is pre-rendered to the right of the first. No gap, no jump on loop.
+- `index.html` — Direction A
+- `audit.html` — Direction B
+- `logo.svg` — shared brand mark, inlined where needed for re-tinting
 
 ## Run locally
 
-Just open `index.html` in a browser — no build step.
+No build step — open either HTML file in a browser, or serve the folder
+with any static server (e.g. `python3 -m http.server`).
