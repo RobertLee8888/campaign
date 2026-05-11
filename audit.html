@@ -202,16 +202,18 @@
 
   /* horizontal auto-scroll rail. NO overflow:hidden so card shadows can
      bleed out vertically; horizontal clipping happens via .stage.
-     A soft bottom mask lets the cards visually dissolve into the next
-     section without features needing to climb up into the hero area. */
+     On desktop the left-side hero-veil already blurs the cards passing
+     beneath it — no bottom mask is needed there. On stacked layouts
+     (<1024) the veil is hidden and the bottom mask is re-introduced
+     so cards dissolve into the next section instead of hard-cutting. */
   .cards-rail {
     position: absolute;
-    top: 50%; left: 0; right: 0;
+    /* same +32 shift as .hero-content — centre within the area below
+       the 64px nav, not within the full stage box */
+    top: calc(50% + 32px); left: 0; right: 0;
     transform: translateY(-50%);
     z-index: 1;
     padding: 40px 0;
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 65%, transparent 100%);
-            mask-image: linear-gradient(to bottom, black 0%, black 65%, transparent 100%);
   }
   .cards-track {
     display: flex; gap: 32px;
@@ -245,9 +247,11 @@
 
   .hero-content {
     position: absolute;
-    top: 50%; left: 0;
+    /* centred in the stage area *below* the 64px nav padding, so the
+       visible space above and below the content is equal */
+    top: calc(50% + 32px); left: 0;
     transform: translateY(-50%);
-    z-index: 3;
+    z-index: 5;
     width: 60%; max-width: 820px;
     padding: 0 24px 0 56px;
   }
@@ -286,25 +290,102 @@
     max-width: 540px; margin: 0 0 36px;
   }
   .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+  /* primary-wrap holds the primary button + its anchored bubble.
+     The bubble is absolutely positioned to the button's right edge so
+     it always points at the button no matter what the button width is. */
+  .primary-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+  .primary-wrap .cta-bubble {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    right: -60px;          /* shift past the button's right edge on PC */
+    margin: 0;
+  }
+
+  /* social-proof bubble above the primary CTA. number rolls up every
+     few seconds via a simple "flap" transition (current slides off the
+     top, next slides in from the bottom). */
+  .cta-bubble {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--text);
+    color: #fff;
+    padding: 7px 14px 7px 12px;
+    border-radius: 9999px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    position: relative;
+    box-shadow: 0 6px 18px -4px rgba(20,20,30,0.25);
+  }
+  /* arrow centred horizontally below the bubble */
+  .cta-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    width: 10px; height: 10px;
+    background: var(--text);
+    transform: translateX(-50%) rotate(45deg);
+    border-radius: 2px;
+  }
+  /* per-digit number flap — each digit lives in its own clip frame so
+     only the positions that actually changed animate on tick. */
+  .cta-bubble .num-flap {
+    display: inline-flex;
+    align-items: center;
+    height: 1em;
+    line-height: 1;
+    vertical-align: -0.06em;
+    font-family: var(--font-mono);  /* tabular monospace so digits don't reflow on swap */
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+  }
+  .cta-bubble .num-flap .d {
+    display: inline-block;
+    height: 1em;
+    overflow: hidden;
+    position: relative;
+  }
+  .cta-bubble .num-flap .dn {
+    display: block;
+    color: #fff;
+    will-change: transform;
+  }
+  .cta-bubble .num-flap .s {
+    display: inline-block;
+    color: #fff;
+  }
+  .cta-bubble .lbl {
+    text-transform: uppercase;
+    opacity: 0.55;
+  }
   .btn-primary {
     display: inline-flex; align-items: center; gap: 10px;
     font-size: 15px; font-weight: 700;
     color: #fff;
-    background: var(--alva);
+    background: var(--text);          /* default = solid black */
     border: 0;
     padding: 16px 32px;
     border-radius: 8px;
-    transition: transform .15s, box-shadow .15s, background .15s;
+    transition: transform .15s, box-shadow .15s, background .15s, color .15s;
   }
   .btn-primary i {
     transition: transform .2s cubic-bezier(.2,.8,.2,1);
   }
   .btn-primary:hover {
     transform: translateY(-1px);
-    background: var(--alva-hi);
+    background: var(--alva);          /* hover = ALVA teal fill */
+    color: #fff;
     box-shadow: 0 12px 28px rgba(73,163,166,0.32);
   }
   .btn-primary:hover i { transform: translateX(3px); }
+  .btn-primary:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(73,163,166,0.25); }
   /* secondary CTA — same footprint as primary, but visually quieter. */
   .btn-secondary {
     display: inline-flex; align-items: center; gap: 10px;
@@ -755,19 +836,21 @@
       position: relative;
       top: auto; left: auto; transform: none;
       width: 100%; max-width: none;
-      padding: 48px 32px 24px;
+      padding: 24px 32px 72px;
     }
     .hero-veil { display: none; }
     .cards-rail {
       position: relative;
       top: auto; left: auto; transform: none;
-      padding: 32px 0 24px;
+      padding: 12px 0 40px;
+      -webkit-mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+              mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
     }
     .cards-track { padding-left: 32px; animation-duration: 65s; }
     .perspective-wrap { width: 320px; }
     h1.hero-title { font-size: 56px; }
     .hero-sub { font-size: 16px; }
-    .features { padding: 96px 32px 80px; }
+    .features { padding: 56px 32px 80px; }
     .features-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
     .closing { padding: 80px 28px; }
     .closing h2 { font-size: 48px; }
@@ -812,18 +895,37 @@
     .nav-burger { display: inline-flex; margin-left: auto; }
     .nav-cta { padding: 8px 14px; font-size: 11px; }
     .stage { padding-top: 56px; }
-    .hero-content { padding: 36px 20px 20px; }
-    .tag { font-size: 10px; padding: 5px 12px; margin-bottom: 20px; }
-    h1.hero-title { font-size: 40px; margin-bottom: 18px; }
-    .hero-sub { font-size: 14px; margin-bottom: 24px; }
-    .btn-primary, .btn-secondary { font-size: 14px; padding: 12px 22px; }
-    .perms { font-size: 11px; gap: 12px; margin-top: 20px; }
-    .cards-rail { padding: 24px 0 20px; }
+    .hero-content { padding: 16px 20px 56px; }
+    .tag { font-size: 10px; padding: 5px 12px; margin-bottom: 12px; }
+    h1.hero-title { font-size: 40px; margin-bottom: 12px; }
+    .hero-sub { font-size: 14px; margin-bottom: 16px; }
+    .cta-bubble { margin-bottom: 10px; }
+    .actions { flex-direction: column; align-items: stretch; gap: 12px; width: 100%; }
+    .btn-primary, .btn-secondary {
+      width: 100%;
+      justify-content: center;
+      padding: 18px 24px;
+      font-size: 16px;
+      border-radius: 10px;
+    }
+    /* mobile: primary-wrap stretches with the full-width button — bubble
+       (position: absolute; right: 0) still sticks to its right edge */
+    .primary-wrap { width: 100%; }
+    .actions { margin-top: 40px; }
+    /* mobile: bubble back inside the button's right edge + arrow at bottom-right */
+    .primary-wrap .cta-bubble { right: 0; }
+    .cta-bubble::after { left: auto; right: 22px; }
+    .perms { font-size: 11px; gap: 10px; margin-top: 12px; }
+    .cards-rail {
+      padding: 12px 0 32px;
+      -webkit-mask-image: linear-gradient(to bottom, black 0%, black 68%, transparent 100%);
+              mask-image: linear-gradient(to bottom, black 0%, black 68%, transparent 100%);
+    }
     .cards-track { padding-left: 20px; gap: 20px; animation-duration: 55s; }
     .perspective-wrap { width: 260px; }
     /* flatten the JS-driven fan on phones so cards don't lean too far */
     .cards-track { --fan-max-deg: 5; --fan-max-lift: 8; }
-    .features { padding: 72px 20px 64px; }
+    .features { padding: 48px 20px 64px; }
     .features-wrap { padding: 0; }
     .features-head { margin-bottom: 24px; }
     .features-head .eyebrow { font-size: 10px; margin-bottom: 6px; }
@@ -1183,7 +1285,13 @@
         follows are alpha and which are noise.
       </p>
       <div class="actions">
-        <button class="btn-primary" data-cursor-label="Connect">Connect X Graph <i class="ph-bold ph-arrow-right"></i></button>
+        <div class="primary-wrap">
+          <div class="cta-bubble" aria-live="polite">
+            <span class="num-flap" id="cta-counter"><span class="num-cur">12,847</span></span>
+            <span class="lbl">feeds audited</span>
+          </div>
+          <button class="btn-primary" data-cursor-label="Connect">Connect X Graph <i class="ph-bold ph-arrow-right"></i></button>
+        </div>
         <button class="btn-secondary" data-cursor-label="Board">View Public Leaderboard</button>
       </div>
       <div class="perms">
@@ -1344,6 +1452,83 @@
       schedule();
     })();
 
+    /* ---- social-proof counter ----
+       The number is rendered as one <span class="d"> per digit (each its
+       own clip frame) plus <span class="s"> separators. On tick, only the
+       positions whose digit actually changed roll: the current glyph slides
+       up out of frame, content swaps, the new glyph drops in from the
+       bottom — staggered slightly so multi-digit rollovers cascade. */
+    (() => {
+      const flap = document.getElementById('cta-counter');
+      if (!flap) return;
+      const fmt  = n => n.toLocaleString('en-US');
+      const EASE = 'cubic-bezier(.55,.05,.45,1)';
+      let count  = 12847;
+      let cur    = fmt(count);
+
+      const build = str => {
+        flap.innerHTML = '';
+        for (const ch of str) {
+          if (/\d/.test(ch)) {
+            const d  = document.createElement('span');  d.className  = 'd';
+            const dn = document.createElement('span');  dn.className = 'dn';
+            dn.textContent = ch;
+            d.appendChild(dn);
+            flap.appendChild(d);
+          } else {
+            const s = document.createElement('span');  s.className = 's';
+            s.textContent = ch;
+            flap.appendChild(s);
+          }
+        }
+      };
+      build(cur);
+
+      const rollDigit = (digit, newCh, delay) => {
+        const dn = digit.querySelector('.dn');
+        setTimeout(() => {
+          dn.style.transition = 'transform .25s ' + EASE;
+          dn.style.transform  = 'translateY(-100%)';
+          setTimeout(() => {
+            dn.style.transition = 'none';
+            dn.textContent = newCh;
+            dn.style.transform  = 'translateY(100%)';
+            void dn.offsetHeight;            // commit before the next transition
+            dn.style.transition = 'transform .25s ' + EASE;
+            dn.style.transform  = 'translateY(0)';
+          }, 260);
+        }, delay);
+      };
+
+      const tick = () => {
+        if (document.hidden) { schedule(); return; }
+        count += 1 + Math.floor(Math.random() * 4);
+        const next = fmt(count);
+        if (next.length !== cur.length) {
+          // length crossed a comma boundary — rebuild cleanly
+          build(next);
+          cur = next;
+          schedule();
+          return;
+        }
+        // collect indices that actually changed and roll them right-to-left
+        // with a small stagger so the units digit moves first, then tens, etc.
+        const changed = [];
+        for (let i = 0; i < next.length; i++) if (next[i] !== cur[i]) changed.push(i);
+        for (let k = changed.length - 1; k >= 0; k--) {
+          const i = changed[k];
+          const node = flap.children[i];
+          if (node && node.classList.contains('d')) {
+            rollDigit(node, next[i], (changed.length - 1 - k) * 60);
+          }
+        }
+        cur = next;
+        schedule();
+      };
+      const schedule = () => setTimeout(tick, 2500 + Math.random() * 3500);
+      schedule();
+    })();
+
     /* ---- mobile hamburger ----
        Click the burger button to slide the nav-links panel down from the
        header. Closes on link click, outside click, Esc, or resize ≥ 768. */
@@ -1386,6 +1571,10 @@
       const SELECTOR = 'a, button, .card, .feat, .interactive';
       let tx = innerWidth / 2, ty = innerHeight / 2;
       let rx = tx, ry = ty;
+      // seed the initial position so the dot + ring are visible immediately,
+      // even before the first pointermove
+      dot.style.left = ring.style.left = label.style.left = tx + 'px';
+      dot.style.top  = ring.style.top  = label.style.top  = ty + 'px';
 
       addEventListener('pointermove', e => {
         tx = e.clientX; ty = e.clientY;
