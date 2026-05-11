@@ -208,7 +208,9 @@
      so cards dissolve into the next section instead of hard-cutting. */
   .cards-rail {
     position: absolute;
-    top: 50%; left: 0; right: 0;
+    /* same +32 shift as .hero-content — centre within the area below
+       the 64px nav, not within the full stage box */
+    top: calc(50% + 32px); left: 0; right: 0;
     transform: translateY(-50%);
     z-index: 1;
     padding: 40px 0;
@@ -245,9 +247,11 @@
 
   .hero-content {
     position: absolute;
-    top: 50%; left: 0;
+    /* centred in the stage area *below* the 64px nav padding, so the
+       visible space above and below the content is equal */
+    top: calc(50% + 32px); left: 0;
     transform: translateY(-50%);
-    z-index: 5;          /* stays above features's white bg when they overlap on stacked layouts */
+    z-index: 5;
     width: 60%; max-width: 820px;
     padding: 0 24px 0 56px;
   }
@@ -285,10 +289,7 @@
     font-size: 17px; line-height: 1.6;
     max-width: 540px; margin: 0 0 36px;
   }
-  /* leave room above the actions row for the bubble that sits over the
-     primary button. applied here (not on .primary-wrap) so both buttons
-     stay vertically aligned with each other. */
-  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 48px; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
   /* primary-wrap holds the primary button + its anchored bubble.
      The bubble is absolutely positioned to the button's right edge so
      it always points at the button no matter what the button width is. */
