@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ALVA | Advanced KOL Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+<style>
+  :root {
+    --bg: #030305;
+    --bg-base: #0a0a10;
+    --border-base: #1c1c25;
+    --text: #ffffff;
+    --muted: #6b7280;
+    --muted-2: #9ca3af;
+    --neon-purple: #b388ff;
+    --neon-green: #5eead4;
+    --neon-orange: #fb923c;
+    --neon-yellow: #fde047;
+    --font-display: "Space Grotesk", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    /* fix: keep the system cursor visible. original used `cursor:none` */
+    cursor: auto;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* spotlight that softly follows the pointer — gives the page life
+     without removing the OS cursor */
+  .spotlight {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background:
+      radial-gradient(600px circle at var(--mx,50%) var(--my,40%),
+        rgba(179,136,255,0.10),
+        rgba(94,234,212,0.05) 35%,
+        transparent 70%);
+    transition: background 120ms linear;
+  }
+
+  /* fixed grid backdrop */
+  .grid-bg {
+    pointer-events: none;
+    position: fixed; inset: 0;
+    z-index: 0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
+  }
+  .grid-bg::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(800px circle at 15% 30%, rgba(179,136,255,0.18), transparent 60%),
+      radial-gradient(700px circle at 90% 80%, rgba(94,234,212,0.10), transparent 60%);
+  }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 2; }
+
+  /* ---------- NAV ---------- */
+  header.nav {
+    position: sticky; top: 0;
+    z-index: 30;
+    backdrop-filter: blur(10px);
+    background: rgba(3,3,5,0.65);
+    border-bottom: 1px solid var(--border-base);
+  }
+  .nav-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border-base);
+    background: var(--bg-base);
+    display: grid; place-items: center;
+    font-family: var(--font-display);
+    font-weight: 900; font-size: 18px;
+  }
+  .brand-text { line-height: 1.1; }
+  .brand-text .name {
+    font-family: var(--font-display);
+    font-weight: 700; letter-spacing: 0.04em; font-size: 14px;
+  }
+  .brand-text .sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .nav-links {
+    display: flex; gap: 28px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted-2);
+  }
+  .nav-links a { display: inline-flex; align-items: center; gap: 6px; }
+  .nav-links a:hover { color: #fff; }
+  .nav-cta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #fff;
+    background: transparent;
+    border: 1px solid var(--border-base);
+    padding: 10px 16px;
+    transition: background .2s;
+  }
+  .nav-cta:hover { background: rgba(255,255,255,0.05); }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    padding: 120px 0 80px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+  .tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--neon-green);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+  .tag::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--neon-green);
+    box-shadow: 0 0 12px var(--neon-green);
+  }
+  h1.hero-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 104px);
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    margin: 0 0 32px;
+    text-transform: uppercase;
+  }
+  h1.hero-title .accent {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255,255,255,0.18);
+  }
+  .hero-sub {
+    color: var(--muted-2);
+    font-size: 16px;
+    line-height: 1.6;
+    max-width: 520px;
+    margin: 0 0 40px;
+  }
+  .hero-actions {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 24px;
+  }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #030305;
+    background: #fff;
+    border: 0;
+    padding: 16px 24px;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgba(179,136,255,.4), 0 8px 24px rgba(179,136,255,.18);
+  }
+  .perm-list {
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .perm-list span { display: inline-flex; align-items: center; gap: 8px; }
+  .perm-list span::before {
+    content: ""; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--neon-green);
+  }
+
+  /* ---------- PROFILE CARD ---------- */
+  .card {
+    background: rgba(10,10,16,0.6);
+    border: 1px solid var(--border-base);
+    backdrop-filter: blur(8px);
+    padding: 24px;
+    position: relative;
+  }
+  .profile-card { display: flex; flex-direction: column; gap: 20px; }
+  .pc-head { display: flex; align-items: center; justify-content: space-between; }
+  .pc-id { display: flex; align-items: center; gap: 14px; }
+  .pc-avatar {
+    width: 48px; height: 48px;
+    background: var(--bg-base);
+    border: 1px solid var(--border-base);
+    display: grid; place-items: center;
+    color: var(--muted);
+  }
+  .pc-name {
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 18px; line-height: 1.1;
+  }
+  .pc-handle {
+    font-family: var(--font-mono);
+    font-size: 12px; color: var(--muted);
+  }
+  .pc-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--neon-green);
+    letter-spacing: 0.2em;
+    padding: 6px 10px;
+    border: 1px solid rgba(94,234,212,0.4);
+    background: rgba(94,234,212,0.06);
+  }
+  .pc-score {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    padding-top: 16px; border-top: 1px solid var(--border-base);
+  }
+  .pc-score .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .pc-score .val {
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--neon-purple);
+  }
+  .pc-score .type {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .pc-score .rank {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--neon-green);
+    margin-top: 4px;
+  }
+  .pc-matrix {
+    display: flex; flex-direction: column; gap: 8px;
+    padding-top: 16px; border-top: 1px solid var(--border-base);
+  }
+  .pc-matrix .row {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .bar-row { display: grid; grid-template-columns: 60px 1fr 30px; gap: 12px; align-items: center; }
+  .bar-row .bl { font-family: var(--font-mono); font-size: 10px; color: var(--muted-2); letter-spacing: 0.1em; text-transform: uppercase; }
+  .bar-row .br { font-family: var(--font-mono); font-size: 10px; color: #fff; text-align: right; }
+  .bar { height: 6px; background: rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+  .bar > i { position: absolute; left: 0; top: 0; bottom: 0; }
+  .bar.profit > i { width: 72%; background: var(--neon-green); }
+  .bar.noise  > i { width: 28%; background: var(--neon-orange); }
+  .bar.early  > i { width: 54%; background: var(--neon-purple); }
+  .pc-providers { padding-top: 16px; border-top: 1px solid var(--border-base); display: flex; flex-direction: column; gap: 10px; }
+  .pc-providers .ph-row { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 12px; }
+  .pc-providers .ph-row .handle { color: #fff; }
+  .pc-providers .ph-row .stat { color: var(--neon-green); }
+
+  /* ---------- MARQUEE (seamless, prefilled right) ---------- */
+  .marquee {
+    position: relative;
+    width: 100vw;
+    overflow: hidden;
+    background: rgba(10,10,16,0.6);
+    border-top: 1px solid var(--border-base);
+    border-bottom: 1px solid var(--border-base);
+    margin: 40px 0;
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 32s linear infinite;
+    will-change: transform;
+  }
+  .marquee-group {
+    display: flex; align-items: center;
+    padding: 14px 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--muted-2);
+    flex-shrink: 0;
+  }
+  .marquee-group .item { display: inline-flex; align-items: center; gap: 8px; margin: 0 28px; }
+  .marquee-group .sep { margin: 0 4px; color: var(--muted); }
+  .marquee-group .item.warn  i { color: var(--neon-orange); }
+  .marquee-group .item.up    i { color: var(--neon-green); }
+  .marquee-group .item.proc  i { color: var(--neon-purple); }
+  @keyframes marquee {
+    from { transform: translate3d(0,0,0); }
+    /* translate exactly the width of ONE group so the duplicate slides
+       seamlessly into its place — no gap, no jump */
+    to   { transform: translate3d(-50%, 0, 0); }
+  }
+
+  /* ---------- DELIVERABLES ---------- */
+  section.block { padding: 96px 0; position: relative; z-index: 2; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--neon-purple);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
+  }
+  .eyebrow::before {
+    content: ""; width: 32px; height: 1px; background: currentColor;
+  }
+  h2.section-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(36px, 5vw, 60px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    margin: 0 0 56px;
+  }
+  h2.section-title .accent {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255,255,255,0.18);
+  }
+  .grid-4 {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+  }
+  .deliv {
+    background: rgba(10,10,16,0.55);
+    border: 1px solid var(--border-base);
+    padding: 28px;
+    min-height: 260px;
+    display: flex; flex-direction: column; gap: 16px;
+    transition: border-color .2s, transform .2s;
+  }
+  .deliv:hover { border-color: rgba(179,136,255,0.5); transform: translateY(-2px); }
+  .deliv .ic {
+    width: 44px; height: 44px;
+    background: var(--bg-base);
+    border: 1px solid var(--border-base);
+    display: grid; place-items: center;
+    color: var(--muted-2);
+  }
+  .deliv .num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+  }
+  .deliv h3 {
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 24px;
+    margin: 0;
+  }
+  .deliv p {
+    color: var(--muted-2);
+    font-size: 14px; line-height: 1.6;
+    margin: 0;
+  }
+
+  /* ---------- ARCHITECTURE ---------- */
+  .arch {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 80px;
+  }
+  .arch-left p {
+    color: var(--muted-2);
+    font-size: 16px; line-height: 1.65;
+    max-width: 460px;
+    margin: 0 0 32px;
+  }
+  .arch-stats { display: flex; gap: 32px; }
+  .arch-stats .stat .l {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .arch-stats .stat .v {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    color: #fff;
+  }
+  .arch-stats .stat .v.green {
+    color: var(--neon-green);
+    font-size: 14px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .arch-stats .stat .v.green::before {
+    content:""; width:6px; height:6px; border-radius:50%; background: var(--neon-green);
+    box-shadow: 0 0 8px var(--neon-green);
+  }
+  .timeline { position: relative; padding-left: 64px; }
+  .timeline::before {
+    content: ""; position: absolute; left: 16px; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--neon-purple), var(--neon-green));
+    opacity: 0.5;
+  }
+  .tl-item { position: relative; padding: 24px 0; }
+  .tl-item + .tl-item { border-top: 1px solid var(--border-base); }
+  .tl-num {
+    position: absolute; left: -64px; top: 24px;
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+    background: var(--bg);
+    border: 1px solid var(--border-base);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .tl-item h4 {
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 10px;
+  }
+  .tl-item p {
+    color: var(--muted-2);
+    font-size: 14px; line-height: 1.6;
+    margin: 0;
+  }
+
+  /* ---------- FINAL CTA ---------- */
+  .cta {
+    text-align: center;
+    padding: 120px 0;
+  }
+  .cta h2 { margin-bottom: 24px; }
+  .cta p {
+    color: var(--muted-2);
+    max-width: 520px;
+    margin: 0 auto 40px;
+    font-size: 16px;
+  }
+  .btn-big {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #030305;
+    background: #fff;
+    padding: 20px 32px;
+    border: 0;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn-big:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgba(179,136,255,.4), 0 12px 32px rgba(179,136,255,.2);
+  }
+  .cta-perms {
+    margin-top: 24px;
+    display: inline-flex; gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .cta-perms span { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    border-top: 1px solid var(--border-base);
+    padding: 32px 0;
+    position: relative; z-index: 2;
+  }
+  .foot-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .foot-inner .left { display: flex; align-items: center; gap: 12px; }
+  .foot-inner .mid { display: flex; gap: 24px; }
+  .foot-inner .mid a:hover { color: #fff; }
+  .foot-mark {
+    width: 24px; height: 24px;
+    border: 1px solid var(--border-base);
+    background: var(--bg-base);
+    display: grid; place-items: center;
+    font-family: var(--font-display);
+    font-weight: 900; font-size: 12px;
+    color: #fff;
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 960px) {
+    .hero { grid-template-columns: 1fr; gap: 48px; padding: 80px 0 56px; }
+    .arch { grid-template-columns: 1fr; gap: 56px; }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .nav-links { display: none; }
+  }
+  @media (max-width: 600px) {
+    .grid-4 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <div class="spotlight" id="spotlight"></div>
+
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="brand">
+        <div class="brand-mark">A</div>
+        <div class="brand-text">
+          <div class="name">ALVA</div>
+          <div class="sub">Intelligence Engine</div>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="#"><i class="ph ph-chart-line"></i> Leaderboard</a>
+        <a href="#"><i class="ph ph-magnifying-glass"></i> Search KOL</a>
+        <a href="#"><i class="ph ph-file-text"></i> Docs</a>
+      </nav>
+      <button class="nav-cta">Initialize Scan</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="container hero">
+      <div>
+        <div class="tag">Protocol V2.4 Active // Simulation Live</div>
+        <h1 class="hero-title">
+          Detect<br/>
+          <span class="accent">The Alpha.</span><br/>
+          Filter Noise.
+        </h1>
+        <p class="hero-sub">
+          Alva stress-tests 15,000+ public KOL sources. Deep-scan your feed to
+          differentiate high-alpha signal from expensive noise. Zero fluff.
+          Pure PnL data.
+        </p>
+        <div class="hero-actions">
+          <button class="btn-primary">Connect X Graph <i class="ph ph-arrow-right"></i></button>
+          <div class="perm-list">
+            <span>Read-only access</span>
+            <span>No auto-posting</span>
+            <span>Encrypted scan</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card profile-card">
+        <div class="pc-head">
+          <div class="pc-id">
+            <div class="pc-avatar"><i class="ph ph-user"></i></div>
+            <div>
+              <div class="pc-name">furycom</div>
+              <div class="pc-handle">@furycom</div>
+            </div>
+          </div>
+          <div class="pc-badge">ALVA_PNL_IDX</div>
+        </div>
+
+        <div class="pc-score">
+          <div>
+            <div class="label">Algorithmic Score</div>
+            <div class="val">82</div>
+          </div>
+          <div>
+            <div class="label">Type</div>
+            <div class="type">Alpha Hunter</div>
+            <div class="rank">RANK · Top 5%</div>
+          </div>
+        </div>
+
+        <div class="pc-matrix">
+          <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
+          <div class="bar-row"><div class="bl">Profit</div><div class="bar profit"><i></i></div><div class="br">72</div></div>
+          <div class="bar-row"><div class="bl">Noise</div> <div class="bar noise"><i></i></div> <div class="br">28</div></div>
+          <div class="bar-row"><div class="bl">Early</div> <div class="bar early"><i></i></div> <div class="br">54</div></div>
+        </div>
+
+        <div class="pc-providers">
+          <div class="row" style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase">
+            <span>Top Signal Providers</span><span>· L30D</span>
+          </div>
+          <div class="ph-row"><span class="handle">@aleabito</span><span class="stat">68% WR</span></div>
+          <div class="ph-row"><span class="handle">@macroalpha</span><span class="stat">+21% EDGE</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <!-- group 1 -->
+        <div class="marquee-group">
+          <span class="item warn"><i class="ph-fill ph-warning-circle"></i> High Volatility Detected</span><span class="sep">///</span>
+          <span class="item up"><i class="ph-fill ph-trend-up"></i> Top Signal: AI Sector</span><span class="sep">///</span>
+          <span class="item proc"><i class="ph-fill ph-activity"></i> Processing 15k+ nodes</span><span class="sep">///</span>
+          <span class="item warn"><i class="ph-fill ph-warning-circle"></i> High Volatility Detected</span><span class="sep">///</span>
+          <span class="item up"><i class="ph-fill ph-trend-up"></i> Top Signal: AI Sector</span><span class="sep">///</span>
+          <span class="item proc"><i class="ph-fill ph-activity"></i> Processing 15k+ nodes</span><span class="sep">///</span>
+        </div>
+        <!-- group 2 (exact duplicate — pre-filled on the right so the track
+             never empties when the first group slides off screen) -->
+        <div class="marquee-group" aria-hidden="true">
+          <span class="item warn"><i class="ph-fill ph-warning-circle"></i> High Volatility Detected</span><span class="sep">///</span>
+          <span class="item up"><i class="ph-fill ph-trend-up"></i> Top Signal: AI Sector</span><span class="sep">///</span>
+          <span class="item proc"><i class="ph-fill ph-activity"></i> Processing 15k+ nodes</span><span class="sep">///</span>
+          <span class="item warn"><i class="ph-fill ph-warning-circle"></i> High Volatility Detected</span><span class="sep">///</span>
+          <span class="item up"><i class="ph-fill ph-trend-up"></i> Top Signal: AI Sector</span><span class="sep">///</span>
+          <span class="item proc"><i class="ph-fill ph-activity"></i> Processing 15k+ nodes</span><span class="sep">///</span>
+        </div>
+      </div>
+    </div>
+
+    <section class="container block">
+      <div class="eyebrow">Deliverables Matrix</div>
+      <h2 class="section-title">System <span class="accent">Output</span></h2>
+      <div class="grid-4">
+        <div class="deliv">
+          <div class="ic"><i class="ph ph-target"></i></div>
+          <div class="num">01 // METRIC</div>
+          <h3>Feed Score</h3>
+          <p>A definitive quantitative read on how your indexed KOL follows performed in our historical market simulations.</p>
+        </div>
+        <div class="deliv">
+          <div class="ic"><i class="ph ph-dna"></i></div>
+          <div class="num">02 // CLASSIFICATION</div>
+          <h3>Feed Type</h3>
+          <p>Algorithmic categorization: Are you an Alpha Hunter, Hidden Gem Collector, or surviving pure Noise?</p>
+        </div>
+        <div class="deliv">
+          <div class="ic"><i class="ph ph-users-three"></i></div>
+          <div class="num">03 // ISOLATION</div>
+          <h3>Top Follows</h3>
+          <p>Pinpoint identification of the specific accounts in your network consistently generating verified alpha.</p>
+        </div>
+        <div class="deliv">
+          <div class="ic"><i class="ph ph-share-network"></i></div>
+          <div class="num">04 // EXPORT</div>
+          <h3>Share Card</h3>
+          <p>Generate a cryptographically-styled public asset to flex your feed quality without exposing your lists.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="container block arch">
+      <div class="arch-left">
+        <div class="eyebrow">Processing Architecture</div>
+        <h2 class="section-title">Processing<br/><span class="accent">Architecture</span></h2>
+        <p>We don't count vanity metrics. Alva's engine translates public content into executable playbooks, backtests historical accuracy, and maps the results against your graph.</p>
+        <div class="arch-stats">
+          <div class="stat"><div class="l">Indexed Nodes</div><div class="v">15,482</div></div>
+          <div class="stat"><div class="l">Engine Status</div><div class="v green">Online</div></div>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-num">01</div>
+          <h4>Indexed KOL Playbooks</h4>
+          <p>Continuous tracking of selected public KOLs. We maintain refreshed playbooks including profile data, weighted scores, signal quality, and notable historical calls.</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-num">02</div>
+          <h4>Post to Signal Parsing</h4>
+          <p>AI-driven NLP translates raw text posts into actionable data: potential tickers, market directionality, underlying rationale, and implicit timing windows.</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-num">03</div>
+          <h4>Historical Simulation</h4>
+          <p>Extracted signals are cross-referenced against years of historical market volatility data to formulate a probability-based edge estimation.</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-num">04</div>
+          <h4>Graph Matching</h4>
+          <p>Your unique X following graph is mapped against our indexed pool. Uncovered KOLs lower coverage and enter the queue for automated future indexing.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="container cta">
+      <h2 class="section-title">Execute<br/><span class="accent">System Check</span></h2>
+      <p>Connect securely. Audit your feed in seconds. Expose the noise.</p>
+      <button class="btn-big">Connect X Wallet <i class="ph ph-lightning"></i></button>
+      <div class="cta-perms">
+        <span><i class="ph ph-lock-key"></i> Read-Only</span>
+        <span><i class="ph ph-prohibit"></i> No Auto-Post</span>
+        <span><i class="ph ph-shield"></i> Private Output</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container foot-inner">
+      <div class="left"><div class="foot-mark">A</div><span>ALVA Engine © 2024</span></div>
+      <div class="mid">
+        <a href="#">Protocol Specs</a>
+        <a href="#">API Access</a>
+        <a href="#">Privacy Node</a>
+      </div>
+      <div>Simulated historical data. Not financial advice. Run at own risk.</div>
+    </div>
+  </footer>
+
+  <script>
+    // soft spotlight that trails the cursor — purely additive lighting,
+    // the OS cursor itself stays visible
+    (() => {
+      const sp = document.getElementById('spotlight');
+      let tx = innerWidth / 2, ty = innerHeight * 0.4;
+      let cx = tx, cy = ty;
+      addEventListener('pointermove', e => { tx = e.clientX; ty = e.clientY; }, { passive: true });
+      const tick = () => {
+        cx += (tx - cx) * 0.12;
+        cy += (ty - cy) * 0.12;
+        sp.style.setProperty('--mx', cx + 'px');
+        sp.style.setProperty('--my', cy + 'px');
+        requestAnimationFrame(tick);
+      };
+      tick();
+    })();
+  </script>
+</body>
+</html>
