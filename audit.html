@@ -120,7 +120,6 @@
     z-index: 50;
     backdrop-filter: blur(14px);
     background: rgba(245,245,247,0.72);
-    border-bottom: 1px solid var(--line);
   }
   .nav-inner {
     max-width: 1440px; margin: 0 auto;
@@ -129,6 +128,24 @@
     display: flex; align-items: center; justify-content: space-between;
   }
   .brand { display: flex; align-items: center; gap: 10px; }
+  a.brand { text-decoration: none; }
+
+  /* small "← back to home" link that sits directly below the nav bar */
+  .nav-back-row {
+    position: relative; z-index: 6;
+    max-width: 1440px; margin: 0 auto;
+    padding: 14px 32px 0;
+  }
+  .nav-back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500;
+    color: var(--muted);
+    padding: 4px 0;
+    transition: color .15s, transform .15s;
+  }
+  .nav-back-link i { font-size: 14px; line-height: 1; transition: transform .15s; }
+  .nav-back-link:hover { color: var(--text); }
+  .nav-back-link:hover i { transform: translateX(-2px); }
   .brand-mark { width: 22px; height: 22px; display: grid; place-items: center; }
   .brand-mark svg { width: 22px; height: 22px; display: block; }
   /* re-tint the inline SVG: white paths → dark text colour; brand path stays brand */
@@ -143,19 +160,29 @@
     letter-spacing: 0.2em; text-transform: uppercase;
     margin-top: 2px; font-weight: 500;
   }
+  /* right cluster: Leaderboard + Initialize Scan, grouped */
   .nav-links {
-    display: flex; align-items: center; gap: 28px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
+    display: flex; align-items: center; gap: 10px;
   }
-  .nav-links a {
+  .nav-link-btn {
     display: inline-flex; align-items: center; gap: 6px;
-    transition: color .15s;
+    font-size: 13px; font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--line);
+    padding: 9px 18px;
+    border-radius: 9999px;
+    transition: background .15s, border-color .15s, color .15s, transform .15s;
   }
-  .nav-links a i { font-size: 14px; color: var(--muted-2); transition: color .15s; }
-  .nav-links a:hover { color: var(--text); }
-  .nav-links a:hover i { color: var(--alva); }
+  .nav-link-btn i { font-size: 14px; color: var(--alva); transition: color .15s; }
+  .nav-link-btn:hover {
+    background: rgba(73,163,166,0.08);
+    border-color: rgba(73,163,166,0.4);
+    color: var(--alva);
+    transform: translateY(-1px);
+  }
+  .nav-link-btn.active { color: #fff; background: var(--text); border-color: var(--text); }
+  .nav-link-btn.active i { color: var(--alva-hi); }
 
   /* hamburger — hidden by default, shown on small screens via media query */
   .nav-burger {
@@ -189,7 +216,7 @@
     display: inline-flex; align-items: center; gap: 8px;
     transition: transform .15s, background .15s;
   }
-  .nav-cta:hover { background: #000; transform: translateY(-1px); }
+  .nav-cta:hover { background: var(--alva); transform: translateY(-1px); }
 
   /* ---------- hero stage ---------- */
   .stage {
@@ -388,6 +415,33 @@
   }
   .btn-primary:hover i { transform: translateX(3px); }
   .btn-primary:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(73,163,166,0.25); }
+
+  /* subtle multi-colour light sweep across the primary button */
+  .btn-primary { position: relative; overflow: hidden; }
+  .btn-primary > * { position: relative; z-index: 1; }
+  .btn-primary::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg,
+      transparent 30%,
+      rgba(73,163,166,0.45) 42%,
+      rgba(255,255,255,0.28) 50%,
+      rgba(255,138,76,0.40) 58%,
+      rgba(176,38,255,0.42) 64%,
+      transparent 78%);
+    background-size: 250% 100%;
+    background-repeat: no-repeat;
+    background-position: 200% 0;
+    animation: btnShimmer 3.6s ease-in-out infinite;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+  @keyframes btnShimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -150% 0; }
+  }
+
   /* secondary CTA — same footprint as primary, but visually quieter. */
   .btn-secondary {
     display: inline-flex; align-items: center; gap: 10px;
@@ -659,12 +713,47 @@
   .pc-providers .prv.purple .track .fill { background: var(--purple); box-shadow: 0 0 8px rgba(179,136,255,0.7); }
 
 
+
+  /* ---------- stats strip (between hero + features) ---------- */
+  .stats-strip {
+    padding: 56px 32px;
+    background: #ffffff;
+  }
+  .stats-wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    text-align: center;
+  }
+  .stats-strip .stat .v {
+    font-weight: 900;
+    font-size: 40px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .stats-strip .stat .l {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  @media (max-width: 767px) {
+    .stats-strip { padding: 36px 20px; }
+    .stats-wrap { grid-template-columns: 1fr; gap: 18px; }
+    .stats-strip .stat .v { font-size: 32px; }
+  }
+
   /* ---------- feature section (below hero) ---------- */
   .features {
     position: relative;
     z-index: 4;
     padding: 152px 48px 96px;
-    background: #ffffff;
+    background: var(--bg);
     /* skip rendering when offscreen — big win on long scrolls */
     content-visibility: auto;
     contain-intrinsic-size: 1px 720px;
@@ -813,12 +902,12 @@
     text-transform: uppercase;
   }
 
-  /* ---------- footer (dark, continues closing's palette) ---------- */
+  /* ---------- footer (light, matches the page surface) ---------- */
   footer.f {
     padding: 28px 32px;
-    background: #0a0a10;
-    color: rgba(255,255,255,0.45);
-    border-top: 1px solid rgba(255,255,255,0.06);
+    background: var(--bg);
+    color: var(--muted);
+    border-top: 1px solid var(--line);
   }
   .f-inner {
     max-width: 1440px; margin: 0 auto;
@@ -827,7 +916,7 @@
     font-size: 12px;
   }
   .f-inner a { color: inherit; }
-  .f-inner a:hover { color: #fff; }
+  .f-inner a:hover { color: var(--text); }
 
   /* ---------- responsive (Tailwind 640 / 768 / 1024 breakpoints) ---------- */
 
@@ -860,42 +949,40 @@
 
   /* md (<768) — phone landscape & small tablets */
   @media (max-width: 767px) {
-    header.nav { backdrop-filter: blur(10px); }
+    header.nav { backdrop-filter: blur(10px); border-bottom: 0; }
     .nav-inner { padding: 0 16px; height: 56px; gap: 8px; }
+    .nav-back-row { padding: 10px 20px 0; }
     /* keep subtitle visible on mobile too */
     .brand-text .name { font-size: 13px; }
-    /* nav-links collapse into a dropdown panel triggered by .nav-burger */
+    /* nav-links (right-side cluster) collapses into a dropdown panel
+       triggered by .nav-burger; mobile shows ONLY the hamburger on the bar */
     .nav-links {
       position: absolute;
       top: 100%; left: 0; right: 0;
       flex-direction: column;
       align-items: stretch;
-      gap: 0;
+      gap: 10px;
       background: rgba(245,245,247,0.96);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      padding: 8px 16px 16px;
-      border-bottom: 1px solid var(--line);
+      padding: 14px 16px 16px;
       transform: translateY(-8px);
       opacity: 0;
       pointer-events: none;
       transition: opacity .18s ease, transform .18s ease;
     }
-    .nav-links a {
-      gap: 10px;
-      font-size: 14px;
-      padding: 12px 4px;
-      border-bottom: 1px solid var(--line);
-    }
-    .nav-links a:last-child { border-bottom: 0; }
-    .nav-links a i { display: inline-flex; font-size: 16px; color: var(--muted); }
     header.nav.open .nav-links {
       transform: translateY(0);
       opacity: 1;
       pointer-events: auto;
     }
+    .nav-links .nav-link-btn,
+    .nav-links .nav-cta {
+      width: 100%; justify-content: center;
+      padding: 14px 18px;
+      font-size: 14px;
+    }
     .nav-burger { display: inline-flex; margin-left: auto; }
-    .nav-cta { padding: 8px 14px; font-size: 11px; }
     .stage { padding-top: 56px; }
     .hero-content { padding: 16px 20px 56px; }
     .tag { font-size: 10px; padding: 5px 12px; margin-bottom: 12px; }
@@ -969,7 +1056,7 @@
 
   <header class="nav">
     <div class="nav-inner">
-      <div class="brand">
+      <a class="brand" href="audit.html" data-cursor-label="Home" aria-label="ALVA · Campaign — back to top">
         <div class="brand-mark">
           <!-- inline logo (recoloured for light theme) -->
           <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-label="ALVA">
@@ -981,18 +1068,56 @@
           <div class="name">ALVA &middot; Campaign</div>
           <div class="sub">Live Audit Engine</div>
         </div>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a class="nav-link-btn" href="leaderboard.html" data-cursor-label="Board"><i class="ph ph-chart-line"></i> Leaderboard</a>
+        <button class="nav-cta" data-cursor-label="Scan">Initialize Scan</button>
       </div>
-      <nav class="nav-links" id="nav-links">
-        <a href="leaderboard.html"><i class="ph ph-chart-line"></i> Leaderboard</a>
-        <a href="#"><i class="ph ph-magnifying-glass"></i> Search KOL</a>
-        <a href="#"><i class="ph ph-file-text"></i> Docs</a>
-      </nav>
       <button class="nav-burger" id="nav-burger" aria-label="Menu" aria-expanded="false" data-cursor-label="Menu">
         <span></span><span></span><span></span>
       </button>
-      <button class="nav-cta" data-cursor-label="Scan">Initialize Scan</button>
     </div>
   </header>
+
+  <div class="nav-back-row">
+    <a class="nav-back-link" href="audit.html" id="nav-back-link" data-cursor-label="Back"><i class="ph-bold ph-arrow-left"></i> <span id="nav-back-label">Back</span></a>
+  </div>
+  <script>
+    /* Make the back-link go to the page the user came from, not always
+       index.html. If there's no same-origin referrer (direct visit, new
+       tab, etc.), fall back to the index page. */
+    (() => {
+      const link = document.getElementById('nav-back-link');
+      const label = document.getElementById('nav-back-label');
+      if (!link) return;
+      let target = 'audit.html';
+      let text = 'Back to audit';
+      try {
+        const ref = document.referrer;
+        if (ref) {
+          const u = new URL(ref);
+          if (u.origin === location.origin && u.pathname !== location.pathname) {
+            target = ref;
+            // pretty label from the referrer's last path segment
+            const seg = u.pathname.split('/').filter(Boolean).pop() || '';
+            const name = seg.replace(/\.html?$/i, '');
+            if (!name || name === 'index') text = 'Back to home';
+            else text = 'Back to ' + name.replace(/[-_]+/g, ' ');
+          }
+        }
+      } catch (_) { /* ignore parse errors, fall back */ }
+      link.setAttribute('href', target);
+      if (label) label.textContent = text;
+      // Prefer history.back() when it really would land on the same page
+      // we resolved above — gives a cleaner "back" UX (preserves scroll).
+      link.addEventListener('click', (e) => {
+        if (history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) {
+          e.preventDefault();
+          history.back();
+        }
+      });
+    })();
+  </script>
 
   <section class="stage">
     <!-- horizontal card rail (sits behind veil + content) -->
@@ -1293,7 +1418,7 @@
             <span class="num-flap" id="cta-counter"><span class="num-cur">12,847</span></span>
             <span class="lbl">feeds audited</span>
           </div>
-          <button class="btn-primary" data-cursor-label="Connect">Connect X Graph <i class="ph-bold ph-arrow-right"></i></button>
+          <button class="btn-primary" data-cursor-label="Audit">Test My Investment Taste <i class="ph-bold ph-arrow-right"></i></button>
         </div>
         <button class="btn-secondary" data-cursor-label="Board" onclick="location.href='leaderboard.html'">View Public Leaderboard</button>
       </div>
@@ -1302,6 +1427,15 @@
         <span><i class="ph-fill ph-check-circle"></i> No auto-posting</span>
         <span><i class="ph-fill ph-check-circle"></i> Private results</span>
       </div>
+    </div>
+  </section>
+
+  <!-- ---------- stats strip (between hero + features) ---------- -->
+  <section class="stats-strip">
+    <div class="stats-wrap">
+      <div class="stat"><div class="v">$420M+</div><div class="l">Audit Volume</div></div>
+      <div class="stat"><div class="v">15,402</div><div class="l">Tracked KOLs</div></div>
+      <div class="stat"><div class="v">0.2s</div><div class="l">Audit Latency</div></div>
     </div>
   </section>
 
@@ -1338,21 +1472,6 @@
   </section>
 
   <!-- ---------- closing CTA + stats ---------- -->
-  <section class="closing">
-    <div class="closing-wrap">
-      <h2>Stop Trading On<br/><span class="alva">Blind Hype.</span></h2>
-      <p>Join 25,000+ readers using ALVA to separate the signal from the noise. The data doesn't lie.</p>
-      <div class="actions">
-        <button class="btn-dark" data-cursor-label="Audit">Audit My Feed <i class="ph-bold ph-arrow-right"></i></button>
-        <button class="btn-outline" data-cursor-label="Board" onclick="location.href='leaderboard.html'">View Public Leaderboard</button>
-      </div>
-      <div class="stats">
-        <div class="stat"><div class="v">$420M+</div><div class="l">Audit Volume</div></div>
-        <div class="stat"><div class="v">15,402</div><div class="l">Tracked KOLs</div></div>
-        <div class="stat"><div class="v">0.2s</div><div class="l">Audit Latency</div></div>
-      </div>
-    </div>
-  </section>
 
   <footer class="f">
     <div class="f-inner">
@@ -1643,16 +1762,45 @@
        ============================================================ -->
   <style>
     /* shared dialog shell */
+    /* Modal entrance:
+       - Use display:flex always, gate visibility + interactivity via opacity
+         and `visibility` so transitions actually fire (display:none → flex
+         instantly suppresses transitions). The `.open` class toggles both.
+       - Scrim: blur builds up alongside opacity for a clean focus pull.
+       - Dialog card: scales up from 0.92 with a slight upward translate,
+         backed by a touch of overshoot easing for tactility. */
     .dlg-scrim {
       position: fixed; inset: 0; z-index: 90;
       background: rgba(10,10,16,0.55);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      display: none; align-items: center; justify-content: center;
+      backdrop-filter: blur(0px) saturate(100%);
+      -webkit-backdrop-filter: blur(0px) saturate(100%);
+      display: flex; align-items: center; justify-content: center;
       padding: 24px;
-      opacity: 0; transition: opacity .25s ease;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        opacity .26s ease,
+        visibility 0s linear .26s,
+        backdrop-filter .32s ease,
+        -webkit-backdrop-filter .32s ease;
     }
-    .dlg-scrim.open { display: flex; opacity: 1; }
+    .dlg-scrim.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      /* sit above any closed sibling scrim so clicks always reach the
+         active modal, even during a cross-modal handoff (e.g. connect →
+         result) when the previous scrim hasn't finished its fade-out. */
+      z-index: 100;
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
+      transition:
+        opacity .26s ease,
+        visibility 0s linear 0s,
+        backdrop-filter .32s ease,
+        -webkit-backdrop-filter .32s ease;
+    }
     .dlg {
       background: var(--card); color: #fff;
       border: 1px solid var(--card-line);
@@ -1662,11 +1810,28 @@
       max-height: calc(100vh - 48px);
       overflow-y: auto;
       position: relative;
-      transform: translateY(12px) scale(0.98);
+      transform: translateY(24px) scale(0.92);
       opacity: 0;
-      transition: transform .3s cubic-bezier(.2,.8,.2,1), opacity .25s ease;
+      transform-origin: 50% 60%;
+      box-shadow: 0 0 0 1px transparent;
+      transition:
+        transform .42s cubic-bezier(.18,1.05,.42,1.0),
+        opacity .28s ease,
+        box-shadow .35s ease;
+      will-change: transform, opacity;
     }
-    .dlg-scrim.open .dlg { transform: translateY(0) scale(1); opacity: 1; }
+    .dlg-scrim.open .dlg {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      box-shadow: 0 30px 80px -20px rgba(0,0,0,0.55);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .dlg-scrim, .dlg-scrim.open,
+      .dlg, .dlg-scrim.open .dlg {
+        transition-duration: .01ms !important;
+      }
+      .dlg { transform: none; }
+    }
     .dlg.size-sm { max-width: 460px; }
     .dlg.size-md { max-width: 560px; }
     .dlg.size-lg { max-width: 760px; }
@@ -1941,13 +2106,28 @@
     }
     .flow-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    @media (max-width: 720px) {
-      .res-grid { grid-template-columns: 1fr; }
-      .share-card { max-width: 260px; }
-      .kol-grid { grid-template-columns: repeat(2, 1fr); }
-      .request-strip { flex-direction: column; align-items: flex-start; }
-      .dlg-title { font-size: 22px; }
-      .dlg { padding: 24px; }
+    /* ---------- Dialog mobile (lines up with index/landing breakpoints
+       1023 / 767 / 639). Modal scrims and inner dlg cards shrink in
+       padding + type while staying readable. ---------- */
+    @media (max-width: 1023px) {
+      .dlg-scrim { padding: 20px; }
+      .dlg { padding: 28px; border-radius: 16px; }
+      .dlg-title { font-size: 24px; }
+    }
+    @media (max-width: 767px) {
+      .dlg-scrim { padding: 12px; align-items: flex-end; }
+      .dlg {
+        padding: 22px 20px;
+        border-radius: 18px 18px 14px 14px;
+        max-height: calc(100vh - 24px);
+      }
+      .dlg.size-sm, .dlg.size-md, .dlg.size-lg, .dlg.size-xl { max-width: 100%; }
+      .dlg-title { font-size: 22px; line-height: 1.1; }
+      .dlg-sub  { font-size: 13.5px; margin-bottom: 18px; }
+      .dlg-close { top: 14px; right: 14px; width: 30px; height: 30px; }
+      .dlg-actions { flex-direction: column; align-items: stretch; }
+      .dlg-actions .dlg-btn { width: 100%; justify-content: center; padding: 14px 20px; }
+      .dlg-btn.ghost { padding: 13px 20px; }
     }
   </style>
 
@@ -1998,10 +2178,24 @@
     }
     #dlg-connect .cta-full:active { transform: translateY(0); }
 
-    /* state toggle inside the connect dialog */
-    #dlg-connect [data-state] { display: none; }
-    #dlg-connect[data-state="auth"]    [data-state="auth"]    { display: block; }
-    #dlg-connect[data-state="loading"] [data-state="loading"] { display: block; }
+    /* Stack the two states in the same grid cell so the dialog always
+       sizes to the taller one — height stays constant as we crossfade. */
+    #dlg-connect .dlg { display: grid; grid-template-columns: minmax(0, 1fr); }
+    #dlg-connect .dlg > .dlg-close { position: absolute; } /* keep out of grid flow */
+    #dlg-connect [data-state] {
+      grid-column: 1; grid-row: 1;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s ease, visibility 0s linear .22s;
+    }
+    #dlg-connect[data-state="auth"]    [data-state="auth"],
+    #dlg-connect[data-state="loading"] [data-state="loading"] {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity .26s ease, visibility 0s linear 0s;
+    }
     #dlg-connect[data-state="loading"] .dlg-close { display: none; }
 
     /* loading state — light, matches the rest of the modal */
@@ -2035,6 +2229,19 @@
     #dlg-connect .l-steps .row.active i { color: var(--alva); animation: pulse 1.4s ease-in-out infinite; }
     #dlg-connect .l-steps .row.done { color: var(--text); }
     #dlg-connect .l-steps .row.done i { color: var(--alva); }
+
+    /* connect modal mobile (matches landing breakpoints) */
+    @media (max-width: 1023px) {
+      #dlg-connect .dlg { max-width: 460px; padding: 24px 28px 28px; }
+    }
+    @media (max-width: 767px) {
+      #dlg-connect .dlg { padding: 22px 20px 24px; }
+      #dlg-connect .dlg-close { top: 16px; right: 16px; }
+      #dlg-connect .trust { gap: 9px; font-size: 12.5px; margin-bottom: 22px; }
+      #dlg-connect .cta-full { padding: 15px 20px; font-size: 14.5px; }
+      #dlg-connect .load-sub { font-size: 13.5px; margin-bottom: 22px; }
+      #dlg-connect .l-steps .row { font-size: 13px; }
+    }
   </style>
   <div class="dlg-scrim" id="dlg-connect" data-state="auth" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dlg-connect-title">
     <div class="dlg size-sm">
@@ -2097,7 +2304,8 @@
 
     .rv-close {
       position: fixed;
-      top: 16px; right: 32px;     /* sits inside the nav row, far right */
+      top: 80px; right: 32px;     /* below the 64px nav — keeps the top bar
+                                     identical to audit.html / leaderboard.html */
       width: 36px; height: 36px;
       border-radius: 50%;
       border: 1px solid var(--line);
@@ -2235,23 +2443,8 @@
       border-color: var(--line); box-shadow: none;
     }
     .share-btn[data-share="copy"]:hover { background: var(--text); color: #fff; border-color: var(--text); }
-    /* quiet save link — visually separated from the share group */
-    .rv-shares .save-link {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 10px 14px;
-      margin-left: 6px;
-      color: var(--muted); background: transparent;
-      border: 0; font-size: 13px; font-weight: 500;
-      position: relative;
-    }
-    .rv-shares .save-link::before {
-      content: ""; display: block;
-      width: 1px; height: 22px;
-      background: var(--line);
-      margin-right: 10px;
-    }
-    .rv-shares .save-link i { font-size: 15px; }
-    .rv-shares .save-link:hover { color: var(--text); }
+    /* save share — same pill shape as the others, distinct neutral colour */
+    .share-btn[data-share="save"] { background: #4b5563; }
 
     /* ----- Content below hero ----- */
     .rv-content {
@@ -2351,15 +2544,58 @@
     }
     .rv-request-btn:hover { background: var(--alva); transform: translateY(-1px); box-shadow: 0 10px 22px -8px rgba(73,163,166,0.35); }
 
-    @media (max-width: 900px) {
-      .rv-stage { padding: 40px 24px 72px; }
-      .rv-card-stage { width: 360px; }
-      .rv-kol-grid { grid-template-columns: repeat(2, 1fr); }
-      .rv-request { flex-direction: column; align-items: flex-start; }
+    /* ---------- Result view mobile (matches landing 1023/767/639) ---------- */
+    @media (max-width: 1023px) {
+      .result-view { inset: 56px 0 0 0; }
+      .rv-scrim    { inset: 56px 0 0 0; }
+      .rv-stage    { padding: 40px 32px 72px; max-width: none; }
+      .rv-card-stage { width: 400px; margin-bottom: 28px; }
+      .rv-title    { font-size: clamp(28px, 4.6vw, 44px); }
+      .rv-sub      { font-size: 15px; }
+      .rv-kol-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .rv-content  { margin-top: 80px; }
+      .rv-section  { margin-bottom: 44px; }
+      .rv-request  { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .rv-request-btn { width: 100%; justify-content: center; }
+      .rv-close { top: 72px; right: 20px; }
     }
-    @media (max-width: 520px) {
-      .rv-kol-grid { grid-template-columns: 1fr; }
-      .rv-card-stage { width: 88vw; }
+    @media (max-width: 767px) {
+      .rv-stage { padding: 24px 16px 56px; }
+      .rv-hero { padding-top: 12px; }
+      .rv-card-stage { width: 100%; max-width: 360px; margin-bottom: 24px; }
+      .rv-title { font-size: 28px; line-height: 1.05; margin-bottom: 12px; }
+      .rv-sub   { font-size: 14px; line-height: 1.55; margin-bottom: 22px; }
+      /* share row: stack into a vertical column of full-width buttons,
+         matching the landing's `.btn-primary` mobile treatment */
+      .rv-shares { flex-direction: column; align-items: stretch; gap: 10px; width: 100%; }
+      .share-btn {
+        width: 100%; justify-content: center;
+        padding: 15px 20px; font-size: 15px;
+        border-radius: 10px;
+      }
+      .rv-content { margin-top: 56px; }
+      .rv-section { margin-bottom: 36px; }
+      .rv-section-head { margin-bottom: 14px; }
+      .rv-section-head h3 { font-size: 18px; }
+      .rv-section-head h3 span.count { display: block; margin: 4px 0 0; font-size: 11px; letter-spacing: 0.12em; }
+      .rv-section-head .hint { display: none; }
+      .rv-kol-grid { grid-template-columns: 1fr; gap: 10px; }
+      .rv-kol-card { padding: 14px; }
+      .rv-request { padding: 18px; border-radius: 12px; }
+      .rv-request .l h4 { font-size: 16px; }
+      .rv-request .l p  { font-size: 12.5px; }
+      .rv-request-btn { padding: 14px 20px; border-radius: 10px; font-size: 14px; }
+      .rv-close { width: 32px; height: 32px; top: 68px; right: 16px; }
+    }
+    @media (max-width: 639px) {
+      .rv-card-stage { max-width: 88vw; }
+      .rv-title { font-size: 26px; }
+    }
+    /* Touch / no-hover: cursor tilt is replaced by a scroll-driven tilt
+       (see JS). Drop the transition on transform so the card tracks the
+       scroll position 1-to-1 without easing lag. */
+    @media (hover: none), (pointer: coarse) {
+      .result-view.tilt .rv-card { transition: opacity .6s ease; }
     }
   </style>
 
@@ -2433,7 +2669,7 @@
           <button class="share-btn" data-share="telegram" data-cursor-label="Telegram" aria-label="Share to Telegram"><i class="ph-fill ph-telegram-logo"></i> Telegram</button>
           <button class="share-btn" data-share="discord" data-cursor-label="Discord" aria-label="Share to Discord"><i class="ph-fill ph-discord-logo"></i> Discord</button>
           <button class="share-btn" data-share="copy" data-cursor-label="Copy" aria-label="Copy link"><i class="ph-bold ph-link-simple"></i> Copy link</button>
-          <button class="save-link" data-share="save" data-cursor-label="Save" aria-label="Save image"><i class="ph-bold ph-download-simple"></i> Save image</button>
+          <button class="share-btn" data-share="save" data-cursor-label="Save" aria-label="Save image"><i class="ph-bold ph-download-simple"></i> Save image</button>
         </div>
       </section>
 
@@ -2488,16 +2724,252 @@
   </div>
 
   <!-- Request missing KOLs modal -->
-  <div class="dlg-scrim" id="dlg-request" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="dlg size-sm">
+  <!-- Request missing KOLs — light, parallel structure to #dlg-connect:
+       form state + success state stacked in the same grid cell so the
+       dialog height stays consistent across the transition. -->
+  <style>
+    #dlg-request .dlg {
+      background: var(--bg-soft);
+      color: var(--text);
+      border: 1px solid var(--line);
+      box-shadow: 0 30px 80px -20px rgba(20,20,30,0.25);
+      max-width: 560px;
+      padding: 28px 36px 32px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    #dlg-request .dlg > .dlg-close { position: absolute; }
+    #dlg-request .dlg-close {
+      top: 20px; right: 20px;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    #dlg-request .dlg-close:hover { background: var(--text); color: #fff; border-color: var(--text); }
+    #dlg-request .dlg-title { color: var(--text); margin-bottom: 10px; }
+    #dlg-request .dlg-sub   { color: var(--muted); font-size: 14px; line-height: 1.55; margin-bottom: 22px; }
+
+    /* state stack — both children sit in the same grid cell */
+    #dlg-request [data-state] {
+      grid-column: 1; grid-row: 1;
+      visibility: hidden; opacity: 0; pointer-events: none;
+      transition: opacity .22s ease, visibility 0s linear .22s;
+    }
+    #dlg-request[data-state="form"]    [data-state="form"],
+    #dlg-request[data-state="success"] [data-state="success"] {
+      visibility: visible; opacity: 1; pointer-events: auto;
+      transition: opacity .26s ease, visibility 0s linear 0s;
+    }
+
+    /* repeating rows of KOL inputs */
+    /* one input per row + a square trash button */
+    #dlg-request .kol-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+    #dlg-request .kol-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 40px;
+      gap: 8px;
+      align-items: stretch;
+      animation: kolRowIn .25s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes kolRowIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    #dlg-request .kol-row.removing {
+      animation: kolRowOut .2s ease forwards;
+      pointer-events: none;
+    }
+    @keyframes kolRowOut {
+      to { opacity: 0; transform: translateY(-4px) scaleY(0.85); height: 0; margin-top: -10px; }
+    }
+    #dlg-request .req-input {
+      width: 100%;
+      height: 40px;
+      padding: 0 13px;
+      font: inherit; font-size: 13.5px;
+      color: var(--text);
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      transition: border-color .15s, box-shadow .15s;
+      min-width: 0;
+    }
+    #dlg-request .req-input::placeholder { color: var(--muted-2); }
+    #dlg-request .req-input:focus {
+      outline: none;
+      border-color: var(--alva);
+      box-shadow: 0 0 0 3px rgba(73,163,166,0.18);
+    }
+    #dlg-request .req-input.error {
+      border-color: #d9534f;
+      box-shadow: 0 0 0 3px rgba(217,83,79,0.15);
+    }
+    #dlg-request .kol-row-remove {
+      width: 40px; height: 40px;             /* perfect square, matches input height */
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted-2);
+      border-radius: 9px;
+      display: inline-flex; align-items: center; justify-content: center;
+      line-height: 1; padding: 0;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    #dlg-request .kol-row-remove i { display: block; line-height: 1; font-size: 15px; }
+    #dlg-request .kol-row-remove:hover { background: #d9534f; color: #fff; border-color: #d9534f; }
+    #dlg-request .kol-row-remove[disabled] { opacity: 0.35; pointer-events: none; }
+
+    #dlg-request .add-kol {
+      align-self: flex-start;
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 14px 8px 11px;
+      font-size: 12.5px; font-weight: 600;
+      color: var(--alva);
+      background: var(--alva-dim);
+      border: 1px dashed rgba(73,163,166,0.40);
+      border-radius: 9999px;
+      transition: background .15s, border-color .15s, transform .15s, opacity .15s;
+    }
+    #dlg-request .add-kol:hover { background: rgba(73,163,166,0.16); border-style: solid; transform: translateY(-1px); }
+    #dlg-request .add-kol i { font-size: 14px; line-height: 1; }
+    #dlg-request .add-kol[disabled] {
+      opacity: 0.45; pointer-events: none;
+      background: transparent;
+      border-style: dashed;
+    }
+
+    /* divider gets more breathing room above + below */
+    #dlg-request .req-foot {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px;
+      margin-top: 28px;
+      padding-top: 28px;
+      border-top: 1px solid var(--line);
+    }
+    #dlg-request .req-count {
+      font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    #dlg-request .req-count b { color: var(--text); font-family: var(--font-display); }
+    #dlg-request .req-submit {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px; border-radius: 10px;
+      font-size: 14px; font-weight: 700;
+      color: #fff; background: var(--text);
+      border: 0;
+      transition: background .15s, transform .15s, box-shadow .15s;
+    }
+    #dlg-request .req-submit:hover { background: var(--alva); transform: translateY(-1px); box-shadow: 0 12px 26px -10px rgba(73,163,166,0.35); }
+    #dlg-request .req-submit[disabled] { opacity: 0.5; pointer-events: none; }
+
+    /* success state — vertically centred in the shared grid cell so it
+       doesn't bunch at the top when the form (taller) sets the height */
+    #dlg-request [data-state="success"] {
+      display: flex; flex-direction: column;
+      justify-content: center;
+      min-height: 100%;
+    }
+    #dlg-request .req-success {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 24px 0;
+    }
+    #dlg-request .req-success .check {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: var(--alva-dim);
+      color: var(--alva);
+      display: grid; place-items: center;
+      font-size: 44px;
+      margin-bottom: 24px;
+      animation: successPop .45s cubic-bezier(.18,1.2,.42,1);
+    }
+    @keyframes successPop {
+      from { transform: scale(0.4); opacity: 0; }
+      60%  { transform: scale(1.08); opacity: 1; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    #dlg-request .req-success h3 {
+      font-family: var(--font-display);
+      font-size: 24px; line-height: 1.1; text-transform: uppercase;
+      letter-spacing: -0.01em; font-weight: 800;
+      color: var(--text); margin: 0 0 10px;
+    }
+    #dlg-request .req-success p {
+      font-size: 14px; color: var(--muted); line-height: 1.55;
+      max-width: 380px; margin: 0 auto;
+    }
+    #dlg-request .req-success .summary {
+      margin-top: 22px; padding: 14px 18px;
+      background: rgba(73,163,166,0.06);
+      border: 1px solid rgba(73,163,166,0.20);
+      border-radius: 10px;
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--text);
+      letter-spacing: 0.06em;
+      max-width: 100%;
+      word-break: break-word;
+      text-align: left;
+    }
+    #dlg-request .req-success .summary b { color: var(--alva); font-family: var(--font-display); }
+    #dlg-request .req-success .summary ul { margin: 8px 0 0; padding: 0; list-style: none; }
+    #dlg-request .req-success .summary li { padding: 4px 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; }
+    #dlg-request .req-success .summary li:first-child { border-top: 0; }
+    #dlg-request .req-success .summary li span:last-child { color: var(--muted); }
+    #dlg-request .req-success .actions {
+      margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+    }
+    #dlg-request .req-success .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 20px; border-radius: 9px;
+      font-size: 13.5px; font-weight: 700;
+      border: 0; cursor: inherit;
+      transition: background .15s, color .15s, border-color .15s, transform .15s;
+    }
+    #dlg-request .req-success .btn.primary { background: var(--text); color: #fff; }
+    #dlg-request .req-success .btn.primary:hover { background: var(--alva); transform: translateY(-1px); }
+    #dlg-request .req-success .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+    #dlg-request .req-success .btn.ghost:hover { background: var(--bg); border-color: var(--text); }
+
+    @media (max-width: 767px) {
+      #dlg-request .dlg { padding: 24px 20px 26px; }
+      #dlg-request .kol-row { grid-template-columns: minmax(0, 1fr) 40px; }
+      #dlg-request .req-foot { flex-direction: column; align-items: stretch; gap: 14px; margin-top: 24px; padding-top: 24px; }
+      #dlg-request .req-submit { width: 100%; justify-content: center; }
+      #dlg-request .req-count { text-align: center; }
+    }
+  </style>
+  <div class="dlg-scrim" id="dlg-request" data-state="form" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="dlg">
       <button class="dlg-close" data-dlg-close data-cursor-label="Close" aria-label="Close"><i class="ph-bold ph-x"></i></button>
-      <div class="dlg-eyebrow"><i class="ph-fill ph-paper-plane-tilt"></i> Coverage request</div>
-      <h2 class="dlg-title">Request missing KOLs</h2>
-      <p class="dlg-sub">One handle per line. We evaluate every request and index high-signal accounts weekly.</p>
-      <textarea class="req-area" placeholder="@elonmusk&#10;@balajis&#10;@RaoulGMI"></textarea>
-      <div class="dlg-actions" style="justify-content: flex-end;">
-        <button class="dlg-btn ghost" data-dlg-close data-cursor-label="Cancel">Cancel</button>
-        <button class="dlg-btn" data-submit-request data-cursor-label="Submit">Submit <i class="ph-bold ph-arrow-right"></i></button>
+
+      <!-- Form state -->
+      <div data-state="form">
+        <h2 class="dlg-title">Request missing KOLs</h2>
+        <p class="dlg-sub">Tell us which KOLs Alva should index next. Drop a handle (e.g. <code style="font-family: var(--font-mono); font-size: 12px; background: var(--bg); padding: 1px 5px; border-radius: 4px;">@RaoulGMI</code>), an X URL, or a homepage link — whichever you have. Up to 5 per request.</p>
+
+        <div class="kol-rows" id="req-rows">
+          <!-- rows injected by JS -->
+        </div>
+
+        <button class="add-kol" id="req-add" data-cursor-label="Add" type="button"><i class="ph-bold ph-plus"></i> Add another KOL</button>
+
+        <div class="req-foot">
+          <div class="req-count"><b id="req-count-num">0</b> / 5 KOLs</div>
+          <button class="req-submit" id="req-submit" data-cursor-label="Submit" type="button" disabled>Submit request <i class="ph-bold ph-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- Success state -->
+      <div data-state="success">
+        <div class="req-success">
+          <div class="check"><i class="ph-fill ph-check-circle"></i></div>
+          <h3>Request received</h3>
+          <p>Thanks — we'll evaluate every handle you sent and surface high-signal accounts in the next index pass (within ~1 week).</p>
+          <div class="summary" id="req-summary"><!-- list injected on submit --></div>
+          <div class="actions">
+            <button class="btn primary" data-dlg-close data-cursor-label="Done">Done</button>
+            <button class="btn ghost" id="req-another" data-cursor-label="More">Submit another</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2601,21 +3073,57 @@
         });
       });
 
-      // ----- Cursor-driven 3D tilt on the result hero card -----
+      // ----- 3D tilt on the result hero card -----
+      // Desktop (fine pointer + hover): cursor position drives the tilt.
+      // Touch / coarse pointer: tilt is bound to the result-view's scroll
+      // position — as the card moves through the viewport the rotateX/Y
+      // shifts proportionally, giving the same "live" feel without a hover.
       (() => {
         const view = dlgs.result;
         const card = document.getElementById('rv-card');
         if (!view || !card) return;
-        const MAX_X = 8;  // deg of rotateY (left/right)
-        const MAX_Y = 6;  // deg of rotateX (up/down) — inverted
-        addEventListener('pointermove', (e) => {
-          if (!view.classList.contains('tilt')) return;
-          const w = innerWidth, h = innerHeight;
-          const nx = (e.clientX / w) * 2 - 1;   // −1..1
-          const ny = (e.clientY / h) * 2 - 1;
-          card.style.setProperty('--tx', (nx * MAX_X).toFixed(2) + 'deg');
-          card.style.setProperty('--ty', (-ny * MAX_Y).toFixed(2) + 'deg');
-        }, { passive: true });
+        const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+        if (fine) {
+          const MAX_X = 8;  // rotateY (left/right)
+          const MAX_Y = 6;  // rotateX (up/down) — inverted
+          addEventListener('pointermove', (e) => {
+            if (!view.classList.contains('tilt')) return;
+            const w = innerWidth, h = innerHeight;
+            const nx = (e.clientX / w) * 2 - 1;
+            const ny = (e.clientY / h) * 2 - 1;
+            card.style.setProperty('--tx', (nx * MAX_X).toFixed(2) + 'deg');
+            card.style.setProperty('--ty', (-ny * MAX_Y).toFixed(2) + 'deg');
+          }, { passive: true });
+        } else {
+          // Scroll-driven version: normalise the card's vertical position
+          // within the viewport to −1..+1 and map to rotateX/Y.
+          const MAX_RY = 6;   // small left/right wobble as the card scrolls
+          const MAX_RX = 12;  // forward/back lean — dominant
+          let scrollRaf = 0;
+          const update = () => {
+            scrollRaf = 0;
+            if (!view.classList.contains('tilt')) return;
+            const rect = card.getBoundingClientRect();
+            if (rect.height === 0) return;
+            const vh = innerHeight;
+            const cy = rect.top + rect.height / 2;
+            const t = Math.max(-1, Math.min(1, (cy - vh / 2) / (vh / 2)));
+            // card above viewport center (t<0) → leans toward viewer (+rotateX)
+            // card below viewport center (t>0) → leans away (−rotateX)
+            const rx = -t * MAX_RX;
+            const ry =  t * MAX_RY;
+            card.style.setProperty('--tx', ry.toFixed(2) + 'deg');
+            card.style.setProperty('--ty', rx.toFixed(2) + 'deg');
+          };
+          const schedule = () => { if (!scrollRaf) scrollRaf = requestAnimationFrame(update); };
+          view.addEventListener('scroll', schedule, { passive: true });
+          addEventListener('resize', schedule, { passive: true });
+          // run once when entrance settles (`.tilt` class is added)
+          new MutationObserver(() => {
+            if (view.classList.contains('tilt')) schedule();
+          }).observe(view, { attributes: true, attributeFilter: ['class'] });
+        }
       })();
 
       // ----- Share button stubs -----
@@ -2642,14 +3150,145 @@
       // expose demo jumps via console for prototype review
       window.__flowJump = (id) => { clearTimeout(loadTimer); switchTo(id); };
 
-      // Request modal triggers (layered, not switched)
+      // ----- Request missing KOLs modal -----
+      const reqDlg     = dlgs.request;
+      const reqRows    = document.getElementById('req-rows');
+      const reqAdd     = document.getElementById('req-add');
+      const reqSubmit  = document.getElementById('req-submit');
+      const reqCount   = document.getElementById('req-count-num');
+      const reqSummary = document.getElementById('req-summary');
+      const reqAnother = document.getElementById('req-another');
+
+      function setReqState(state) { reqDlg.setAttribute('data-state', state); }
+
+      const MAX_KOLS = 5;
+
+      function makeRow(autofocus) {
+        if (reqRows.querySelectorAll('.kol-row:not(.removing)').length >= MAX_KOLS) return null;
+        const row = document.createElement('div');
+        row.className = 'kol-row';
+        row.innerHTML = `
+          <input class="req-input value" type="text" placeholder="@handle, x.com/handle, or homepage URL" autocomplete="off" spellcheck="false" />
+          <button class="kol-row-remove" type="button" data-cursor-label="Remove" aria-label="Remove this KOL"><i class="ph-bold ph-trash"></i></button>
+        `;
+        row.querySelector('.value').addEventListener('input', refreshCount);
+        row.querySelector('.kol-row-remove').addEventListener('click', () => removeRow(row));
+        reqRows.appendChild(row);
+        if (autofocus) requestAnimationFrame(() => row.querySelector('.value').focus());
+        refreshCount();
+        return row;
+      }
+      function removeRow(row) {
+        // never let the form drop to zero rows
+        if (reqRows.querySelectorAll('.kol-row:not(.removing)').length <= 1) {
+          row.querySelectorAll('input').forEach(i => { i.value = ''; i.classList.remove('error'); });
+          refreshCount();
+          row.querySelector('.value').focus();
+          return;
+        }
+        row.classList.add('removing');
+        row.addEventListener('animationend', () => {
+          row.remove();
+          refreshCount();
+        }, { once: true });
+      }
+      function refreshCount() {
+        const rows = [...reqRows.querySelectorAll('.kol-row:not(.removing)')];
+        let n = 0;
+        rows.forEach(r => { if (r.querySelector('.value').value.trim()) n++; });
+        reqCount.textContent = String(n);
+        reqSubmit.disabled = n === 0;
+        reqAdd.toggleAttribute('disabled', rows.length >= MAX_KOLS);
+        rows.forEach(r => {
+          const btn = r.querySelector('.kol-row-remove');
+          btn.toggleAttribute('disabled', rows.length === 1 && !r.querySelector('.value').value.trim());
+        });
+      }
+      function resetForm() {
+        reqRows.innerHTML = '';
+        makeRow(false);
+        refreshCount();
+      }
+
+      reqAdd.addEventListener('click', () => makeRow(true));
+
+      reqSubmit.addEventListener('click', () => {
+        // collect; each row accepts handle OR URL OR homepage — any non-empty
+        // value goes through. We classify the value to render a nicer summary.
+        const entries = [];
+        let hasError = false;
+        reqRows.querySelectorAll('.kol-row:not(.removing)').forEach(r => {
+          const input = r.querySelector('.value');
+          const v = input.value.trim();
+          input.classList.remove('error');
+          if (!v) return;
+          // classify: starts with @ → handle; contains :// or a dot → URL-ish; else handle
+          let label, detail;
+          if (v.startsWith('@')) {
+            label = v;
+            detail = 'X handle';
+          } else if (/^https?:\/\//i.test(v) || /^[\w-]+\.[\w.-]+/.test(v)) {
+            // attempt URL parse — auto-prefix scheme if needed
+            const url = /^https?:\/\//i.test(v) ? v : 'https://' + v;
+            try {
+              const u = new URL(url);
+              label = u.hostname.replace(/^www\./, '') + (u.pathname !== '/' ? u.pathname : '');
+              detail = 'link';
+            } catch {
+              input.classList.add('error'); hasError = true; return;
+            }
+          } else {
+            // bare token → treat as handle
+            label = '@' + v.replace(/^@?/, '');
+            detail = 'X handle';
+          }
+          entries.push({ label, detail });
+        });
+        if (hasError || entries.length === 0) {
+          if (entries.length === 0) {
+            const first = reqRows.querySelector('.value');
+            if (first) { first.classList.add('error'); first.focus(); }
+          }
+          return;
+        }
+        const list = entries.map(e => `<li><span>${e.label}</span><span>${e.detail}</span></li>`).join('');
+        reqSummary.innerHTML = `<b>${entries.length}</b> KOL${entries.length === 1 ? '' : 's'} queued<ul>${list}</ul>`;
+        setReqState('success');
+      });
+
+      reqAnother.addEventListener('click', () => {
+        resetForm();
+        setReqState('form');
+        requestAnimationFrame(() => reqRows.querySelector('.value').focus());
+      });
+
+      // Open triggers — reset form each time we open (unless we're already in
+      // success state and the user just left it open).
       document.querySelectorAll('[data-open-request]').forEach(b => {
-        b.addEventListener('click', () => openDlg('request'));
+        b.addEventListener('click', () => {
+          if (reqDlg.getAttribute('data-state') !== 'success') {
+            if (!reqRows.children.length) resetForm();
+          }
+          openDlg('request');
+        });
       });
-      document.querySelector('[data-submit-request]').addEventListener('click', () => {
-        closeDlg('request');
-        showToast('Request submitted · thank you');
+
+      // On close, reset back to form so reopening is clean.
+      // closeDlg already runs the scrim transition; we delay state reset.
+      const origCloseDlg = closeDlg;
+      // wrap close to add request-specific cleanup
+      const reqCloseObserver = new MutationObserver(() => {
+        if (!reqDlg.classList.contains('open')) {
+          setTimeout(() => {
+            resetForm();
+            setReqState('form');
+          }, 280);
+        }
       });
+      reqCloseObserver.observe(reqDlg, { attributes: true, attributeFilter: ['class'] });
+
+      // seed the first row
+      resetForm();
 
       // ----- Progress animation -----
       let progRaf = 0, progStart = 0;
