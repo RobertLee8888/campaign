@@ -71,7 +71,7 @@
   }
 
   /* ---------- nav (matches audit.html) ---------- */
-  header.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; backdrop-filter: blur(14px); background: rgba(245,245,247,0.72); border-bottom: 1px solid var(--line); }
+  header.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; backdrop-filter: blur(14px); background: rgba(245,245,247,0.72); }
   .nav-inner { max-width: 1440px; margin: 0 auto; height: 64px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-mark { width: 22px; height: 22px; display: grid; place-items: center; }
@@ -80,20 +80,34 @@
   .brand-mark .lg-bg { fill: var(--alva); }
   .brand-text .name { font-weight: 700; letter-spacing: 0.04em; font-size: 14px; line-height: 1.1; color: var(--text); }
   .brand-text .sub { font-size: 10px; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 2px; font-weight: 500; }
-  .nav-links { display: flex; align-items: center; gap: 28px; font-size: 13px; font-weight: 500; color: var(--muted); }
-  .nav-links a { display: inline-flex; align-items: center; gap: 6px; transition: color .15s; }
-  .nav-links a i { font-size: 14px; color: var(--muted-2); transition: color .15s; }
-  .nav-links a:hover { color: var(--text); }
-  .nav-links a:hover i { color: var(--alva); }
-  .nav-links a.active { color: var(--text); }
-  .nav-links a.active i { color: var(--alva); }
+  /* right cluster: Leaderboard + Initialize Scan, grouped */
+  .nav-links { display: flex; align-items: center; gap: 10px; }
+  .nav-link-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--line);
+    padding: 9px 18px;
+    border-radius: 9999px;
+    transition: background .15s, border-color .15s, color .15s, transform .15s;
+  }
+  .nav-link-btn i { font-size: 14px; color: var(--alva); transition: color .15s; }
+  .nav-link-btn:hover {
+    background: rgba(73,163,166,0.08);
+    border-color: rgba(73,163,166,0.4);
+    color: var(--alva);
+    transform: translateY(-1px);
+  }
+  .nav-link-btn.active { color: #fff; background: var(--text); border-color: var(--text); }
+  .nav-link-btn.active i { color: var(--alva-hi); }
   .nav-burger { display: none; width: 36px; height: 36px; background: transparent; border: 0; padding: 0; flex-direction: column; justify-content: center; align-items: center; gap: 5px; }
   .nav-burger span { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 1px; transition: transform .2s ease, opacity .2s ease; transform-origin: center; }
   header.nav.open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
   header.nav.open .nav-burger span:nth-child(2) { opacity: 0; }
   header.nav.open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
   .nav-cta { font-size: 13px; font-weight: 600; color: #fff; background: var(--text); border: 0; padding: 10px 22px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 8px; transition: transform .15s, background .15s; }
-  .nav-cta:hover { background: #000; transform: translateY(-1px); }
+  .nav-cta:hover { background: var(--alva); transform: translateY(-1px); }
 
   /* ---------- page header ---------- */
   .lb-head {
@@ -191,36 +205,23 @@
     border-color: var(--text);
   }
   .sort-tab.active i { color: var(--alva-hi); }
-  .toolbar-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-  .search-box {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: #fff;
-    border: 1px solid var(--line);
-    padding: 8px 14px;
-    border-radius: 9999px;
-    transition: border-color .15s;
-  }
-  .search-box:focus-within { border-color: var(--muted-2); }
-  .search-box i { font-size: 14px; color: var(--muted-2); }
-  .search-box input {
-    border: 0; outline: 0; background: transparent;
-    font-size: 13px; color: var(--text);
-    width: 200px;
-  }
-  .search-box input::placeholder { color: var(--muted-2); }
-
   /* ---------- macro stats row — light, contextual per sort tab ---------- */
   .macro {
     background: var(--bg);
-    border-bottom: 1px solid var(--line);
+    padding-top: 16px;
   }
-  .macro-inner {
+  .macro-wrap {
     max-width: 1440px;
     margin: 0 auto;
-    padding: 20px 48px;
+    padding: 0 48px;
+  }
+  .macro-inner {
+    padding: 18px 24px;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 32px;
+    gap: 24px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
   }
   .macro-cell {
     display: flex; flex-direction: column; gap: 6px;
@@ -230,7 +231,7 @@
   .macro-cell + .macro-cell::before {
     content: "";
     position: absolute;
-    left: -16px; top: 4px; bottom: 4px;
+    left: -12px; top: 6px; bottom: 6px;
     width: 1px;
     background: var(--line);
   }
@@ -257,10 +258,10 @@
 
   /* ---------- podium (top 3) ---------- */
   .lb-section {
-    padding: 32px 48px 96px;
+    padding: 32px 0 96px;
     background: var(--bg);
   }
-  .lb-wrap { max-width: 1440px; margin: 0 auto; }
+  .lb-wrap { max-width: 1440px; margin: 0 auto; padding: 0 48px; }
 
   .podium-head {
     display: flex; align-items: baseline; justify-content: space-between;
@@ -300,7 +301,7 @@
     transition: background .15s ease, border-color .15s ease;
     display: flex; flex-direction: column;
   }
-  .podium-card:hover { background: rgba(73,163,166,0.04); }
+  .podium-card:hover { background: rgba(73,163,166,0.10); }
   .podium-card.p1 { --medal: #d4a73a; }  /* gold */
   .podium-card.p2 { --medal: #9ca3af; }  /* silver */
   .podium-card.p3 { --medal: #b07a4b; }  /* bronze */
@@ -324,6 +325,7 @@
     color: var(--medal);
     letter-spacing: 0.2em;
     text-transform: uppercase;
+    pointer-events: none;        /* let hover pass through to the card */
   }
   .podium-id {
     display: flex; align-items: center; gap: 12px;
@@ -488,8 +490,12 @@
     cursor: none;
   }
   .lb-row:focus-visible { outline: 2px solid var(--alva); outline-offset: -2px; }
-  .lb-row:hover { background: rgba(73,163,166,0.05); }
+  .lb-row:hover { background: rgba(73,163,166,0.12); }
   .lb-row:hover .col-rank .num-v { color: var(--alva); }
+  /* on hover, also tint the score-bar track + donut track so those cells
+     pick up the row hover state instead of staying flat gray */
+  .lb-row:hover .score-bar .track { background: rgba(73,163,166,0.18); }
+  .lb-row:hover .wr .donut-mini .track { stroke: rgba(73,163,166,0.28); }
 
   /* rank — italic display number with delta stacked below */
   .col-rank {
@@ -701,70 +707,42 @@
     line-height: 1.6;
     max-width: 460px;
   }
-  .req-form { position: relative; }
-  .req-form label {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: rgba(255,255,255,0.5);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  .req-input {
-    display: flex; align-items: center; gap: 0;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 10px;
-    padding: 4px 4px 4px 14px;
-    transition: border-color .15s, background .15s;
-  }
-  .req-input:focus-within {
-    border-color: var(--alva);
-    background: rgba(73,163,166,0.06);
-  }
-  .req-input .at {
-    color: rgba(255,255,255,0.4);
-    font-family: var(--font-mono);
-    font-size: 14px;
-    margin-right: 4px;
-  }
-  .req-input input {
-    flex: 1;
-    border: 0; outline: 0; background: transparent;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: #fff;
-    padding: 12px 4px;
-    min-width: 0;
-  }
-  .req-input input::placeholder { color: rgba(255,255,255,0.32); }
-  .req-input button {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 13px; font-weight: 700;
+  .req-cta-wrap { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
+  .req-cta {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%;
+    font-size: 15px; font-weight: 700;
     color: var(--text); background: #fff;
     border: 0;
-    padding: 10px 18px;
-    border-radius: 8px;
-    transition: background .15s, transform .15s;
-    flex-shrink: 0;
+    padding: 18px 26px;
+    border-radius: 10px;
+    transition: background .15s, color .15s, transform .15s, box-shadow .15s;
+    box-shadow: 0 12px 28px -8px rgba(0,0,0,0.35);
   }
-  .req-input button:hover { background: var(--alva); color: #fff; transform: translateY(-1px); }
+  .req-cta i { font-size: 16px; transition: transform .2s cubic-bezier(.2,.8,.2,1); }
+  .req-cta:hover { background: var(--alva); color: #fff; transform: translateY(-1px); box-shadow: 0 18px 36px -10px rgba(73,163,166,0.45); }
+  .req-cta:hover i { transform: translateX(3px); }
+  .req-cta:active { transform: translateY(0); }
   .req-hint {
-    margin-top: 14px;
+    display: flex; flex-wrap: wrap; gap: 8px 14px;
+    justify-content: center;
     font-family: var(--font-mono);
     font-size: 11px;
-    color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.45);
     letter-spacing: 0.05em;
   }
-  .req-hint .ok { color: var(--alva); }
+  .req-hint span {
+    display: inline-flex; align-items: center; gap: 5px;
+    white-space: nowrap;        /* icon + label wrap as one unit */
+  }
+  .req-hint i { color: var(--alva); font-size: 13px; }
 
-  /* ---------- footer (dark, matches audit.html) ---------- */
+  /* ---------- footer (light, matches the page surface) ---------- */
   footer.f {
     padding: 28px 32px;
-    background: #0a0a10;
-    color: rgba(255,255,255,0.45);
-    border-top: 1px solid rgba(255,255,255,0.06);
+    background: var(--bg);
+    color: var(--muted);
+    border-top: 1px solid var(--line);
   }
   .f-inner {
     max-width: 1440px; margin: 0 auto;
@@ -773,7 +751,7 @@
     font-size: 12px;
   }
   .f-inner a { color: inherit; }
-  .f-inner a:hover { color: #fff; }
+  .f-inner a:hover { color: var(--text); }
 
   /* ---------- responsive ---------- */
   @media (max-width: 1199px) {
@@ -783,12 +761,28 @@
     .row-head .col-spark, .lb-row .col-spark { display: none; }
   }
   @media (max-width: 1023px) {
-    .lb-head-inner { padding: 0 24px; }
+    .lb-head-inner    { padding: 0 32px; }
+    .lb-toolbar-inner { padding: 12px 32px; }
+    .lb-section       { padding: 24px 0 80px; }
+    .lb-wrap          { padding: 0 32px; }
+    .macro-wrap       { padding: 0 32px; }
     .lb-head-title h1 { font-size: 40px; }
-    .lb-toolbar-inner { padding: 12px 24px; }
-    .lb-section { padding: 24px 24px 80px; }
     .req { grid-template-columns: 1fr; gap: 24px; padding: 28px; }
     .req-text h3 { font-size: 24px; }
+    .macro-inner { grid-template-columns: repeat(3, 1fr); gap: 20px 24px; row-gap: 20px; }
+    .macro-cell:nth-child(n+4) { padding-top: 16px; border-top: 1px solid var(--line); }
+    .macro-cell + .macro-cell::before { display: none; }
+    .macro-cell:nth-child(2)::before,
+    .macro-cell:nth-child(3)::before,
+    .macro-cell:nth-child(5)::before {
+      content: ""; display: block;
+      position: absolute;
+      left: -12px; top: 6px; bottom: 6px;
+      width: 1px;
+      background: var(--line);
+    }
+    .macro-cell:nth-child(n+4):nth-child(2)::before,
+    .macro-cell:nth-child(n+4):nth-child(3)::before { top: 22px; }
 
     .podium { grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
     .podium-card { padding: 20px; }
@@ -809,28 +803,52 @@
       gap: 12px;
     }
     .podium-card { padding: 20px !important; }
-    .podium-card.p1 { padding-top: 20px !important; }
+  }
+  /* mobile (≤767px): podium becomes a horizontal swipe row */
+  @media (max-width: 767px) {
+    .podium {
+      display: flex;
+      flex-direction: row;
+      grid-template-columns: none;
+      grid-template-areas: none;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      gap: 12px;
+      margin: 0 -20px 32px;
+      padding: 0 20px 8px;
+    }
+    .podium::-webkit-scrollbar { display: none; }
+    .podium-card {
+      flex: 0 0 78%;
+      min-width: 0;
+      padding: 18px !important;
+      scroll-snap-align: start;
+    }
+    .podium-spark { height: 28px; }
   }
   @media (max-width: 767px) {
     header.nav { backdrop-filter: blur(10px); }
     .nav-inner { padding: 0 16px; height: 56px; gap: 8px; }
     .brand-text .sub { display: none; }
+    /* right cluster collapses into dropdown panel; mobile bar shows only hamburger */
     .nav-links {
       position: absolute;
       top: 100%; left: 0; right: 0;
-      flex-direction: column; align-items: stretch; gap: 0;
+      flex-direction: column; align-items: stretch; gap: 10px;
       background: rgba(245,245,247,0.96);
       backdrop-filter: blur(14px);
-      padding: 8px 16px 16px;
-      border-bottom: 1px solid var(--line);
+      padding: 14px 16px 16px;
       transform: translateY(-8px); opacity: 0; pointer-events: none;
       transition: opacity .18s ease, transform .18s ease;
     }
-    .nav-links a { gap: 10px; font-size: 14px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
-    .nav-links a:last-child { border-bottom: 0; }
     header.nav.open .nav-links { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .nav-links .nav-link-btn,
+    .nav-links .nav-cta {
+      width: 100%; justify-content: center;
+      padding: 14px 18px; font-size: 14px;
+    }
     .nav-burger { display: inline-flex; margin-left: auto; }
-    .nav-cta { padding: 8px 14px; font-size: 11px; }
 
     .lb-head { padding-top: 88px; }
     .lb-head-title h1 { font-size: 32px; }
@@ -839,67 +857,82 @@
     .lb-head-meta .v { font-size: 18px; }
 
     .lb-toolbar { top: 56px; }
-    .lb-toolbar-inner { padding: 10px 16px; gap: 12px; }
+    .lb-toolbar-inner { padding: 10px 20px; gap: 12px; }
     .sort-tab { font-size: 12px; padding: 6px 12px; }
-    .search-box input { width: 140px; }
 
-    .lb-section { padding: 16px 0 64px; }
-    .lb-wrap { padding: 0 16px; }
+    .lb-head-inner { padding: 0 20px; }
+    .macro-wrap    { padding: 0 20px; }
+    .lb-section    { padding: 16px 0 64px; }
+    .lb-wrap       { padding: 0 20px; }
+    .macro-inner   { grid-template-columns: repeat(2, 1fr); gap: 16px 20px; padding: 16px 20px; }
+    .macro-cell .v { font-size: 20px; }
+    .macro-cell:nth-child(n+3) { padding-top: 16px; border-top: 1px solid var(--line); }
+    .macro-cell:nth-child(n+4) { padding-top: 16px; border-top: 1px solid var(--line); }
+    .macro-cell:nth-child(5) { grid-column: 1 / -1; }
+    .macro-cell::before,
+    .macro-cell + .macro-cell::before { display: none !important; }
+    .macro-cell:nth-child(2n)::before {
+      content: ""; display: block !important;
+      position: absolute;
+      left: -10px; top: 4px; bottom: 4px;
+      width: 1px;
+      background: var(--line);
+    }
+    .macro-cell:nth-child(n+3):nth-child(2n)::before { top: 20px; }
 
-    .row-head { display: none; }
-    .lb-row {
-      grid-template-columns: 44px 1fr auto;
-      grid-template-areas:
-        "rank kol  action"
-        "stats stats stats";
-      row-gap: 12px;
-      padding: 14px;
+    /* page head meta — left-align on mobile (was flex-end) */
+    .lb-head-meta { gap: 20px; }
+    .lb-head-meta .meta-row { align-items: flex-start; }
+
+    /* sort tabs — single scrollable row, swipe left/right.
+       min-width: 0 lets the flex item shrink below its content size so the
+       internal overflow-x scroll can actually activate; without it the tab
+       list expands to fit all 7 tabs and the last ones overflow off-screen. */
+    .sort-tabs {
+      flex-wrap: nowrap;
+      min-width: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      margin: 0 -20px;
+      padding: 0 20px;
     }
-    .lb-row .col-rank   { grid-area: rank; }
-    .lb-row .col-kol    { grid-area: kol; }
-    .lb-row .col-action { grid-area: action; }
-    .lb-row .col-badge,
-    .lb-row .col-score,
-    .lb-row .col-wr,
-    .lb-row .col-pnl,
-    .lb-row .col-spark {
-      grid-area: stats;
-      display: none;
+    .sort-tabs::-webkit-scrollbar { display: none; }
+    .sort-tab { flex-shrink: 0; }
+
+    /* list — preserve desktop columns; horizontal scroll inside list-scroll
+       (podium above + macro stay full-width on mobile, only the table scrolls) */
+    .list-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      margin: 0 -20px;
+      padding: 0 20px 8px 20px;
     }
-    .lb-row .col-score {
-      display: block;
-      padding-top: 10px;
-      border-top: 1px solid var(--line);
+    /* .list-rows is flex-column — without this it shrinks to viewport width
+       and the rows underneath don't extend the scroll, so swiping anywhere
+       past the header does nothing. min-width: max-content fixes that. */
+    .list-rows { min-width: max-content; }
+    .row-head, .lb-row {
+      grid-template-columns: 44px 160px 120px 150px 100px 150px 150px 20px;
+      gap: 14px;
+      min-width: auto;
+      padding-right: 24px;
     }
-    .lb-row .mobile-stats {
-      grid-area: stats;
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--line);
-    }
-    .mobile-stats .ms-cell { display: flex; flex-direction: column; gap: 3px; }
-    .mobile-stats .ms-cell .ms-l {
-      font-family: var(--font-mono);
-      font-size: 9px; color: var(--muted);
-      letter-spacing: 0.2em; text-transform: uppercase;
-    }
-    .mobile-stats .ms-cell .ms-v {
-      font-family: var(--font-display);
-      font-weight: 800;
-      font-size: 16px;
-      color: var(--text);
-      letter-spacing: -0.01em;
-    }
-    .mobile-stats .ms-cell .ms-v.up   { color: var(--alva); }
-    .mobile-stats .ms-cell .ms-v.down { color: var(--red); }
+    /* undo the tablet display:none — both columns belong back in the mobile
+       grid (the horizontal scroll restores them to full desktop parity) */
+    .row-head .col-pnl, .lb-row .col-pnl,
+    .row-head .col-spark, .lb-row .col-spark { display: block; }
+    .lb-row { padding: 14px 24px 14px 0; }
+    .row-head { padding: 12px 24px 12px 0; }
+    /* boost sparkline visibility on mobile (compensates for area opacity at small size) */
+    .spark-area { opacity: 0.28; }
+    .spark-line { stroke-width: 2; }
 
     .req { padding: 24px; margin-top: 32px; }
     .req-text h3 { font-size: 22px; }
-    .req-input { flex-wrap: wrap; gap: 8px; padding: 8px; }
-    .req-input input { width: 100%; padding: 10px 4px; }
-    .req-input button { width: 100%; justify-content: center; padding: 12px 18px; }
+    .req-cta { padding: 16px 22px; font-size: 14.5px; }
+    .req-hint { font-size: 10.5px; gap: 10px; }
   }
 </style>
 </head>
@@ -910,7 +943,7 @@
 
   <header class="nav">
     <div class="nav-inner">
-      <a href="audit.html" class="brand" data-cursor-label="Home">
+      <a class="brand" href="audit.html" data-cursor-label="Home" aria-label="ALVA · Campaign — back to home">
         <div class="brand-mark">
           <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-label="ALVA">
             <path class="lg-bg" fill-rule="evenodd" clip-rule="evenodd" d="M34.4684 0.397058C38.1369 -0.132341 41.8624 -0.132364 45.5309 0.397058C45.8246 0.439446 46.1194 0.486373 46.7086 0.580652C46.9049 0.612064 47.0035 0.628453 47.0914 0.648035C48.2192 0.899298 49.1009 1.77999 49.3522 2.9078C49.3717 2.99576 49.3872 3.09432 49.4186 3.29061C49.5129 3.8799 49.5598 4.17464 49.6022 4.46835C50.1316 8.13701 50.1316 11.8632 49.6022 15.5318C49.5598 15.8255 49.5128 16.1204 49.4186 16.7096C49.3871 16.906 49.3718 17.0044 49.3522 17.0924C49.1009 18.2202 48.2192 19.1009 47.0914 19.3521C47.0035 19.3717 46.9049 19.3871 46.7086 19.4185C46.1193 19.5128 45.8246 19.5607 45.5309 19.6031C43.6966 19.8678 41.8481 19.9996 39.9996 19.9996C28.9548 20.0001 20.0013 28.9538 20.0006 39.9986H19.9996C19.9997 41.8476 19.8679 43.6971 19.6031 45.5318C19.5608 45.8255 19.5128 46.1203 19.4186 46.7096C19.3871 46.906 19.3718 47.0043 19.3522 47.0924C19.1009 48.2202 18.2202 49.1009 17.0924 49.3521C17.0044 49.3717 16.906 49.3871 16.7096 49.4185C16.1203 49.5128 15.8255 49.5607 15.5318 49.6031C11.8632 50.1326 8.13701 50.1326 4.46837 49.6031C4.17464 49.5607 3.88002 49.5128 3.29064 49.4185C3.0942 49.3871 2.99583 49.3717 2.90783 49.3521C1.78005 49.1009 0.899342 48.2201 0.64806 47.0924C0.628444 47.0043 0.612121 46.9061 0.580677 46.7096C0.486402 46.1203 0.439464 45.8255 0.397083 45.5318C-0.132361 41.8632 -0.132361 38.137 0.397083 34.4683C0.439471 34.1746 0.486392 33.8799 0.580677 33.2906C0.612101 33.0942 0.628467 32.9958 0.64806 32.9078C0.899321 31.78 1.78002 30.8993 2.90783 30.648C2.99585 30.6284 3.09415 30.6121 3.29064 30.5807C3.87992 30.4864 4.17468 30.4394 4.46837 30.3971C6.30257 30.1324 8.15117 29.9996 9.99962 29.9996V29.9976C20.8724 29.9974 29.7188 21.322 29.9928 10.5152L29.9996 9.99862C29.9997 8.15047 30.1314 6.30225 30.3961 4.46835C30.4385 4.1746 30.4864 3.87999 30.5807 3.29061C30.6121 3.09428 30.6275 2.99577 30.6471 2.9078C30.8983 1.7801 31.7792 0.899397 32.9068 0.648035C32.9949 0.628428 33.0933 0.612069 33.2897 0.580652C33.8791 0.486335 34.1746 0.439454 34.4684 0.397058Z"/>
@@ -918,19 +951,17 @@
           </svg>
         </div>
         <div class="brand-text">
-          <div class="name">ALVA</div>
+          <div class="name">ALVA &middot; Campaign</div>
           <div class="sub">Live Audit Engine</div>
         </div>
       </a>
-      <nav class="nav-links" id="nav-links">
-        <a href="leaderboard.html" class="active"><i class="ph ph-chart-line"></i> Leaderboard</a>
-        <a href="audit.html"><i class="ph ph-magnifying-glass"></i> Search KOL</a>
-        <a href="#"><i class="ph ph-file-text"></i> Docs</a>
-      </nav>
+      <div class="nav-links" id="nav-links">
+        <a class="nav-link-btn active" href="leaderboard.html" data-cursor-label="Board"><i class="ph ph-chart-line"></i> Leaderboard</a>
+        <button class="nav-cta" data-cursor-label="Scan" onclick="location.href='audit.html'">Initialize Scan</button>
+      </div>
       <button class="nav-burger" id="nav-burger" aria-label="Menu" aria-expanded="false" data-cursor-label="Menu">
         <span></span><span></span><span></span>
       </button>
-      <button class="nav-cta" data-cursor-label="Scan" onclick="location.href='audit.html'">Audit My Feed</button>
     </div>
   </header>
 
@@ -972,18 +1003,14 @@
         <button class="sort-tab"        data-sort="followers" data-cursor-label="Sort"><i class="ph ph-users-three"></i> Followers</button>
         <button class="sort-tab"        data-sort="trending"  data-cursor-label="Sort"><i class="ph ph-flame"></i> Trending</button>
       </div>
-      <div class="toolbar-right">
-        <div class="search-box">
-          <i class="ph ph-magnifying-glass"></i>
-          <input id="lb-search" type="search" placeholder="Search handle or name…" autocomplete="off" />
-        </div>
-      </div>
     </div>
   </div>
 
   <!-- ---------- macro stats row — contextual per sort tab ---------- -->
   <section class="macro" aria-label="Index summary">
-    <div class="macro-inner" id="macro-stats"><!-- rendered via JS --></div>
+    <div class="macro-wrap">
+      <div class="macro-inner" id="macro-stats"><!-- rendered via JS --></div>
+    </div>
   </section>
 
   <!-- ---------- podium + list ---------- -->
@@ -995,21 +1022,19 @@
       </div>
       <div class="podium" id="podium"><!-- rendered via JS --></div>
 
-      <div class="list-head">
-        <h2>Full Leaderboard</h2>
-        <div class="total"><b id="total-count">15</b> Tracked · <span id="visible-count">15</span> Shown</div>
+      <div class="list-scroll">
+        <div class="row-head" role="row">
+          <div>Rank</div>
+          <div>KOL Entity</div>
+          <div class="col-badge">Classification</div>
+          <div class="col-score">Score Index</div>
+          <div class="col-wr">Win Ratio</div>
+          <div class="col-pnl">PnL · 90D</div>
+          <div class="col-spark">Signal Velocity</div>
+          <div aria-label="action"></div>
+        </div>
+        <div class="list-rows" id="lb-body"><!-- rendered via JS --></div>
       </div>
-      <div class="row-head" role="row">
-        <div>Rank</div>
-        <div>KOL Entity</div>
-        <div class="col-badge">Classification</div>
-        <div class="col-score">Score Index</div>
-        <div class="col-wr">Win Ratio</div>
-        <div class="col-pnl">PnL · 90D</div>
-        <div class="col-spark">Signal Velocity</div>
-        <div aria-label="action"></div>
-      </div>
-      <div class="list-rows" id="lb-body"><!-- rendered via JS --></div>
 
       <!-- ---------- request missing KOLs ---------- -->
       <div class="req">
@@ -1018,24 +1043,20 @@
           <h3>Request a Missing KOL</h3>
           <p>
             ALVA indexes the 15,000 most-cited financial voices on X. If a
-            handle you trust isn't here, drop it below — we backfill
-            requested KOLs into the next index cycle, usually within 48
-            hours.
+            handle you trust isn't here, send it in — we backfill requested
+            KOLs into the next index cycle, usually within 48 hours.
           </p>
         </div>
-        <form class="req-form" id="req-form" onsubmit="return false;">
-          <label for="req-handle">X HANDLE TO INDEX</label>
-          <div class="req-input">
-            <span class="at">@</span>
-            <input id="req-handle" type="text" placeholder="cryptowizz" autocomplete="off" maxlength="32" />
-            <button type="submit" data-cursor-label="Submit">
-              Request <i class="ph-bold ph-arrow-right"></i>
-            </button>
+        <div class="req-cta-wrap">
+          <button class="req-cta" data-open-request data-cursor-label="Request" type="button">
+            Request a missing KOL <i class="ph-bold ph-arrow-right"></i>
+          </button>
+          <div class="req-hint">
+            <span><i class="ph-fill ph-check-circle"></i> Read-only</span>
+            <span><i class="ph-fill ph-check-circle"></i> No follow or post</span>
+            <span><i class="ph-fill ph-check-circle"></i> Submit as many as you'd like</span>
           </div>
-          <div class="req-hint" id="req-hint">
-            Read-only · No follow or post · One handle per submit.
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   </section>
@@ -1055,21 +1076,51 @@
     /* ---------- KOL leaderboard data + render ---------- */
     (() => {
       const KOLS = [
-        { rank:  1, delta: +2, handle: 'aleabito',    name: 'Lea Bito',       type: 'alpha', score: 94, winrate: 71, pnl: 38.4, edge: 22, early: 6.2, followers: 482000, spark: [3,5,4,8,7,9,8,11,10,13,12,15,14,17] },
-        { rank:  2, delta:  0, handle: 'macroalpha',  name: 'Macro Alpha',    type: 'macro', score: 92, winrate: 68, pnl: 31.7, edge: 19, early: 4.8, followers: 318000, spark: [2,3,5,4,7,8,6,9,11,10,12,13,15,14] },
-        { rank:  3, delta: +1, handle: 'furycom',     name: 'Fury',           type: 'alpha', score: 88, winrate: 66, pnl: 27.9, edge: 17, early: 3.9, followers: 261000, spark: [4,3,6,5,8,7,10,9,11,10,12,13,12,14] },
-        { rank:  4, delta: -2, handle: 'cryptowiz',   name: 'CryptoWiz',      type: 'early', score: 86, winrate: 63, pnl: 41.2, edge: 24, early: 8.4, followers: 540000, spark: [1,2,4,3,6,5,7,8,7,10,9,12,11,13] },
-        { rank:  5, delta: +4, handle: 'optiontrade', name: 'OptionTrade',    type: 'alpha', score: 84, winrate: 64, pnl: 22.6, edge: 15, early: 3.1, followers: 198000, spark: [5,4,7,6,8,7,9,11,10,12,11,13,12,14] },
-        { rank:  6, delta:  0, handle: 'narrative_q', name: 'Narrative Q',    type: 'early', score: 82, winrate: 59, pnl: 35.8, edge: 21, early: 9.1, followers:  92000, spark: [2,3,3,5,6,4,7,8,9,11,10,13,12,14] },
-        { rank:  7, delta: -1, handle: 'ratesguy',    name: 'Rates Guy',      type: 'macro', score: 79, winrate: 62, pnl: 18.4, edge: 12, early: 2.6, followers: 145000, spark: [6,5,7,8,7,9,8,10,9,11,12,11,13,12] },
-        { rank:  8, delta: +3, handle: 'smallcapsam', name: 'SmallCap Sam',   type: 'alpha', score: 77, winrate: 60, pnl: 24.1, edge: 14, early: 4.0, followers:  68000, spark: [3,4,5,6,5,7,8,9,8,10,11,10,12,13] },
-        { rank:  9, delta:  0, handle: 'flowfocus',   name: 'Flow Focus',     type: 'alpha', score: 75, winrate: 58, pnl: 19.7, edge: 13, early: 2.3, followers: 112000, spark: [4,5,4,6,7,6,8,7,9,10,9,11,10,12] },
-        { rank: 10, delta: -3, handle: 'tapeisapeway', name: 'TapeIsTheWay',  type: 'alpha', score: 74, winrate: 57, pnl: 21.9, edge: 13, early: 3.4, followers: 230000, spark: [5,6,5,7,8,7,9,8,10,9,11,12,11,13] },
-        { rank: 11, delta: +1, handle: 'aimomentum',  name: 'AI Momentum',    type: 'early', score: 72, winrate: 56, pnl: 28.5, edge: 18, early: 7.2, followers:  44000, spark: [1,2,3,2,4,5,4,6,7,9,10,11,13,12] },
-        { rank: 12, delta:  0, handle: 'goldbug42',   name: 'GoldBug',        type: 'macro', score: 68, winrate: 55, pnl: 11.4, edge:  9, early: 1.8, followers: 287000, spark: [7,6,8,7,9,8,10,9,11,10,12,11,13,12] },
-        { rank: 13, delta: -5, handle: 'hypewatch',   name: 'HypeWatch',      type: 'noise', score: 54, winrate: 49, pnl: -8.2, edge:  4, early: 1.2, followers: 612000, spark: [8,9,7,10,8,11,9,12,10,9,11,8,10,7] },
-        { rank: 14, delta: -2, handle: 'pumpcaller',  name: 'PumpCaller',     type: 'noise', score: 41, winrate: 42, pnl:-12.6, edge:  2, early: 0.6, followers: 198000, spark: [9,10,8,11,9,7,10,8,6,9,7,5,8,6] },
-        { rank: 15, delta: -1, handle: 'fademe',      name: 'FadeMe',         type: 'noise', score: 28, winrate: 36, pnl:-19.8, edge:  1, early: 0.3, followers:  76000, spark: [10,8,11,7,9,6,8,5,7,4,6,3,5,2] },
+        // alpha — smooth uptrend with mild noise (the consistent winner)
+        { rank:  1, delta: +2, handle: 'aleabito',    name: 'Lea Bito',       type: 'alpha', score: 94, winrate: 71, pnl: 38.4, edge: 22, early: 6.2, followers: 482000,
+          spark: [42, 45, 43, 47, 50, 48, 52, 55, 53, 58, 56, 60, 63, 61, 65, 68, 65, 70, 72, 68, 74, 77, 74, 79, 82, 79, 85, 88, 85, 90] },
+        // macro — clean, calm uptrend
+        { rank:  2, delta:  0, handle: 'macroalpha',  name: 'Macro Alpha',    type: 'macro', score: 92, winrate: 68, pnl: 31.7, edge: 19, early: 4.8, followers: 318000,
+          spark: [55, 58, 56, 60, 62, 59, 63, 65, 62, 66, 68, 64, 67, 70, 67, 71, 73, 70, 74, 76, 73, 77, 80, 76, 80, 83, 79, 82, 85, 82] },
+        // alpha hunter — high-volatility zig-zag uptrend
+        { rank:  3, delta: +1, handle: 'furycom',     name: 'Fury',           type: 'alpha', score: 88, winrate: 66, pnl: 27.9, edge: 17, early: 3.9, followers: 261000,
+          spark: [40, 48, 42, 52, 46, 55, 50, 58, 52, 62, 55, 65, 58, 68, 60, 70, 63, 72, 65, 75, 67, 78, 70, 80, 72, 83, 75, 85, 78, 82] },
+        // early caller — flat then late-cycle breakout
+        { rank:  4, delta: -2, handle: 'cryptowiz',   name: 'CryptoWiz',      type: 'early', score: 86, winrate: 63, pnl: 41.2, edge: 24, early: 8.4, followers: 540000,
+          spark: [38, 36, 40, 38, 42, 40, 38, 35, 40, 45, 50, 55, 60, 65, 62, 68, 72, 70, 78, 82, 85, 90, 87, 92, 95, 92, 96, 98, 95, 99] },
+        // alpha — rise → pullback → recovery
+        { rank:  5, delta: +4, handle: 'optiontrade', name: 'OptionTrade',    type: 'alpha', score: 84, winrate: 64, pnl: 22.6, edge: 15, early: 3.1, followers: 198000,
+          spark: [50, 55, 52, 58, 55, 60, 58, 50, 45, 48, 52, 56, 60, 63, 60, 65, 68, 65, 70, 72, 68, 73, 75, 72, 76, 78, 75, 80, 82, 78] },
+        // early — drawdown then strong recovery (V-shape)
+        { rank:  6, delta:  0, handle: 'narrative_q', name: 'Narrative Q',    type: 'early', score: 82, winrate: 59, pnl: 35.8, edge: 21, early: 9.1, followers:  92000,
+          spark: [60, 65, 62, 68, 55, 45, 38, 42, 48, 52, 58, 62, 65, 68, 72, 70, 75, 78, 75, 80, 83, 80, 85, 87, 84, 88, 90, 87, 92, 95] },
+        // macro — choppy sideways, slight upward bias
+        { rank:  7, delta: -1, handle: 'ratesguy',    name: 'Rates Guy',      type: 'macro', score: 79, winrate: 62, pnl: 18.4, edge: 12, early: 2.6, followers: 145000,
+          spark: [55, 58, 53, 56, 60, 54, 58, 62, 56, 60, 64, 58, 62, 66, 60, 64, 68, 62, 66, 70, 65, 68, 72, 66, 70, 74, 68, 72, 76, 70] },
+        // alpha — clean staircase uptrend
+        { rank:  8, delta: +3, handle: 'smallcapsam', name: 'SmallCap Sam',   type: 'alpha', score: 77, winrate: 60, pnl: 24.1, edge: 14, early: 4.0, followers:  68000,
+          spark: [42, 45, 43, 48, 45, 50, 48, 52, 50, 55, 53, 58, 55, 60, 58, 63, 60, 65, 62, 68, 65, 70, 67, 72, 70, 74, 72, 76, 74, 78] },
+        // alpha — gradual grind upward
+        { rank:  9, delta:  0, handle: 'flowfocus',   name: 'Flow Focus',     type: 'alpha', score: 75, winrate: 58, pnl: 19.7, edge: 13, early: 2.3, followers: 112000,
+          spark: [48, 50, 47, 52, 49, 53, 51, 54, 52, 55, 53, 56, 54, 57, 55, 58, 56, 59, 57, 60, 58, 61, 59, 62, 60, 63, 61, 64, 62, 65] },
+        // alpha — peaked mid-period and now declining
+        { rank: 10, delta: -3, handle: 'tapeisapeway', name: 'TapeIsTheWay',  type: 'alpha', score: 74, winrate: 57, pnl: 21.9, edge: 13, early: 3.4, followers: 230000,
+          spark: [50, 55, 60, 65, 70, 75, 78, 82, 85, 80, 78, 75, 72, 70, 68, 65, 68, 70, 67, 65, 62, 60, 58, 60, 62, 58, 55, 57, 54, 52] },
+        // early caller — late rocket from a flat base
+        { rank: 11, delta: +1, handle: 'aimomentum',  name: 'AI Momentum',    type: 'early', score: 72, winrate: 56, pnl: 28.5, edge: 18, early: 7.2, followers:  44000,
+          spark: [30, 32, 28, 30, 35, 32, 38, 36, 40, 38, 42, 45, 48, 52, 55, 60, 65, 70, 75, 78, 82, 85, 88, 90, 92, 88, 92, 95, 90, 95] },
+        // macro — slow grinding uptrend (steady-eddie)
+        { rank: 12, delta:  0, handle: 'goldbug42',   name: 'GoldBug',        type: 'macro', score: 68, winrate: 55, pnl: 11.4, edge:  9, early: 1.8, followers: 287000,
+          spark: [55, 56, 54, 57, 58, 56, 59, 60, 58, 61, 62, 60, 63, 64, 62, 65, 66, 64, 67, 68, 66, 69, 70, 68, 71, 72, 70, 73, 74, 72] },
+        // noise — early peak then sustained decline (top blew off)
+        { rank: 13, delta: -5, handle: 'hypewatch',   name: 'HypeWatch',      type: 'noise', score: 54, winrate: 49, pnl: -8.2, edge:  4, early: 1.2, followers: 612000,
+          spark: [85, 82, 78, 80, 75, 72, 68, 70, 65, 60, 62, 58, 55, 52, 50, 48, 45, 47, 43, 40, 38, 35, 38, 32, 30, 28, 32, 25, 22, 28] },
+        // noise — gradual decline, no recovery
+        { rank: 14, delta: -2, handle: 'pumpcaller',  name: 'PumpCaller',     type: 'noise', score: 41, winrate: 42, pnl:-12.6, edge:  2, early: 0.6, followers: 198000,
+          spark: [70, 72, 68, 65, 62, 58, 55, 50, 52, 48, 45, 42, 45, 38, 35, 38, 32, 30, 28, 30, 25, 22, 25, 20, 18, 15, 18, 12, 15, 10] },
+        // noise — cratering, choppy on the way down
+        { rank: 15, delta: -1, handle: 'fademe',      name: 'FadeMe',         type: 'noise', score: 28, winrate: 36, pnl:-19.8, edge:  1, early: 0.3, followers:  76000,
+          spark: [60, 55, 58, 50, 52, 45, 48, 40, 42, 35, 38, 30, 32, 25, 28, 22, 25, 18, 20, 15, 17, 12, 15, 10, 12, 8, 10, 5, 8, 6] },
       ];
 
       const TYPE_LABEL = { alpha: 'Alpha Hunter', early: 'Early Caller', macro: 'Macro Voice', noise: 'Noise · Fade' };
@@ -1101,13 +1152,9 @@
 
       const body   = document.getElementById('lb-body');
       const podium = document.getElementById('podium');
-      const search = document.getElementById('lb-search');
       const macroEl = document.getElementById('macro-stats');
       const sortLabelEl = document.getElementById('podium-sort-label');
-      const totalCountEl   = document.getElementById('total-count');
-      const visibleCountEl = document.getElementById('visible-count');
       let currentSort = 'score';
-      let searchTerm = '';
 
       /* macro stat sets — different per sort tab.
          each cell: { l: label, v: value, tone?: 'up'|'down' }  */
@@ -1338,26 +1385,13 @@
       };
 
       const render = () => {
-        const filtered = KOLS.filter(k => {
-          if (!searchTerm) return true;
-          const t = searchTerm.toLowerCase();
-          return k.handle.toLowerCase().includes(t) || k.name.toLowerCase().includes(t);
-        }).slice().sort(sortKeys[currentSort]);
+        const sorted = KOLS.slice().sort(sortKeys[currentSort]);
 
         sortLabelEl.textContent = sortLabel[currentSort];
-        totalCountEl.textContent = KOLS.length;
-        visibleCountEl.textContent = filtered.length;
-        renderMacro(filtered.length ? filtered : KOLS);
+        renderMacro(sorted);
 
-        // Top 3 on the podium; the rest in the list
-        if (filtered.length === 0) {
-          podium.innerHTML = '';
-          body.innerHTML = `<div class="lb-empty">No KOLs match "${searchTerm}". Try a different handle.</div>`;
-          return;
-        }
-        renderPodium(filtered.slice(0, 3));
-
-        const rest = filtered.slice(3);
+        renderPodium(sorted.slice(0, 3));
+        const rest = sorted.slice(3);
         body.innerHTML = rest.length
           ? rest.map((k, i) => renderRow(k, i + 4)).join('')
           : `<div class="lb-empty" style="padding:24px 16px;">— End of leaderboard —</div>`;
@@ -1370,12 +1404,6 @@
         document.querySelectorAll('.sort-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentSort = btn.dataset.sort;
-        render();
-      });
-
-      /* ---- search ---- */
-      search.addEventListener('input', () => {
-        searchTerm = search.value.trim();
         render();
       });
 
@@ -1401,29 +1429,8 @@
       render();
     })();
 
-    /* ---------- request-missing-KOLs form ---------- */
-    (() => {
-      const form = document.getElementById('req-form');
-      const input = document.getElementById('req-handle');
-      const hint  = document.getElementById('req-hint');
-      if (!form) return;
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        const raw = input.value.trim().replace(/^@+/, '');
-        if (!raw) {
-          hint.innerHTML = '<span style="color:var(--orange);">Enter an X handle to request.</span>';
-          input.focus();
-          return;
-        }
-        if (!/^[A-Za-z0-9_]{1,15}$/.test(raw)) {
-          hint.innerHTML = '<span style="color:var(--orange);">X handles are letters, numbers, and underscores (max 15).</span>';
-          input.focus();
-          return;
-        }
-        hint.innerHTML = `<span class="ok"><i class="ph-fill ph-check-circle"></i></span> @${raw} queued for indexing — usually back in 48h.`;
-        input.value = '';
-      });
-    })();
+    /* request flow is handled by the global #dlg-request modal injected at
+       the bottom of the page — see the modal script block below. */
 
     /* ---- mobile hamburger ---- */
     (() => {
@@ -1492,6 +1499,411 @@
       const schedule = () => { if (!cRaf) cRaf = requestAnimationFrame(tick); };
       addEventListener('pointermove', schedule, { passive: true });
       schedule();
+    })();
+  </script>
+
+  <!-- ============================================================
+       Request missing KOLs — global modal. Same structure & styling
+       as the modal in audit.html so behaviour is identical across
+       both pages.
+       ============================================================ -->
+  <style>
+    .dlg-scrim {
+      position: fixed; inset: 0; z-index: 90;
+      background: rgba(10,10,16,0.55);
+      backdrop-filter: blur(0px) saturate(100%);
+      -webkit-backdrop-filter: blur(0px) saturate(100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition:
+        opacity .26s ease,
+        visibility 0s linear .26s,
+        backdrop-filter .32s ease,
+        -webkit-backdrop-filter .32s ease;
+    }
+    .dlg-scrim.open {
+      opacity: 1; visibility: visible; pointer-events: auto;
+      z-index: 100;
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
+      transition:
+        opacity .26s ease,
+        visibility 0s linear 0s,
+        backdrop-filter .32s ease,
+        -webkit-backdrop-filter .32s ease;
+    }
+    .dlg {
+      background: var(--card); color: #fff;
+      border: 1px solid var(--card-line);
+      border-radius: 20px;
+      padding: 32px;
+      width: 100%;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      position: relative;
+      transform: translateY(24px) scale(0.92); opacity: 0;
+      transform-origin: 50% 60%;
+      transition:
+        transform .42s cubic-bezier(.18,1.05,.42,1.0),
+        opacity .28s ease,
+        box-shadow .35s ease;
+      will-change: transform, opacity;
+    }
+    .dlg-scrim.open .dlg {
+      transform: translateY(0) scale(1); opacity: 1;
+      box-shadow: 0 30px 80px -20px rgba(0,0,0,0.55);
+    }
+    .dlg-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-line);
+      color: rgba(255,255,255,0.7);
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0; line-height: 1; font-size: 13px;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .dlg-close i { display: block; line-height: 1; }
+    .dlg-close:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.25); }
+    .dlg-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 28px; line-height: 1.05;
+      letter-spacing: -0.01em; text-transform: uppercase;
+      margin: 0 0 10px;
+    }
+    .dlg-sub { color: rgba(255,255,255,0.65); font-size: 13.5px; line-height: 1.55; margin: 0 0 22px; }
+
+    /* ----- light-themed request modal (matches audit.html) ----- */
+    #dlg-request .dlg {
+      background: #fff; color: var(--text);
+      border: 1px solid var(--line);
+      box-shadow: 0 30px 80px -20px rgba(20,20,30,0.25);
+      max-width: 560px;
+      padding: 28px 36px 32px;
+      display: grid; grid-template-columns: minmax(0, 1fr);
+    }
+    #dlg-request .dlg > .dlg-close { position: absolute; }
+    #dlg-request .dlg-close {
+      top: 20px; right: 20px;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    #dlg-request .dlg-close:hover { background: var(--text); color: #fff; border-color: var(--text); }
+    #dlg-request .dlg-title { color: var(--text); margin-bottom: 10px; }
+    #dlg-request .dlg-sub   { color: var(--muted); font-size: 14px; line-height: 1.55; margin-bottom: 22px; }
+
+    #dlg-request [data-state] {
+      grid-column: 1; grid-row: 1;
+      visibility: hidden; opacity: 0; pointer-events: none;
+      transition: opacity .22s ease, visibility 0s linear .22s;
+    }
+    #dlg-request[data-state="form"]    [data-state="form"],
+    #dlg-request[data-state="success"] [data-state="success"] {
+      visibility: visible; opacity: 1; pointer-events: auto;
+      transition: opacity .26s ease, visibility 0s linear 0s;
+    }
+
+    #dlg-request .kol-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+    #dlg-request .kol-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 40px;
+      gap: 8px; align-items: stretch;
+      animation: kolRowIn .25s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes kolRowIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    #dlg-request .kol-row.removing { animation: kolRowOut .2s ease forwards; pointer-events: none; }
+    @keyframes kolRowOut { to { opacity: 0; transform: translateY(-4px) scaleY(0.85); height: 0; margin-top: -10px; } }
+    #dlg-request .req-input2 {
+      width: 100%; height: 40px; padding: 0 13px;
+      font: inherit; font-size: 13.5px; color: var(--text);
+      background: #fff; border: 1px solid var(--line);
+      border-radius: 9px; min-width: 0;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    #dlg-request .req-input2::placeholder { color: var(--muted-2); }
+    #dlg-request .req-input2:focus { outline: none; border-color: var(--alva); box-shadow: 0 0 0 3px rgba(73,163,166,0.18); }
+    #dlg-request .req-input2.error { border-color: #d9534f; box-shadow: 0 0 0 3px rgba(217,83,79,0.15); }
+    #dlg-request .kol-row-remove {
+      width: 40px; height: 40px;
+      border: 1px solid var(--line); background: transparent;
+      color: var(--muted-2); border-radius: 9px;
+      display: inline-flex; align-items: center; justify-content: center;
+      line-height: 1; padding: 0;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    #dlg-request .kol-row-remove i { display: block; line-height: 1; font-size: 15px; }
+    #dlg-request .kol-row-remove:hover { background: #d9534f; color: #fff; border-color: #d9534f; }
+    #dlg-request .kol-row-remove[disabled] { opacity: 0.35; pointer-events: none; }
+    #dlg-request .add-kol {
+      align-self: flex-start;
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 14px 8px 11px;
+      font-size: 12.5px; font-weight: 600;
+      color: var(--alva);
+      background: rgba(73,163,166,0.10);
+      border: 1px dashed rgba(73,163,166,0.40);
+      border-radius: 9999px;
+      transition: background .15s, border-color .15s, transform .15s, opacity .15s;
+    }
+    #dlg-request .add-kol:hover { background: rgba(73,163,166,0.16); border-style: solid; transform: translateY(-1px); }
+    #dlg-request .add-kol i { font-size: 14px; line-height: 1; }
+    #dlg-request .add-kol[disabled] {
+      opacity: 0.45; pointer-events: none;
+      background: transparent; border-style: dashed;
+    }
+    #dlg-request .req-foot {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; margin-top: 28px;
+      padding-top: 28px; border-top: 1px solid var(--line);
+    }
+    #dlg-request .req-count {
+      font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    #dlg-request .req-count b { color: var(--text); font-family: var(--font-display); }
+    #dlg-request .req-submit {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px; border-radius: 10px;
+      font-size: 14px; font-weight: 700;
+      color: #fff; background: var(--text); border: 0;
+      transition: background .15s, transform .15s, box-shadow .15s;
+    }
+    #dlg-request .req-submit:hover { background: var(--alva); transform: translateY(-1px); box-shadow: 0 12px 26px -10px rgba(73,163,166,0.35); }
+    #dlg-request .req-submit[disabled] { opacity: 0.5; pointer-events: none; }
+    #dlg-request [data-state="success"] {
+      display: flex; flex-direction: column;
+      justify-content: center;
+      min-height: 100%;
+    }
+    #dlg-request .req-success { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px 0; }
+    #dlg-request .req-success .check {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: rgba(73,163,166,0.10); color: var(--alva);
+      display: grid; place-items: center;
+      font-size: 44px; margin-bottom: 24px;
+      animation: successPop .45s cubic-bezier(.18,1.2,.42,1);
+    }
+    @keyframes successPop { from { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } to { transform: scale(1); opacity: 1; } }
+    #dlg-request .req-success h3 {
+      font-family: var(--font-display);
+      font-size: 24px; line-height: 1.1; text-transform: uppercase;
+      letter-spacing: -0.01em; font-weight: 800;
+      color: var(--text); margin: 0 0 10px;
+    }
+    #dlg-request .req-success p {
+      font-size: 14px; color: var(--muted); line-height: 1.55;
+      max-width: 380px; margin: 0 auto;
+    }
+    #dlg-request .req-success .summary {
+      margin-top: 22px; padding: 14px 18px;
+      background: rgba(73,163,166,0.06);
+      border: 1px solid rgba(73,163,166,0.20);
+      border-radius: 10px;
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--text); letter-spacing: 0.06em;
+      max-width: 100%; word-break: break-word; text-align: left;
+    }
+    #dlg-request .req-success .summary b { color: var(--alva); font-family: var(--font-display); }
+    #dlg-request .req-success .summary ul { margin: 8px 0 0; padding: 0; list-style: none; }
+    #dlg-request .req-success .summary li {
+      padding: 4px 0; border-top: 1px solid var(--line);
+      display: flex; justify-content: space-between; gap: 12px;
+    }
+    #dlg-request .req-success .summary li:first-child { border-top: 0; }
+    #dlg-request .req-success .summary li span:last-child { color: var(--muted); }
+    #dlg-request .req-success .actions { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    #dlg-request .req-success .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 20px; border-radius: 9px;
+      font-size: 13.5px; font-weight: 700;
+      border: 0;
+      transition: background .15s, color .15s, border-color .15s, transform .15s;
+    }
+    #dlg-request .req-success .btn.primary { background: var(--text); color: #fff; }
+    #dlg-request .req-success .btn.primary:hover { background: var(--alva); transform: translateY(-1px); }
+    #dlg-request .req-success .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+    #dlg-request .req-success .btn.ghost:hover { background: var(--bg); border-color: var(--text); }
+
+    .req-toast {
+      position: fixed; left: 50%; bottom: 36px; transform: translateX(-50%) translateY(20px);
+      background: var(--text); color: #fff;
+      padding: 9px 16px; border-radius: 999px;
+      font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase;
+      opacity: 0; transition: opacity .25s, transform .25s;
+      pointer-events: none; z-index: 200;
+    }
+    .req-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 767px) {
+      .dlg-scrim { padding: 12px; align-items: flex-end; }
+      #dlg-request .dlg { padding: 24px 20px 26px; border-radius: 18px 18px 14px 14px; max-width: 100%; }
+      #dlg-request .kol-row { grid-template-columns: minmax(0, 1fr) 40px; }
+      #dlg-request .req-foot { flex-direction: column; align-items: stretch; gap: 14px; margin-top: 24px; padding-top: 24px; }
+      #dlg-request .req-submit { width: 100%; justify-content: center; }
+      #dlg-request .req-count { text-align: center; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .dlg-scrim, .dlg-scrim.open, .dlg, .dlg-scrim.open .dlg { transition-duration: .01ms !important; }
+      .dlg { transform: none; }
+    }
+  </style>
+
+  <div class="dlg-scrim" id="dlg-request" data-state="form" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="dlg">
+      <button class="dlg-close" data-dlg-close data-cursor-label="Close" aria-label="Close"><i class="ph-bold ph-x"></i></button>
+
+      <div data-state="form">
+        <h2 class="dlg-title">Request missing KOLs</h2>
+        <p class="dlg-sub">Tell us which KOLs Alva should index next. Drop a handle (e.g. <code style="font-family: var(--font-mono); font-size: 12px; background: var(--bg); padding: 1px 5px; border-radius: 4px;">@RaoulGMI</code>), an X URL, or a homepage link — whichever you have. Up to 5 per request.</p>
+
+        <div class="kol-rows" id="req-rows"></div>
+
+        <button class="add-kol" id="req-add" data-cursor-label="Add" type="button"><i class="ph-bold ph-plus"></i> Add another KOL</button>
+
+        <div class="req-foot">
+          <div class="req-count"><b id="req-count-num">0</b> / 5 KOLs</div>
+          <button class="req-submit" id="req-submit" data-cursor-label="Submit" type="button" disabled>Submit request <i class="ph-bold ph-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <div data-state="success">
+        <div class="req-success">
+          <div class="check"><i class="ph-fill ph-check-circle"></i></div>
+          <h3>Request received</h3>
+          <p>Thanks — we'll evaluate every handle you sent and surface high-signal accounts in the next index pass (within ~1 week).</p>
+          <div class="summary" id="req-summary"></div>
+          <div class="actions">
+            <button class="btn primary" data-dlg-close data-cursor-label="Done">Done</button>
+            <button class="btn ghost" id="req-another" data-cursor-label="More">Submit another</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="req-toast" id="req-toast"></div>
+
+  <script>
+    (() => {
+      const dlg        = document.getElementById('dlg-request');
+      const reqRows    = document.getElementById('req-rows');
+      const reqAdd     = document.getElementById('req-add');
+      const reqSubmit  = document.getElementById('req-submit');
+      const reqCount   = document.getElementById('req-count-num');
+      const reqSummary = document.getElementById('req-summary');
+      const reqAnother = document.getElementById('req-another');
+      if (!dlg) return;
+
+      /* defensive: clear any leftover body-overflow lock from a prior session */
+      document.body.style.overflow = '';
+
+      let scrollLock = 0;
+      const lockBody = () => { if (scrollLock++ === 0) document.body.style.overflow = 'hidden'; };
+      const unlockBody = () => { scrollLock = Math.max(0, scrollLock - 1); if (scrollLock === 0) document.body.style.overflow = ''; };
+
+      function openDlg() {
+        if (dlg.classList.contains('open')) return;   // guard: prevent double-lock
+        if (dlg.getAttribute('data-state') !== 'success' && !reqRows.children.length) resetForm();
+        dlg.classList.add('open');
+        dlg.setAttribute('aria-hidden', 'false');
+        lockBody();
+      }
+      function closeDlg() {
+        if (!dlg.classList.contains('open')) return;
+        dlg.classList.remove('open');
+        dlg.setAttribute('aria-hidden', 'true');
+        unlockBody();
+        setTimeout(() => { resetForm(); dlg.setAttribute('data-state', 'form'); }, 280);
+      }
+      function setState(s) { dlg.setAttribute('data-state', s); }
+
+      const MAX_KOLS = 5;
+
+      function makeRow(autofocus) {
+        if (reqRows.querySelectorAll('.kol-row:not(.removing)').length >= MAX_KOLS) return null;
+        const row = document.createElement('div');
+        row.className = 'kol-row';
+        row.innerHTML = `
+          <input class="req-input2 value" type="text" placeholder="@handle, x.com/handle, or homepage URL" autocomplete="off" spellcheck="false" />
+          <button class="kol-row-remove" type="button" data-cursor-label="Remove" aria-label="Remove this KOL"><i class="ph-bold ph-trash"></i></button>
+        `;
+        row.querySelector('.value').addEventListener('input', refreshCount);
+        row.querySelector('.kol-row-remove').addEventListener('click', () => removeRow(row));
+        reqRows.appendChild(row);
+        if (autofocus) requestAnimationFrame(() => row.querySelector('.value').focus());
+        refreshCount();
+        return row;
+      }
+      function removeRow(row) {
+        if (reqRows.querySelectorAll('.kol-row:not(.removing)').length <= 1) {
+          row.querySelectorAll('input').forEach(i => { i.value = ''; i.classList.remove('error'); });
+          refreshCount(); row.querySelector('.value').focus();
+          return;
+        }
+        row.classList.add('removing');
+        row.addEventListener('animationend', () => { row.remove(); refreshCount(); }, { once: true });
+      }
+      function refreshCount() {
+        const rows = [...reqRows.querySelectorAll('.kol-row:not(.removing)')];
+        let n = 0;
+        rows.forEach(r => { if (r.querySelector('.value').value.trim()) n++; });
+        reqCount.textContent = String(n);
+        reqSubmit.disabled = n === 0;
+        reqAdd.toggleAttribute('disabled', rows.length >= MAX_KOLS);
+        rows.forEach(r => {
+          const btn = r.querySelector('.kol-row-remove');
+          btn.toggleAttribute('disabled', rows.length === 1 && !r.querySelector('.value').value.trim());
+        });
+      }
+      function resetForm() { reqRows.innerHTML = ''; makeRow(false); refreshCount(); }
+
+      reqAdd.addEventListener('click', () => makeRow(true));
+      reqSubmit.addEventListener('click', () => {
+        const entries = []; let hasError = false;
+        reqRows.querySelectorAll('.kol-row:not(.removing)').forEach(r => {
+          const input = r.querySelector('.value');
+          const v = input.value.trim();
+          input.classList.remove('error');
+          if (!v) return;
+          let label, detail;
+          if (v.startsWith('@')) {
+            label = v; detail = 'X handle';
+          } else if (/^https?:\/\//i.test(v) || /^[\w-]+\.[\w.-]+/.test(v)) {
+            const url = /^https?:\/\//i.test(v) ? v : 'https://' + v;
+            try {
+              const u = new URL(url);
+              label = u.hostname.replace(/^www\./, '') + (u.pathname !== '/' ? u.pathname : '');
+              detail = 'link';
+            } catch { input.classList.add('error'); hasError = true; return; }
+          } else {
+            label = '@' + v.replace(/^@?/, ''); detail = 'X handle';
+          }
+          entries.push({ label, detail });
+        });
+        if (hasError || entries.length === 0) {
+          if (entries.length === 0) { const f = reqRows.querySelector('.value'); if (f) { f.classList.add('error'); f.focus(); } }
+          return;
+        }
+        const list = entries.map(e => `<li><span>${e.label}</span><span>${e.detail}</span></li>`).join('');
+        reqSummary.innerHTML = `<b>${entries.length}</b> KOL${entries.length === 1 ? '' : 's'} queued<ul>${list}</ul>`;
+        setState('success');
+      });
+      reqAnother.addEventListener('click', () => {
+        resetForm(); setState('form');
+        requestAnimationFrame(() => reqRows.querySelector('.value').focus());
+      });
+
+      // open triggers, close handlers, ESC, backdrop
+      document.querySelectorAll('[data-open-request]').forEach(b => b.addEventListener('click', openDlg));
+      dlg.querySelectorAll('[data-dlg-close]').forEach(b => b.addEventListener('click', closeDlg));
+      dlg.addEventListener('click', (e) => { if (e.target === dlg) closeDlg(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dlg.classList.contains('open')) closeDlg(); });
+
+      resetForm();
     })();
   </script>
 </body>
