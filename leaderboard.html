@@ -1,0 +1,1498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ALVA · KOL Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+<style>
+  :root {
+    --bg:        #f5f5f7;
+    --bg-soft:   #ffffff;
+    --text:      #1a1a1e;
+    --muted:     #6b7280;
+    --muted-2:   #9ca3af;
+    --line:      #e5e5ea;
+    --card:      #0a0a10;
+    --card-line: rgba(255,255,255,0.06);
+    --alva:      #49A3A6;
+    --alva-hi:   #5cb9bc;
+    --alva-dim:  rgba(73,163,166,0.18);
+    --orange:    #ff8a4c;
+    --purple:    #b388ff;
+    --red:       #ef4444;
+    /* gain green — used for positive data viz (bars, donuts, PnL, sparklines).
+       brand teal stays for navigation accents only; data viz uses this. */
+    --gain:      #22c55e;
+    --gain-hi:   #4ade80;
+    --gain-soft: rgba(34,197,94,0.10);
+    --font:      "Inter", system-ui, sans-serif;
+    --font-display: "Space Grotesk", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    cursor: none;
+  }
+  a { color: inherit; text-decoration: none; cursor: none; }
+  button, .interactive, input { font-family: inherit; cursor: none; }
+
+  /* ---------- custom cursor (matches audit.html) ---------- */
+  #cursor-dot, #cursor-ring, #cursor-label {
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    will-change: transform, width, height, opacity;
+  }
+  #cursor-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; mix-blend-mode: difference; z-index: 10001; transition: width .2s ease, height .2s ease; }
+  #cursor-ring { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #fff; mix-blend-mode: difference; opacity: 0.7; z-index: 10000; transition: width .25s cubic-bezier(.2,.8,.2,1), height .25s cubic-bezier(.2,.8,.2,1), border-color .25s, background .25s, opacity .25s; }
+  #cursor-label { background: var(--text); color: #fff; font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.18em; padding: 4px 10px; border-radius: 9999px; white-space: nowrap; transform: translate(12px, 12px) scale(0.8); opacity: 0; z-index: 10002; transition: opacity .2s ease, transform .2s cubic-bezier(.2,.8,.2,1); }
+  body.hovering #cursor-dot { width: 0; height: 0; }
+  body.hovering #cursor-ring { width: 72px; height: 72px; background: rgba(73,163,166,0.18); border-color: var(--alva); mix-blend-mode: normal; opacity: 1; }
+  body.has-label #cursor-label { opacity: 1; transform: translate(20px, 20px) scale(1); }
+  body.pressing #cursor-ring { width: 56px; height: 56px; }
+  @media (hover: none), (pointer: coarse) {
+    body, a, button, .interactive, input { cursor: auto; }
+    #cursor-dot, #cursor-ring, #cursor-label { display: none; }
+  }
+
+  /* ---------- nav (matches audit.html) ---------- */
+  header.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; backdrop-filter: blur(14px); background: rgba(245,245,247,0.72); border-bottom: 1px solid var(--line); }
+  .nav-inner { max-width: 1440px; margin: 0 auto; height: 64px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark { width: 22px; height: 22px; display: grid; place-items: center; }
+  .brand-mark svg { width: 22px; height: 22px; display: block; }
+  .brand-mark .lg-fg { fill: var(--text); }
+  .brand-mark .lg-bg { fill: var(--alva); }
+  .brand-text .name { font-weight: 700; letter-spacing: 0.04em; font-size: 14px; line-height: 1.1; color: var(--text); }
+  .brand-text .sub { font-size: 10px; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 2px; font-weight: 500; }
+  .nav-links { display: flex; align-items: center; gap: 28px; font-size: 13px; font-weight: 500; color: var(--muted); }
+  .nav-links a { display: inline-flex; align-items: center; gap: 6px; transition: color .15s; }
+  .nav-links a i { font-size: 14px; color: var(--muted-2); transition: color .15s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a:hover i { color: var(--alva); }
+  .nav-links a.active { color: var(--text); }
+  .nav-links a.active i { color: var(--alva); }
+  .nav-burger { display: none; width: 36px; height: 36px; background: transparent; border: 0; padding: 0; flex-direction: column; justify-content: center; align-items: center; gap: 5px; }
+  .nav-burger span { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 1px; transition: transform .2s ease, opacity .2s ease; transform-origin: center; }
+  header.nav.open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  header.nav.open .nav-burger span:nth-child(2) { opacity: 0; }
+  header.nav.open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  .nav-cta { font-size: 13px; font-weight: 600; color: #fff; background: var(--text); border: 0; padding: 10px 22px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 8px; transition: transform .15s, background .15s; }
+  .nav-cta:hover { background: #000; transform: translateY(-1px); }
+
+  /* ---------- page header ---------- */
+  .lb-head {
+    padding-top: 112px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .lb-head-inner { max-width: 1440px; margin: 0 auto; padding: 0 48px; display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+  .lb-head-title { flex: 1 1 480px; min-width: 0; }
+  .lb-head-title .tag {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 11px; font-weight: 600; color: var(--alva);
+    letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 6px 14px; border-radius: 9999px;
+    background: var(--alva-dim); border: 1px solid rgba(73,163,166,0.3);
+    margin-bottom: 16px;
+  }
+  .lb-head-title .tag::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--alva); animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.5); } }
+  .lb-head-title h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 56px;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+    color: var(--text);
+  }
+  .lb-head-title p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 620px;
+    margin: 0;
+  }
+  .lb-head-meta {
+    display: flex; align-items: center; gap: 28px;
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .lb-head-meta .meta-row { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .lb-head-meta .v {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .lb-head-meta .v .dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--alva); box-shadow: 0 0 6px var(--alva);
+    animation: pulse 2s ease-in-out infinite;
+    vertical-align: middle; margin-right: 8px;
+  }
+
+  /* ---------- toolbar (sort tabs + search) ---------- */
+  .lb-toolbar {
+    position: sticky; top: 64px; z-index: 20;
+    background: rgba(245,245,247,0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .lb-toolbar-inner {
+    max-width: 1440px; margin: 0 auto; padding: 12px 48px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .sort-tabs { display: flex; gap: 4px; flex-wrap: wrap; flex: 1 1 auto; }
+  .sort-tab {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 8px 14px;
+    border-radius: 9999px;
+    transition: color .15s, background .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .sort-tab i { font-size: 14px; color: var(--muted-2); transition: color .15s; }
+  .sort-tab:hover { color: var(--text); background: rgba(0,0,0,0.04); }
+  .sort-tab:hover i { color: var(--alva); }
+  .sort-tab.active {
+    color: #fff;
+    background: var(--text);
+    border-color: var(--text);
+  }
+  .sort-tab.active i { color: var(--alva-hi); }
+  .toolbar-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .search-box {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 8px 14px;
+    border-radius: 9999px;
+    transition: border-color .15s;
+  }
+  .search-box:focus-within { border-color: var(--muted-2); }
+  .search-box i { font-size: 14px; color: var(--muted-2); }
+  .search-box input {
+    border: 0; outline: 0; background: transparent;
+    font-size: 13px; color: var(--text);
+    width: 200px;
+  }
+  .search-box input::placeholder { color: var(--muted-2); }
+
+  /* ---------- macro stats row — light, contextual per sort tab ---------- */
+  .macro {
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .macro-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 20px 48px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 32px;
+  }
+  .macro-cell {
+    display: flex; flex-direction: column; gap: 6px;
+    min-width: 0;
+    position: relative;
+  }
+  .macro-cell + .macro-cell::before {
+    content: "";
+    position: absolute;
+    left: -16px; top: 4px; bottom: 4px;
+    width: 1px;
+    background: var(--line);
+  }
+  .macro-cell .l {
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+  }
+  .macro-cell .v {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .macro-cell .v.up   { color: var(--gain); }
+  .macro-cell .v.down { color: var(--red); }
+  /* hide extra mobile-only stats row on desktop */
+  .mobile-stats { display: none; }
+
+  /* ---------- podium (top 3) ---------- */
+  .lb-section {
+    padding: 32px 48px 96px;
+    background: var(--bg);
+  }
+  .lb-wrap { max-width: 1440px; margin: 0 auto; }
+
+  .podium-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .podium-head .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+  }
+  .podium-head .by {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    color: var(--alva);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .podium {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .podium-card {
+    position: relative;
+    border-radius: 12px;
+    padding: 20px;
+    background: #fff;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--medal, var(--muted-2));
+    cursor: none;
+    transition: background .15s ease, border-color .15s ease;
+    display: flex; flex-direction: column;
+  }
+  .podium-card:hover { background: rgba(73,163,166,0.04); }
+  .podium-card.p1 { --medal: #d4a73a; }  /* gold */
+  .podium-card.p2 { --medal: #9ca3af; }  /* silver */
+  .podium-card.p3 { --medal: #b07a4b; }  /* bronze */
+  .podium-card.p1 .podium-id .name::after,
+  .podium-card.p2 .podium-id .name::after,
+  .podium-card.p3 .podium-id .name::after { content: none; }
+  /* small medal icon — top corner, restrained */
+  .podium-medal-icon {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-size: 18px;
+    color: var(--medal);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .podium-rank-label {
+    position: absolute;
+    top: 16px; left: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 700;
+    color: var(--medal);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .podium-id {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 18px;
+    margin-top: 18px;
+  }
+  .podium-id .avatar {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .podium-id .who { min-width: 0; }
+  .podium-id .name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text);
+    line-height: 1.15;
+    margin-bottom: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .podium-id .handle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .podium-score {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .podium-score .score-block { flex: 1; min-width: 0; }
+  .podium-score .l {
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .podium-score .v {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .podium-score .v .max {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted-2);
+    letter-spacing: 0.05em;
+    margin-left: 2px;
+  }
+
+  /* win-rate donut */
+  .donut { width: 72px; height: 72px; position: relative; flex-shrink: 0; }
+  .donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .donut .track { stroke: var(--line); }
+  .donut .fill  { stroke: var(--gain); transition: stroke-dashoffset .5s ease; }
+  .donut .label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .donut .label .pl { display: none; }
+
+  .podium-stats {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    padding: 12px 0 0;
+    margin-top: auto;
+    border-top: 1px solid var(--line);
+  }
+  .podium-stat .l {
+    font-family: var(--font-mono);
+    font-size: 9px; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .podium-stat .v {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .podium-stat .v.up   { color: var(--gain); }
+  .podium-stat .v.down { color: var(--red); }
+
+  .podium-spark {
+    margin-top: 12px;
+    height: 32px;
+    width: 100%;
+  }
+  .podium-spark svg { width: 100%; height: 100%; display: block; }
+  .podium-trend-area { opacity: 0.14; }
+  .podium-trend-line { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---------- main list (rank 4+) — card rows ---------- */
+  .list-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .list-head h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    margin: 0;
+    color: var(--text);
+  }
+  .list-head .total {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .list-head .total b { color: var(--text); font-weight: 700; }
+
+  .row-head {
+    display: grid;
+    grid-template-columns: 64px 1.5fr 1.2fr 1.4fr 1fr 1.2fr 1.6fr 24px;
+    gap: 24px;
+    padding: 14px 12px;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    color: var(--muted-2);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    border-bottom: 1px solid var(--line);
+  }
+  .row-head .num { text-align: right; }
+  /* flat reading rows — like a table, not cards */
+  .list-rows { display: flex; flex-direction: column; gap: 0; padding-top: 0; }
+  .lb-row {
+    display: grid;
+    grid-template-columns: 64px 1.5fr 1.2fr 1.4fr 1fr 1.2fr 1.6fr 24px;
+    gap: 24px;
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    padding: 16px 12px;
+    transition: background .12s ease;
+    cursor: none;
+  }
+  .lb-row:focus-visible { outline: 2px solid var(--alva); outline-offset: -2px; }
+  .lb-row:hover { background: rgba(73,163,166,0.05); }
+  .lb-row:hover .col-rank .num-v { color: var(--alva); }
+
+  /* rank — italic display number with delta stacked below */
+  .col-rank {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  }
+  .col-rank .num-v {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .col-rank .delta {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 11px; font-weight: 600;
+    line-height: 1;
+  }
+  .col-rank .delta .tri { font-size: 9px; line-height: 1; }
+  .col-rank .delta.up   { color: var(--gain); }
+  .col-rank .delta.down { color: var(--red); }
+  .col-rank .delta.flat { color: var(--muted-2); }
+
+  .col-kol { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .col-kol .avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--line);
+    background: #fff;
+    flex-shrink: 0;
+  }
+  .col-kol .who { min-width: 0; }
+  .col-kol .name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.15;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .col-kol .handle {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+  .col-kol .avatar { width: 36px; height: 36px; }
+
+  .badge {
+    display: inline-flex; align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 0;
+    white-space: nowrap;
+  }
+  .badge.alpha   { color: #0e8a8d; background: rgba(73,163,166,0.14); }
+  .badge.early   { color: #6e4dc4; background: rgba(179,136,255,0.18); }
+  .badge.macro   { color: #c4641c; background: rgba(255,138,76,0.16); }
+  .badge.noise   { color: var(--muted); background: rgba(0,0,0,0.05); }
+
+  /* score bar — horizontal viz, single line */
+  .score-bar {
+    display: flex; align-items: center; gap: 10px;
+    min-width: 0;
+  }
+  .score-bar .v {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 17px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1;
+    flex-shrink: 0;
+    min-width: 26px;
+  }
+  .score-bar .track {
+    flex: 1;
+    height: 8px;
+    background: var(--line);
+    border-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+  }
+  .score-bar .fill {
+    height: 100%;
+    border-radius: 9999px;
+    background: var(--gain);
+    transition: width .4s ease;
+  }
+  .score-bar.noise .fill { background: var(--muted-2); }
+
+  /* win rate — donut + percent (matches reference) */
+  .wr {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .wr .donut-mini { width: 32px; height: 32px; position: relative; flex-shrink: 0; }
+  .wr .donut-mini svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .wr .donut-mini .track { stroke: var(--line); }
+  .wr .donut-mini .fill  { stroke: var(--gain); transition: stroke-dashoffset .4s ease; }
+  .wr.noise .donut-mini .fill { stroke: var(--muted-2); }
+  .wr .wr-v {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+
+  /* PnL — bold number + small inline area chart (matches reference) */
+  .pnl-cell {
+    display: flex; align-items: center; gap: 12px;
+    min-width: 0;
+  }
+  .pnl-cell .v {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .pnl-cell.up   .v { color: var(--gain); }
+  .pnl-cell.down .v { color: var(--red); }
+  .pnl-spark { flex: 1; min-width: 0; }
+  .pnl-spark svg { width: 100%; height: 32px; display: block; }
+
+  /* Signal Velocity sparkline col — bigger area chart on the right */
+  .col-spark { min-width: 0; }
+  .sparkline { display: block; width: 100%; height: 40px; }
+  .spark-area { opacity: 0.16; }
+  .spark-line { fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  .col-action { text-align: right; color: var(--muted-2); }
+  .col-action i {
+    font-size: 14px;
+    transition: color .15s ease, transform .15s ease;
+  }
+  .lb-row:hover .col-action i {
+    color: var(--alva);
+    transform: translateX(3px);
+  }
+
+  .lb-empty {
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* ---------- request-missing-KOLs ---------- */
+  .req {
+    margin-top: 56px;
+    padding: 40px;
+    border-radius: 16px;
+    background: var(--card);
+    color: #fff;
+    border: 1px solid var(--card-line);
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 40px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .req::before {
+    content: "";
+    position: absolute; inset: -1px;
+    background:
+      radial-gradient(600px 200px at 0% 0%, rgba(73,163,166,0.18), transparent 70%),
+      radial-gradient(600px 200px at 100% 100%, rgba(179,136,255,0.12), transparent 70%);
+    pointer-events: none;
+  }
+  .req-text { position: relative; }
+  .req-text .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    color: var(--alva);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .req-text h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 30px;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin: 0 0 12px;
+    color: #fff;
+    text-transform: uppercase;
+  }
+  .req-text p {
+    margin: 0;
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 460px;
+  }
+  .req-form { position: relative; }
+  .req-form label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .req-input {
+    display: flex; align-items: center; gap: 0;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 4px 4px 4px 14px;
+    transition: border-color .15s, background .15s;
+  }
+  .req-input:focus-within {
+    border-color: var(--alva);
+    background: rgba(73,163,166,0.06);
+  }
+  .req-input .at {
+    color: rgba(255,255,255,0.4);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    margin-right: 4px;
+  }
+  .req-input input {
+    flex: 1;
+    border: 0; outline: 0; background: transparent;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: #fff;
+    padding: 12px 4px;
+    min-width: 0;
+  }
+  .req-input input::placeholder { color: rgba(255,255,255,0.32); }
+  .req-input button {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 700;
+    color: var(--text); background: #fff;
+    border: 0;
+    padding: 10px 18px;
+    border-radius: 8px;
+    transition: background .15s, transform .15s;
+    flex-shrink: 0;
+  }
+  .req-input button:hover { background: var(--alva); color: #fff; transform: translateY(-1px); }
+  .req-hint {
+    margin-top: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.05em;
+  }
+  .req-hint .ok { color: var(--alva); }
+
+  /* ---------- footer (dark, matches audit.html) ---------- */
+  footer.f {
+    padding: 28px 32px;
+    background: #0a0a10;
+    color: rgba(255,255,255,0.45);
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .f-inner {
+    max-width: 1440px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+    font-size: 12px;
+  }
+  .f-inner a { color: inherit; }
+  .f-inner a:hover { color: #fff; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1199px) {
+    .row-head, .lb-row {
+      grid-template-columns: 48px 1.4fr 0.9fr 1.3fr 0.8fr 0.9fr 86px;
+    }
+    .row-head .col-spark, .lb-row .col-spark { display: none; }
+  }
+  @media (max-width: 1023px) {
+    .lb-head-inner { padding: 0 24px; }
+    .lb-head-title h1 { font-size: 40px; }
+    .lb-toolbar-inner { padding: 12px 24px; }
+    .lb-section { padding: 24px 24px 80px; }
+    .req { grid-template-columns: 1fr; gap: 24px; padding: 28px; }
+    .req-text h3 { font-size: 24px; }
+
+    .podium { grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .podium-card { padding: 20px; }
+    .podium-card.p1 { padding-top: 48px; }
+    .podium-card.p1 .podium-id .avatar { width: 60px; height: 60px; }
+    .podium-card.p1 .podium-score .v { font-size: 60px; }
+    .podium-score .v { font-size: 44px; }
+
+    .row-head, .lb-row {
+      grid-template-columns: 44px 1.4fr 0.9fr 1.3fr 0.9fr 86px;
+    }
+    .row-head .col-pnl, .lb-row .col-pnl { display: none; }
+  }
+  @media (max-width: 859px) {
+    .podium {
+      grid-template-columns: 1fr;
+      grid-template-areas: "p1" "p2" "p3";
+      gap: 12px;
+    }
+    .podium-card { padding: 20px !important; }
+    .podium-card.p1 { padding-top: 20px !important; }
+  }
+  @media (max-width: 767px) {
+    header.nav { backdrop-filter: blur(10px); }
+    .nav-inner { padding: 0 16px; height: 56px; gap: 8px; }
+    .brand-text .sub { display: none; }
+    .nav-links {
+      position: absolute;
+      top: 100%; left: 0; right: 0;
+      flex-direction: column; align-items: stretch; gap: 0;
+      background: rgba(245,245,247,0.96);
+      backdrop-filter: blur(14px);
+      padding: 8px 16px 16px;
+      border-bottom: 1px solid var(--line);
+      transform: translateY(-8px); opacity: 0; pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .nav-links a { gap: 10px; font-size: 14px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+    .nav-links a:last-child { border-bottom: 0; }
+    header.nav.open .nav-links { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .nav-burger { display: inline-flex; margin-left: auto; }
+    .nav-cta { padding: 8px 14px; font-size: 11px; }
+
+    .lb-head { padding-top: 88px; }
+    .lb-head-title h1 { font-size: 32px; }
+    .lb-head-title p { font-size: 14px; }
+    .lb-head-meta { gap: 16px; font-size: 10px; }
+    .lb-head-meta .v { font-size: 18px; }
+
+    .lb-toolbar { top: 56px; }
+    .lb-toolbar-inner { padding: 10px 16px; gap: 12px; }
+    .sort-tab { font-size: 12px; padding: 6px 12px; }
+    .search-box input { width: 140px; }
+
+    .lb-section { padding: 16px 0 64px; }
+    .lb-wrap { padding: 0 16px; }
+
+    .row-head { display: none; }
+    .lb-row {
+      grid-template-columns: 44px 1fr auto;
+      grid-template-areas:
+        "rank kol  action"
+        "stats stats stats";
+      row-gap: 12px;
+      padding: 14px;
+    }
+    .lb-row .col-rank   { grid-area: rank; }
+    .lb-row .col-kol    { grid-area: kol; }
+    .lb-row .col-action { grid-area: action; }
+    .lb-row .col-badge,
+    .lb-row .col-score,
+    .lb-row .col-wr,
+    .lb-row .col-pnl,
+    .lb-row .col-spark {
+      grid-area: stats;
+      display: none;
+    }
+    .lb-row .col-score {
+      display: block;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+    .lb-row .mobile-stats {
+      grid-area: stats;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .mobile-stats .ms-cell { display: flex; flex-direction: column; gap: 3px; }
+    .mobile-stats .ms-cell .ms-l {
+      font-family: var(--font-mono);
+      font-size: 9px; color: var(--muted);
+      letter-spacing: 0.2em; text-transform: uppercase;
+    }
+    .mobile-stats .ms-cell .ms-v {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .mobile-stats .ms-cell .ms-v.up   { color: var(--alva); }
+    .mobile-stats .ms-cell .ms-v.down { color: var(--red); }
+
+    .req { padding: 24px; margin-top: 32px; }
+    .req-text h3 { font-size: 22px; }
+    .req-input { flex-wrap: wrap; gap: 8px; padding: 8px; }
+    .req-input input { width: 100%; padding: 10px 4px; }
+    .req-input button { width: 100%; justify-content: center; padding: 12px 18px; }
+  }
+</style>
+</head>
+<body>
+  <div id="cursor-ring"></div>
+  <div id="cursor-dot"></div>
+  <div id="cursor-label"></div>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="audit.html" class="brand" data-cursor-label="Home">
+        <div class="brand-mark">
+          <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-label="ALVA">
+            <path class="lg-bg" fill-rule="evenodd" clip-rule="evenodd" d="M34.4684 0.397058C38.1369 -0.132341 41.8624 -0.132364 45.5309 0.397058C45.8246 0.439446 46.1194 0.486373 46.7086 0.580652C46.9049 0.612064 47.0035 0.628453 47.0914 0.648035C48.2192 0.899298 49.1009 1.77999 49.3522 2.9078C49.3717 2.99576 49.3872 3.09432 49.4186 3.29061C49.5129 3.8799 49.5598 4.17464 49.6022 4.46835C50.1316 8.13701 50.1316 11.8632 49.6022 15.5318C49.5598 15.8255 49.5128 16.1204 49.4186 16.7096C49.3871 16.906 49.3718 17.0044 49.3522 17.0924C49.1009 18.2202 48.2192 19.1009 47.0914 19.3521C47.0035 19.3717 46.9049 19.3871 46.7086 19.4185C46.1193 19.5128 45.8246 19.5607 45.5309 19.6031C43.6966 19.8678 41.8481 19.9996 39.9996 19.9996C28.9548 20.0001 20.0013 28.9538 20.0006 39.9986H19.9996C19.9997 41.8476 19.8679 43.6971 19.6031 45.5318C19.5608 45.8255 19.5128 46.1203 19.4186 46.7096C19.3871 46.906 19.3718 47.0043 19.3522 47.0924C19.1009 48.2202 18.2202 49.1009 17.0924 49.3521C17.0044 49.3717 16.906 49.3871 16.7096 49.4185C16.1203 49.5128 15.8255 49.5607 15.5318 49.6031C11.8632 50.1326 8.13701 50.1326 4.46837 49.6031C4.17464 49.5607 3.88002 49.5128 3.29064 49.4185C3.0942 49.3871 2.99583 49.3717 2.90783 49.3521C1.78005 49.1009 0.899342 48.2201 0.64806 47.0924C0.628444 47.0043 0.612121 46.9061 0.580677 46.7096C0.486402 46.1203 0.439464 45.8255 0.397083 45.5318C-0.132361 41.8632 -0.132361 38.137 0.397083 34.4683C0.439471 34.1746 0.486392 33.8799 0.580677 33.2906C0.612101 33.0942 0.628467 32.9958 0.64806 32.9078C0.899321 31.78 1.78002 30.8993 2.90783 30.648C2.99585 30.6284 3.09415 30.6121 3.29064 30.5807C3.87992 30.4864 4.17468 30.4394 4.46837 30.3971C6.30257 30.1324 8.15117 29.9996 9.99962 29.9996V29.9976C20.8724 29.9974 29.7188 21.322 29.9928 10.5152L29.9996 9.99862C29.9997 8.15047 30.1314 6.30225 30.3961 4.46835C30.4385 4.1746 30.4864 3.87999 30.5807 3.29061C30.6121 3.09428 30.6275 2.99577 30.6471 2.9078C30.8983 1.7801 31.7792 0.899397 32.9068 0.648035C32.9949 0.628428 33.0933 0.612069 33.2897 0.580652C33.8791 0.486335 34.1746 0.439454 34.4684 0.397058Z"/>
+            <path class="lg-fg" fill-rule="evenodd" clip-rule="evenodd" d="M45.5312 30.3971C41.8626 29.8677 38.1372 29.8677 34.4687 30.3971C34.1749 30.4395 33.8794 30.4864 33.29 30.5807C33.0936 30.6121 32.9952 30.6275 32.9071 30.6471C31.7795 30.8984 30.8988 31.7793 30.6474 32.9069C30.6278 32.9949 30.6124 33.0941 30.581 33.2906C30.4867 33.8799 30.4388 34.1747 30.3964 34.4684C29.867 38.1368 29.867 41.8624 30.3964 45.5309C30.4388 45.8246 30.4867 46.1201 30.581 46.7096C30.6124 46.9059 30.6278 47.0044 30.6474 47.0924C30.8987 48.2201 31.7795 49.1009 32.9071 49.3522C32.9952 49.3718 33.0936 49.3872 33.29 49.4186C33.8794 49.5129 34.1749 49.5607 34.4687 49.6031C38.1371 50.1325 41.8627 50.1326 45.5312 49.6031C45.8249 49.5608 46.1196 49.5129 46.7089 49.4186C46.9052 49.3872 47.0038 49.3717 47.0917 49.3522C48.2195 49.1009 49.1012 48.2202 49.3525 47.0924C49.3721 47.0044 49.3874 46.906 49.4189 46.7096C49.5132 46.1201 49.5601 45.8246 49.6025 45.5309C50.1319 41.8624 50.1319 38.1369 49.6025 34.4684C49.5601 34.1747 49.5131 33.8799 49.4189 33.2906C49.3874 33.0941 49.3721 32.9949 49.3525 32.9069C49.1011 31.7792 48.2194 30.8983 47.0917 30.6471C47.0038 30.6275 46.9051 30.6121 46.7089 30.5807C46.1196 30.4864 45.8249 30.4395 45.5312 30.3971ZM15.5322 0.397086C11.8635 -0.132362 8.13731 -0.132362 4.46867 0.397086C4.17498 0.439473 3.88023 0.486393 3.29094 0.580679C3.09461 0.612093 2.9961 0.627503 2.90813 0.647086C1.78049 0.898312 0.899769 1.77928 0.648361 2.90685C0.628742 2.99491 0.612434 3.09405 0.580978 3.29064C0.486706 3.87984 0.43977 4.17467 0.397385 4.46837C-0.132023 8.13688 -0.132004 11.8624 0.397385 15.5309C0.439781 15.8246 0.48666 16.1201 0.580978 16.7096C0.6124 16.906 0.628754 17.0044 0.648361 17.0924C0.899708 18.2201 1.78042 19.1009 2.90813 19.3522C2.99611 19.3718 3.09457 19.3871 3.29094 19.4186C3.88032 19.5129 4.17493 19.5607 4.46867 19.6031C8.13731 20.1326 11.8635 20.1326 15.5322 19.6031C15.8258 19.5608 16.1207 19.5128 16.7099 19.4186C16.9063 19.3871 17.0047 19.3718 17.0927 19.3522C18.2204 19.1009 19.1011 18.2201 19.3525 17.0924C19.3721 17.0044 19.3875 16.9059 19.4189 16.7096C19.5132 16.1201 19.561 15.8246 19.6034 15.5309C20.1328 11.8624 20.1328 8.13685 19.6034 4.46837C19.5611 4.17466 19.5131 3.8799 19.4189 3.29064C19.3874 3.09405 19.3721 2.99491 19.3525 2.90685C19.1011 1.77924 18.2204 0.898318 17.0927 0.647086C17.0047 0.627474 16.9063 0.612111 16.7099 0.580679C16.1207 0.486415 15.8258 0.439463 15.5322 0.397086Z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="name">ALVA</div>
+          <div class="sub">Live Audit Engine</div>
+        </div>
+      </a>
+      <nav class="nav-links" id="nav-links">
+        <a href="leaderboard.html" class="active"><i class="ph ph-chart-line"></i> Leaderboard</a>
+        <a href="audit.html"><i class="ph ph-magnifying-glass"></i> Search KOL</a>
+        <a href="#"><i class="ph ph-file-text"></i> Docs</a>
+      </nav>
+      <button class="nav-burger" id="nav-burger" aria-label="Menu" aria-expanded="false" data-cursor-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <button class="nav-cta" data-cursor-label="Scan" onclick="location.href='audit.html'">Audit My Feed</button>
+    </div>
+  </header>
+
+  <!-- ---------- page head ---------- -->
+  <section class="lb-head">
+    <div class="lb-head-inner">
+      <div class="lb-head-title">
+        <div class="tag">Public Index · Updated Hourly</div>
+        <h1>KOL Leaderboard</h1>
+        <p>
+          The 15,402 financial KOLs ALVA actively tracks, ranked by audited
+          performance — not follower count. Sort by algorithmic score, win
+          rate, signal edge, or early-detection lead time. Tap any row to
+          open that KOL's full Playbook.
+        </p>
+      </div>
+      <div class="lb-head-meta">
+        <div class="meta-row">
+          <div class="l">Tracked KOLs</div>
+          <div class="v">15,402</div>
+        </div>
+        <div class="meta-row">
+          <div class="l">Last Refresh</div>
+          <div class="v"><span class="dot"></span>2m ago</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- toolbar ---------- -->
+  <div class="lb-toolbar">
+    <div class="lb-toolbar-inner">
+      <div class="sort-tabs" role="tablist" id="sort-tabs">
+        <button class="sort-tab active" data-sort="score"     data-cursor-label="Sort"><i class="ph ph-trophy"></i> Algorithmic Score</button>
+        <button class="sort-tab"        data-sort="winrate"   data-cursor-label="Sort"><i class="ph ph-target"></i> Win Rate</button>
+        <button class="sort-tab"        data-sort="pnl"       data-cursor-label="Sort"><i class="ph ph-trend-up"></i> PnL (90D)</button>
+        <button class="sort-tab"        data-sort="edge"      data-cursor-label="Sort"><i class="ph ph-lightning"></i> Signal Edge</button>
+        <button class="sort-tab"        data-sort="early"     data-cursor-label="Sort"><i class="ph ph-clock-countdown"></i> Early Lead</button>
+        <button class="sort-tab"        data-sort="followers" data-cursor-label="Sort"><i class="ph ph-users-three"></i> Followers</button>
+        <button class="sort-tab"        data-sort="trending"  data-cursor-label="Sort"><i class="ph ph-flame"></i> Trending</button>
+      </div>
+      <div class="toolbar-right">
+        <div class="search-box">
+          <i class="ph ph-magnifying-glass"></i>
+          <input id="lb-search" type="search" placeholder="Search handle or name…" autocomplete="off" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- macro stats row — contextual per sort tab ---------- -->
+  <section class="macro" aria-label="Index summary">
+    <div class="macro-inner" id="macro-stats"><!-- rendered via JS --></div>
+  </section>
+
+  <!-- ---------- podium + list ---------- -->
+  <section class="lb-section">
+    <div class="lb-wrap">
+      <div class="podium-head">
+        <span class="eyebrow">Top 3 · Hall of Fame</span>
+        <span class="by">Ranked by <span id="podium-sort-label">Algorithmic Score</span></span>
+      </div>
+      <div class="podium" id="podium"><!-- rendered via JS --></div>
+
+      <div class="list-head">
+        <h2>Full Leaderboard</h2>
+        <div class="total"><b id="total-count">15</b> Tracked · <span id="visible-count">15</span> Shown</div>
+      </div>
+      <div class="row-head" role="row">
+        <div>Rank</div>
+        <div>KOL Entity</div>
+        <div class="col-badge">Classification</div>
+        <div class="col-score">Score Index</div>
+        <div class="col-wr">Win Ratio</div>
+        <div class="col-pnl">PnL · 90D</div>
+        <div class="col-spark">Signal Velocity</div>
+        <div aria-label="action"></div>
+      </div>
+      <div class="list-rows" id="lb-body"><!-- rendered via JS --></div>
+
+      <!-- ---------- request missing KOLs ---------- -->
+      <div class="req">
+        <div class="req-text">
+          <div class="eyebrow">Don't see who you follow?</div>
+          <h3>Request a Missing KOL</h3>
+          <p>
+            ALVA indexes the 15,000 most-cited financial voices on X. If a
+            handle you trust isn't here, drop it below — we backfill
+            requested KOLs into the next index cycle, usually within 48
+            hours.
+          </p>
+        </div>
+        <form class="req-form" id="req-form" onsubmit="return false;">
+          <label for="req-handle">X HANDLE TO INDEX</label>
+          <div class="req-input">
+            <span class="at">@</span>
+            <input id="req-handle" type="text" placeholder="cryptowizz" autocomplete="off" maxlength="32" />
+            <button type="submit" data-cursor-label="Submit">
+              Request <i class="ph-bold ph-arrow-right"></i>
+            </button>
+          </div>
+          <div class="req-hint" id="req-hint">
+            Read-only · No follow or post · One handle per submit.
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer class="f">
+    <div class="f-inner">
+      <div>© 2026 ALVA Live Audit Engine</div>
+      <div>
+        <a href="#">Methodology</a> &nbsp;·&nbsp;
+        <a href="leaderboard.html">Leaderboard</a> &nbsp;·&nbsp;
+        <a href="#">Privacy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ---------- KOL leaderboard data + render ---------- */
+    (() => {
+      const KOLS = [
+        { rank:  1, delta: +2, handle: 'aleabito',    name: 'Lea Bito',       type: 'alpha', score: 94, winrate: 71, pnl: 38.4, edge: 22, early: 6.2, followers: 482000, spark: [3,5,4,8,7,9,8,11,10,13,12,15,14,17] },
+        { rank:  2, delta:  0, handle: 'macroalpha',  name: 'Macro Alpha',    type: 'macro', score: 92, winrate: 68, pnl: 31.7, edge: 19, early: 4.8, followers: 318000, spark: [2,3,5,4,7,8,6,9,11,10,12,13,15,14] },
+        { rank:  3, delta: +1, handle: 'furycom',     name: 'Fury',           type: 'alpha', score: 88, winrate: 66, pnl: 27.9, edge: 17, early: 3.9, followers: 261000, spark: [4,3,6,5,8,7,10,9,11,10,12,13,12,14] },
+        { rank:  4, delta: -2, handle: 'cryptowiz',   name: 'CryptoWiz',      type: 'early', score: 86, winrate: 63, pnl: 41.2, edge: 24, early: 8.4, followers: 540000, spark: [1,2,4,3,6,5,7,8,7,10,9,12,11,13] },
+        { rank:  5, delta: +4, handle: 'optiontrade', name: 'OptionTrade',    type: 'alpha', score: 84, winrate: 64, pnl: 22.6, edge: 15, early: 3.1, followers: 198000, spark: [5,4,7,6,8,7,9,11,10,12,11,13,12,14] },
+        { rank:  6, delta:  0, handle: 'narrative_q', name: 'Narrative Q',    type: 'early', score: 82, winrate: 59, pnl: 35.8, edge: 21, early: 9.1, followers:  92000, spark: [2,3,3,5,6,4,7,8,9,11,10,13,12,14] },
+        { rank:  7, delta: -1, handle: 'ratesguy',    name: 'Rates Guy',      type: 'macro', score: 79, winrate: 62, pnl: 18.4, edge: 12, early: 2.6, followers: 145000, spark: [6,5,7,8,7,9,8,10,9,11,12,11,13,12] },
+        { rank:  8, delta: +3, handle: 'smallcapsam', name: 'SmallCap Sam',   type: 'alpha', score: 77, winrate: 60, pnl: 24.1, edge: 14, early: 4.0, followers:  68000, spark: [3,4,5,6,5,7,8,9,8,10,11,10,12,13] },
+        { rank:  9, delta:  0, handle: 'flowfocus',   name: 'Flow Focus',     type: 'alpha', score: 75, winrate: 58, pnl: 19.7, edge: 13, early: 2.3, followers: 112000, spark: [4,5,4,6,7,6,8,7,9,10,9,11,10,12] },
+        { rank: 10, delta: -3, handle: 'tapeisapeway', name: 'TapeIsTheWay',  type: 'alpha', score: 74, winrate: 57, pnl: 21.9, edge: 13, early: 3.4, followers: 230000, spark: [5,6,5,7,8,7,9,8,10,9,11,12,11,13] },
+        { rank: 11, delta: +1, handle: 'aimomentum',  name: 'AI Momentum',    type: 'early', score: 72, winrate: 56, pnl: 28.5, edge: 18, early: 7.2, followers:  44000, spark: [1,2,3,2,4,5,4,6,7,9,10,11,13,12] },
+        { rank: 12, delta:  0, handle: 'goldbug42',   name: 'GoldBug',        type: 'macro', score: 68, winrate: 55, pnl: 11.4, edge:  9, early: 1.8, followers: 287000, spark: [7,6,8,7,9,8,10,9,11,10,12,11,13,12] },
+        { rank: 13, delta: -5, handle: 'hypewatch',   name: 'HypeWatch',      type: 'noise', score: 54, winrate: 49, pnl: -8.2, edge:  4, early: 1.2, followers: 612000, spark: [8,9,7,10,8,11,9,12,10,9,11,8,10,7] },
+        { rank: 14, delta: -2, handle: 'pumpcaller',  name: 'PumpCaller',     type: 'noise', score: 41, winrate: 42, pnl:-12.6, edge:  2, early: 0.6, followers: 198000, spark: [9,10,8,11,9,7,10,8,6,9,7,5,8,6] },
+        { rank: 15, delta: -1, handle: 'fademe',      name: 'FadeMe',         type: 'noise', score: 28, winrate: 36, pnl:-19.8, edge:  1, early: 0.3, followers:  76000, spark: [10,8,11,7,9,6,8,5,7,4,6,3,5,2] },
+      ];
+
+      const TYPE_LABEL = { alpha: 'Alpha Hunter', early: 'Early Caller', macro: 'Macro Voice', noise: 'Noise · Fade' };
+      const TYPE_CLASS = { alpha: 'alpha',        early: 'early',        macro: 'macro',       noise: 'noise' };
+
+      const fmtNum = n => n.toLocaleString('en-US');
+      const fmtPct = n => (n > 0 ? '+' : '') + n.toFixed(1) + '%';
+      const fmtDays = n => n.toFixed(1) + 'd';
+      const fmtFollowers = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'K' : String(n);
+
+      const sortKeys = {
+        score:     (a,b) => b.score - a.score,
+        winrate:   (a,b) => b.winrate - a.winrate,
+        pnl:       (a,b) => b.pnl - a.pnl,
+        edge:      (a,b) => b.edge - a.edge,
+        early:     (a,b) => b.early - a.early,
+        followers: (a,b) => b.followers - a.followers,
+        trending:  (a,b) => b.delta - a.delta,
+      };
+      const sortLabel = {
+        score: 'Algorithmic Score',
+        winrate: 'Win Rate',
+        pnl: 'PnL · 90D',
+        edge: 'Signal Edge',
+        early: 'Early Lead',
+        followers: 'Followers',
+        trending: 'Rank Momentum',
+      };
+
+      const body   = document.getElementById('lb-body');
+      const podium = document.getElementById('podium');
+      const search = document.getElementById('lb-search');
+      const macroEl = document.getElementById('macro-stats');
+      const sortLabelEl = document.getElementById('podium-sort-label');
+      const totalCountEl   = document.getElementById('total-count');
+      const visibleCountEl = document.getElementById('visible-count');
+      let currentSort = 'score';
+      let searchTerm = '';
+
+      /* macro stat sets — different per sort tab.
+         each cell: { l: label, v: value, tone?: 'up'|'down' }  */
+      const macroFor = (key, pool) => {
+        const n = pool.length;
+        const avg = (arr, k) => arr.reduce((s, x) => s + x[k], 0) / (arr.length || 1);
+        const best  = (k, asc=false) => pool.slice().sort((a,b) => asc ? a[k]-b[k] : b[k]-a[k])[0] || {};
+        const worst = (k) => best(k, true);
+        switch (key) {
+          case 'score': return [
+            { l: 'Tracked KOLs',     v: n.toLocaleString() },
+            { l: 'Avg Score',        v: avg(pool, 'score').toFixed(1) },
+            { l: 'Above 80',         v: pool.filter(x => x.score >= 80).length + ' / ' + n },
+            { l: 'Top Score',        v: '@' + best('score').handle },
+            { l: 'Lowest',           v: '@' + worst('score').handle, tone: 'down' },
+          ];
+          case 'winrate': return [
+            { l: 'Tracked KOLs',     v: n.toLocaleString() },
+            { l: 'Avg Win Rate',     v: avg(pool, 'winrate').toFixed(1) + '%' },
+            { l: 'Above 60%',        v: pool.filter(x => x.winrate >= 60).length + ' / ' + n },
+            { l: 'Highest WR',       v: '@' + best('winrate').handle },
+            { l: 'Lowest WR',        v: '@' + worst('winrate').handle, tone: 'down' },
+          ];
+          case 'pnl': return [
+            { l: 'Tracked KOLs',     v: n.toLocaleString() },
+            { l: 'Avg Return · 90D', v: fmtPct(avg(pool, 'pnl')), tone: avg(pool, 'pnl') >= 0 ? 'up' : 'down' },
+            { l: 'Profitable',       v: pool.filter(x => x.pnl > 0).length + ' / ' + n },
+            { l: 'Best Performer',   v: '@' + best('pnl').handle, tone: 'up' },
+            { l: 'Worst Performer',  v: '@' + worst('pnl').handle, tone: 'down' },
+          ];
+          case 'edge': return [
+            { l: 'Tracked KOLs',     v: n.toLocaleString() },
+            { l: 'Avg Edge',         v: '+' + avg(pool, 'edge').toFixed(1) },
+            { l: 'Edge > 15',        v: pool.filter(x => x.edge > 15).length + ' / ' + n },
+            { l: 'Top Edge',         v: '@' + best('edge').handle },
+            { l: 'Lowest',           v: '@' + worst('edge').handle, tone: 'down' },
+          ];
+          case 'early': return [
+            { l: 'Tracked KOLs',     v: n.toLocaleString() },
+            { l: 'Avg Lead Time',    v: avg(pool, 'early').toFixed(1) + 'd' },
+            { l: 'Early Callers',    v: pool.filter(x => x.early >= 5).length + ' / ' + n },
+            { l: 'Earliest',         v: '@' + best('early').handle },
+            { l: 'Latest',           v: '@' + worst('early').handle, tone: 'down' },
+          ];
+          case 'followers': return [
+            { l: 'Tracked KOLs',     v: n.toLocaleString() },
+            { l: 'Total Reach',      v: (pool.reduce((s,x)=>s+x.followers,0) / 1e6).toFixed(1) + 'M' },
+            { l: 'Avg Following',    v: fmtFollowers(Math.round(avg(pool, 'followers'))) },
+            { l: 'Largest',          v: '@' + best('followers').handle },
+            { l: 'Smallest',         v: '@' + worst('followers').handle },
+          ];
+          case 'trending': return [
+            { l: 'Tracked KOLs',     v: n.toLocaleString() },
+            { l: 'Rank Risers',      v: pool.filter(x => x.delta > 0).length + ' / ' + n, tone: 'up' },
+            { l: 'Rank Fallers',     v: pool.filter(x => x.delta < 0).length + ' / ' + n, tone: 'down' },
+            { l: 'Top Climber',      v: '@' + best('delta').handle, tone: 'up' },
+            { l: 'Biggest Drop',     v: '@' + worst('delta').handle, tone: 'down' },
+          ];
+          default: return [];
+        }
+      };
+
+      const renderMacro = (pool) => {
+        macroEl.innerHTML = macroFor(currentSort, pool).map(c => `
+          <div class="macro-cell">
+            <span class="l">${c.l}</span>
+            <span class="v ${c.tone || ''}">${c.v}</span>
+          </div>
+        `).join('');
+      };
+
+      /* svg path for sparkline within a w×h box */
+      const sparkPaths = (values, w, h, padY = 2) => {
+        const max = Math.max(...values), min = Math.min(...values);
+        const range = max - min || 1;
+        const n = values.length;
+        const pts = values.map((v, i) => {
+          const x = (i / (n - 1)) * (w - 2) + 1;
+          const y = h - padY - ((v - min) / range) * (h - padY * 2);
+          return [x, y];
+        });
+        const line = pts.map(([x, y], i) =>
+          (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1)
+        ).join(' ');
+        const area = line + ` L ${(w-1).toFixed(1)},${h.toFixed(1)} L 1,${h.toFixed(1)} Z`;
+        return { line, area };
+      };
+
+      const renderDelta = (d) => {
+        if (d > 0) return `<span class="delta up"><span class="tri">▲</span>${d}</span>`;
+        if (d < 0) return `<span class="delta down"><span class="tri">▼</span>${-d}</span>`;
+        return `<span class="delta flat">— 0</span>`;
+      };
+
+      /* win-rate donut svg */
+      const donutSvg = (pct, size, stroke, cls) => {
+        const r = (size - stroke) / 2;
+        const c = 2 * Math.PI * r;
+        const off = c * (1 - pct / 100);
+        return `<svg viewBox="0 0 ${size} ${size}">
+          <circle class="track" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke-width="${stroke}"></circle>
+          <circle class="fill"  cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke-width="${stroke}"
+            stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" stroke-linecap="round"></circle>
+        </svg>`;
+      };
+
+      /* podium card for top 3 */
+      const renderPodium = (top3) => {
+        const html = ['p1','p2','p3'].map((cls, i) => {
+          const k = top3[i];
+          if (!k) return '';
+          const rankNum = i + 1;
+          const rankLbl = ['1st · Champion', '2nd · Runner-Up', '3rd · Bronze'][i];
+          const icon = i === 0 ? 'ph-fill ph-trophy' : 'ph-fill ph-medal';
+          const avatar = `https://i.pravatar.cc/96?u=${encodeURIComponent(k.handle)}`;
+          const spark = sparkPaths(k.spark, 240, 32);
+          const isUp = k.pnl >= 0;
+          return `
+            <article class="podium-card ${cls}" data-handle="${k.handle}" tabindex="0" role="link"
+                     aria-label="Rank ${rankNum} · Open ${k.handle} playbook" data-cursor-label="Playbook">
+              <span class="podium-rank-label">${rankLbl}</span>
+              <i class="podium-medal-icon ${icon}" aria-hidden="true"></i>
+              <div class="podium-id">
+                <img class="avatar" loading="lazy" src="${avatar}" alt="${k.handle} avatar" />
+                <div class="who">
+                  <div class="name">${k.name}</div>
+                  <div class="handle">@${k.handle}</div>
+                </div>
+              </div>
+              <div class="podium-score">
+                <div class="score-block">
+                  <div class="l">Score Index</div>
+                  <div class="v">${k.score}<span class="max">/100</span></div>
+                </div>
+                <div class="donut" aria-label="Win rate ${k.winrate}%">
+                  ${donutSvg(k.winrate, 72, 5)}
+                  <div class="label">${k.winrate}%</div>
+                </div>
+              </div>
+              <div class="podium-spark" aria-hidden="true">
+                <svg viewBox="0 0 240 32" preserveAspectRatio="none">
+                  <path class="podium-trend-area" d="${spark.area}" fill="var(--gain)" />
+                  <path class="podium-trend-line" d="${spark.line}" stroke="var(--gain)" />
+                </svg>
+              </div>
+              <div class="podium-stats">
+                <div class="podium-stat">
+                  <div class="l">PnL 90D</div>
+                  <div class="v ${isUp ? 'up' : 'down'}">${fmtPct(k.pnl)}</div>
+                </div>
+                <div class="podium-stat">
+                  <div class="l">Edge</div>
+                  <div class="v">+${k.edge}</div>
+                </div>
+                <div class="podium-stat">
+                  <div class="l">Early Lead</div>
+                  <div class="v">${fmtDays(k.early)}</div>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+        podium.innerHTML = html;
+      };
+
+      /* one reading row for ranks 4+ */
+      const renderRow = (k, rank) => {
+        const isUp = k.pnl >= 0;
+        const isLoss = k.type === 'noise' || !isUp;
+        const stroke   = isLoss ? 'var(--red)' : 'var(--gain)';
+        const velocity = sparkPaths(k.spark, 200, 40);
+        const pnlSpark = sparkPaths(k.spark, 110, 32);
+        const avatar = `https://i.pravatar.cc/80?u=${encodeURIComponent(k.handle)}`;
+        return `
+          <div class="lb-row" data-handle="${k.handle}" tabindex="0" role="link"
+               aria-label="Open ${k.handle} playbook" data-cursor-label="Playbook">
+            <div class="col-rank">
+              <span class="num-v">${rank}</span>
+              ${renderDelta(k.delta)}
+            </div>
+            <div class="col-kol">
+              <img class="avatar" loading="lazy" src="${avatar}" alt="${k.handle} avatar" />
+              <div class="who">
+                <div class="name">${k.name}</div>
+                <div class="handle">@${k.handle}</div>
+              </div>
+            </div>
+            <div class="col-badge">
+              <span class="badge ${TYPE_CLASS[k.type]}">${TYPE_LABEL[k.type]}</span>
+            </div>
+            <div class="col-score">
+              <div class="score-bar ${isLoss ? 'noise' : ''}">
+                <span class="v">${k.score}</span>
+                <div class="track"><div class="fill" style="width:${k.score}%"></div></div>
+              </div>
+            </div>
+            <div class="col-wr">
+              <div class="wr ${isLoss ? 'noise' : ''}">
+                <div class="donut-mini" aria-hidden="true">${donutSvg(k.winrate, 32, 3.5)}</div>
+                <span class="wr-v">${k.winrate}%</span>
+              </div>
+            </div>
+            <div class="col-pnl">
+              <div class="pnl-cell ${isUp ? 'up' : 'down'}">
+                <span class="v">${fmtPct(k.pnl)}</span>
+                <div class="pnl-spark" aria-hidden="true">
+                  <svg viewBox="0 0 110 32" preserveAspectRatio="none">
+                    <path class="spark-area" d="${pnlSpark.area}" fill="${stroke}" />
+                    <path class="spark-line" d="${pnlSpark.line}" stroke="${stroke}" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="col-spark">
+              <svg class="sparkline" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true">
+                <path class="spark-area" d="${velocity.area}" fill="${stroke}" />
+                <path class="spark-line" d="${velocity.line}" stroke="${stroke}" />
+              </svg>
+            </div>
+            <div class="col-action" aria-hidden="true"><i class="ph ph-caret-right"></i></div>
+            <div class="mobile-stats" aria-hidden="true">
+              <div class="ms-cell"><span class="ms-l">Score</span><span class="ms-v">${k.score}</span></div>
+              <div class="ms-cell"><span class="ms-l">Win Rate</span><span class="ms-v">${k.winrate}%</span></div>
+              <div class="ms-cell"><span class="ms-l">PnL 90D</span><span class="ms-v ${isUp ? 'up' : 'down'}">${fmtPct(k.pnl)}</span></div>
+            </div>
+          </div>
+        `;
+      };
+
+      const render = () => {
+        const filtered = KOLS.filter(k => {
+          if (!searchTerm) return true;
+          const t = searchTerm.toLowerCase();
+          return k.handle.toLowerCase().includes(t) || k.name.toLowerCase().includes(t);
+        }).slice().sort(sortKeys[currentSort]);
+
+        sortLabelEl.textContent = sortLabel[currentSort];
+        totalCountEl.textContent = KOLS.length;
+        visibleCountEl.textContent = filtered.length;
+        renderMacro(filtered.length ? filtered : KOLS);
+
+        // Top 3 on the podium; the rest in the list
+        if (filtered.length === 0) {
+          podium.innerHTML = '';
+          body.innerHTML = `<div class="lb-empty">No KOLs match "${searchTerm}". Try a different handle.</div>`;
+          return;
+        }
+        renderPodium(filtered.slice(0, 3));
+
+        const rest = filtered.slice(3);
+        body.innerHTML = rest.length
+          ? rest.map((k, i) => renderRow(k, i + 4)).join('')
+          : `<div class="lb-empty" style="padding:24px 16px;">— End of leaderboard —</div>`;
+      };
+
+      /* ---- sort tabs ---- */
+      document.getElementById('sort-tabs').addEventListener('click', e => {
+        const btn = e.target.closest('.sort-tab');
+        if (!btn) return;
+        document.querySelectorAll('.sort-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentSort = btn.dataset.sort;
+        render();
+      });
+
+      /* ---- search ---- */
+      search.addEventListener('input', () => {
+        searchTerm = search.value.trim();
+        render();
+      });
+
+      /* ---- row / podium click → open KOL playbook ---- */
+      const openPlaybook = (handle) => { location.href = `audit.html#playbook/${handle}`; };
+      const hookClicks = (root, selector) => {
+        root.addEventListener('click', e => {
+          const el = e.target.closest(selector);
+          if (!el || !el.dataset.handle) return;
+          openPlaybook(el.dataset.handle);
+        });
+        root.addEventListener('keydown', e => {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          const el = e.target.closest(selector);
+          if (!el || !el.dataset.handle) return;
+          e.preventDefault();
+          openPlaybook(el.dataset.handle);
+        });
+      };
+      hookClicks(body,   '.lb-row');
+      hookClicks(podium, '.podium-card');
+
+      render();
+    })();
+
+    /* ---------- request-missing-KOLs form ---------- */
+    (() => {
+      const form = document.getElementById('req-form');
+      const input = document.getElementById('req-handle');
+      const hint  = document.getElementById('req-hint');
+      if (!form) return;
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const raw = input.value.trim().replace(/^@+/, '');
+        if (!raw) {
+          hint.innerHTML = '<span style="color:var(--orange);">Enter an X handle to request.</span>';
+          input.focus();
+          return;
+        }
+        if (!/^[A-Za-z0-9_]{1,15}$/.test(raw)) {
+          hint.innerHTML = '<span style="color:var(--orange);">X handles are letters, numbers, and underscores (max 15).</span>';
+          input.focus();
+          return;
+        }
+        hint.innerHTML = `<span class="ok"><i class="ph-fill ph-check-circle"></i></span> @${raw} queued for indexing — usually back in 48h.`;
+        input.value = '';
+      });
+    })();
+
+    /* ---- mobile hamburger ---- */
+    (() => {
+      const nav    = document.querySelector('header.nav');
+      const burger = document.getElementById('nav-burger');
+      const links  = document.getElementById('nav-links');
+      if (!nav || !burger || !links) return;
+      const close = () => { nav.classList.remove('open'); burger.setAttribute('aria-expanded', 'false'); };
+      const toggle = () => { const open = !nav.classList.contains('open'); nav.classList.toggle('open', open); burger.setAttribute('aria-expanded', String(open)); };
+      burger.addEventListener('click', e => { e.stopPropagation(); toggle(); });
+      links.addEventListener('click', e => { if (e.target.closest('a')) close(); });
+      document.addEventListener('click', e => { if (!nav.classList.contains('open')) return; if (!e.target.closest('header.nav')) close(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+      let mq = matchMedia('(min-width: 768px)');
+      mq.addEventListener('change', e => { if (e.matches) close(); });
+    })();
+
+    /* ---- custom cursor ---- */
+    (() => {
+      const dot   = document.getElementById('cursor-dot');
+      const ring  = document.getElementById('cursor-ring');
+      const label = document.getElementById('cursor-label');
+      if (!dot) return;
+      const SELECTOR = 'a, button, .lb-row, .podium-card, .sort-tab, input, .interactive';
+      let tx = innerWidth / 2, ty = innerHeight / 2;
+      let rx = tx, ry = ty;
+      dot.style.left = ring.style.left = label.style.left = tx + 'px';
+      dot.style.top  = ring.style.top  = label.style.top  = ty + 'px';
+      addEventListener('pointermove', e => {
+        tx = e.clientX; ty = e.clientY;
+        dot.style.left = tx + 'px';   dot.style.top  = ty + 'px';
+        label.style.left = tx + 'px'; label.style.top  = ty + 'px';
+      }, { passive: true });
+      addEventListener('pointerdown', () => document.body.classList.add('pressing'));
+      addEventListener('pointerup',   () => document.body.classList.remove('pressing'));
+      addEventListener('pointerleave',() => document.body.classList.remove('pressing'));
+      addEventListener('pointerover', e => {
+        const hit = e.target.closest && e.target.closest(SELECTOR);
+        if (!hit) return;
+        document.body.classList.add('hovering');
+        const txt = hit.dataset.cursorLabel;
+        if (txt) { label.textContent = txt; document.body.classList.add('has-label'); }
+      }, true);
+      addEventListener('pointerout', e => {
+        const hit = e.target.closest && e.target.closest(SELECTOR);
+        if (!hit) return;
+        const toHit = e.relatedTarget?.closest?.(SELECTOR);
+        if (toHit === hit) return;
+        if (!toHit) {
+          document.body.classList.remove('hovering');
+          document.body.classList.remove('has-label');
+        } else {
+          const txt = toHit.dataset.cursorLabel;
+          if (txt) { label.textContent = txt; document.body.classList.add('has-label'); }
+          else     { document.body.classList.remove('has-label'); }
+        }
+      }, true);
+      let cRaf = 0;
+      const tick = () => {
+        cRaf = 0;
+        const ex = tx - rx, ey = ty - ry;
+        rx += ex * 0.18; ry += ey * 0.18;
+        ring.style.left = rx + 'px'; ring.style.top  = ry + 'px';
+        if (ex * ex + ey * ey > 0.25) cRaf = requestAnimationFrame(tick);
+      };
+      const schedule = () => { if (!cRaf) cRaf = requestAnimationFrame(tick); };
+      addEventListener('pointermove', schedule, { passive: true });
+      schedule();
+    })();
+  </script>
+</body>
+</html>
