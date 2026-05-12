@@ -300,7 +300,9 @@
   .primary-wrap .cta-bubble {
     position: absolute;
     bottom: calc(100% + 10px);
-    right: -60px;          /* shift past the button's right edge on PC */
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;        /* avoid shrink-to-fit width constraint */
     margin: 0;
   }
 
@@ -860,7 +862,7 @@
   @media (max-width: 767px) {
     header.nav { backdrop-filter: blur(10px); }
     .nav-inner { padding: 0 16px; height: 56px; gap: 8px; }
-    .brand-text .sub { display: none; }
+    /* keep subtitle visible on mobile too */
     .brand-text .name { font-size: 13px; }
     /* nav-links collapse into a dropdown panel triggered by .nav-burger */
     .nav-links {
@@ -912,9 +914,10 @@
        (position: absolute; right: 0) still sticks to its right edge */
     .primary-wrap { width: 100%; }
     .actions { margin-top: 40px; }
-    /* mobile: bubble back inside the button's right edge + arrow at bottom-right */
-    .primary-wrap .cta-bubble { right: 0; }
-    .cta-bubble::after { left: auto; right: 22px; }
+    /* mobile: bubble snaps back to the right edge of the full-width button,
+       arrow at bottom-right */
+    .primary-wrap .cta-bubble { left: auto; right: 0; transform: none; }
+    .cta-bubble::after { left: auto; right: 22px; transform: rotate(45deg); }
     .perms { font-size: 11px; gap: 10px; margin-top: 12px; }
     .cards-rail {
       padding: 12px 0 32px;
@@ -975,12 +978,12 @@
           </svg>
         </div>
         <div class="brand-text">
-          <div class="name">ALVA</div>
+          <div class="name">ALVA &middot; Campaign</div>
           <div class="sub">Live Audit Engine</div>
         </div>
       </div>
       <nav class="nav-links" id="nav-links">
-        <a href="#"><i class="ph ph-chart-line"></i> Leaderboard</a>
+        <a href="leaderboard.html"><i class="ph ph-chart-line"></i> Leaderboard</a>
         <a href="#"><i class="ph ph-magnifying-glass"></i> Search KOL</a>
         <a href="#"><i class="ph ph-file-text"></i> Docs</a>
       </nav>
@@ -1292,7 +1295,7 @@
           </div>
           <button class="btn-primary" data-cursor-label="Connect">Connect X Graph <i class="ph-bold ph-arrow-right"></i></button>
         </div>
-        <button class="btn-secondary" data-cursor-label="Board">View Public Leaderboard</button>
+        <button class="btn-secondary" data-cursor-label="Board" onclick="location.href='leaderboard.html'">View Public Leaderboard</button>
       </div>
       <div class="perms">
         <span><i class="ph-fill ph-check-circle"></i> Read-only X scope</span>
@@ -1341,7 +1344,7 @@
       <p>Join 25,000+ readers using ALVA to separate the signal from the noise. The data doesn't lie.</p>
       <div class="actions">
         <button class="btn-dark" data-cursor-label="Audit">Audit My Feed <i class="ph-bold ph-arrow-right"></i></button>
-        <button class="btn-outline" data-cursor-label="Board">View Public Leaderboard</button>
+        <button class="btn-outline" data-cursor-label="Board" onclick="location.href='leaderboard.html'">View Public Leaderboard</button>
       </div>
       <div class="stats">
         <div class="stat"><div class="v">$420M+</div><div class="l">Audit Volume</div></div>
@@ -1356,7 +1359,7 @@
       <div>© 2026 ALVA Live Audit Engine</div>
       <div>
         <a href="#">Methodology</a> &nbsp;·&nbsp;
-        <a href="#">Leaderboard</a> &nbsp;·&nbsp;
+        <a href="leaderboard.html">Leaderboard</a> &nbsp;·&nbsp;
         <a href="#">Privacy</a>
       </div>
     </div>
@@ -1629,6 +1632,1127 @@
       const schedule = () => { if (!cRaf) cRaf = requestAnimationFrame(tick); };
       addEventListener('pointermove', schedule, { passive: true });
       schedule();
+    })();
+  </script>
+
+  <!-- ============================================================
+       Audit flow — modal dialogs that sit on top of the landing
+       page (the marketing background stays visible). Each step is
+       its own dialog: connect → loading → result → insufficient,
+       plus a separate Request-missing-KOLs modal.
+       ============================================================ -->
+  <style>
+    /* shared dialog shell */
+    .dlg-scrim {
+      position: fixed; inset: 0; z-index: 90;
+      background: rgba(10,10,16,0.55);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; transition: opacity .25s ease;
+    }
+    .dlg-scrim.open { display: flex; opacity: 1; }
+    .dlg {
+      background: var(--card); color: #fff;
+      border: 1px solid var(--card-line);
+      border-radius: 20px;
+      padding: 32px;
+      width: 100%;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      position: relative;
+      transform: translateY(12px) scale(0.98);
+      opacity: 0;
+      transition: transform .3s cubic-bezier(.2,.8,.2,1), opacity .25s ease;
+    }
+    .dlg-scrim.open .dlg { transform: translateY(0) scale(1); opacity: 1; }
+    .dlg.size-sm { max-width: 460px; }
+    .dlg.size-md { max-width: 560px; }
+    .dlg.size-lg { max-width: 760px; }
+    .dlg.size-xl { max-width: 960px; }
+    .dlg-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-line);
+      color: rgba(255,255,255,0.7);
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0; line-height: 1;
+      font-size: 13px;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .dlg-close i { display: block; line-height: 1; }
+    .dlg-close:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.25); }
+
+    .dlg-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--alva);
+      padding: 4px 10px; border-radius: 999px;
+      background: var(--alva-dim);
+      border: 1px solid rgba(73,163,166,0.3);
+      margin-bottom: 14px;
+    }
+    .dlg-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 28px; line-height: 1.05;
+      letter-spacing: -0.01em; text-transform: uppercase;
+      margin: 0 0 10px;
+    }
+    .dlg-sub { color: rgba(255,255,255,0.65); font-size: 13.5px; line-height: 1.55; margin: 0 0 22px; }
+
+    /* shared dialog buttons */
+    .dlg-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13.5px; font-weight: 700;
+      color: #fff; background: var(--alva);
+      border: 0; padding: 12px 22px;
+      border-radius: 8px;
+      transition: transform .15s, box-shadow .15s, background .15s;
+    }
+    .dlg-btn:hover { background: var(--alva-hi); transform: translateY(-1px); box-shadow: 0 12px 24px rgba(73,163,166,0.32); }
+    .dlg-btn.ghost {
+      color: rgba(255,255,255,0.75); background: transparent;
+      border: 1px solid var(--card-line);
+      padding: 11px 20px;
+    }
+    .dlg-btn.ghost:hover { color: #fff; border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.04); }
+    .dlg-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+
+    /* Step 1: Connect (X OAuth) */
+    .x-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .x-mark {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: #fff; color: #000;
+      display: grid; place-items: center;
+      font-weight: 900; font-size: 18px;
+    }
+    .x-head .t { font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+    .x-head .s { font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.16em; text-transform: uppercase; margin-top: 2px; }
+    .scopes {
+      margin: 18px 0 0;
+      padding: 16px;
+      border: 1px solid var(--card-line);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.02);
+      display: grid; gap: 8px;
+    }
+    .scope-row { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: rgba(255,255,255,0.85); }
+    .scope-row i { font-size: 14px; color: var(--alva); }
+    .scope-row.neg { color: rgba(255,255,255,0.55); }
+    .scope-row.neg i { color: var(--orange); }
+
+    /* Step 2: Loading */
+    .load-head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+    .loader-orb {
+      width: 44px; height: 44px; border-radius: 12px;
+      background:
+        conic-gradient(from 0deg, var(--alva), transparent 70%),
+        radial-gradient(circle at 30% 30%, rgba(73,163,166,0.6), rgba(73,163,166,0));
+      animation: orbSpin 2.2s linear infinite;
+      position: relative; flex-shrink: 0;
+    }
+    .loader-orb::after { content: ""; position: absolute; inset: 7px; background: var(--card); border-radius: 7px; }
+    @keyframes orbSpin { to { transform: rotate(360deg); } }
+    .load-head h3 { font-family: var(--font-display); font-size: 18px; font-weight: 700; text-transform: uppercase; }
+    .load-head .s { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+    .progress-track {
+      height: 5px; background: rgba(255,255,255,0.07);
+      border-radius: 999px; overflow: hidden;
+    }
+    .progress-track span {
+      display: block; height: 100%;
+      background: linear-gradient(90deg, var(--alva), var(--alva-hi));
+      width: 0%;
+      animation: prog 3.2s ease-out forwards;
+    }
+    @keyframes prog { to { width: 100%; } }
+    .progress-meta {
+      margin-top: 8px; display: flex; justify-content: space-between;
+      font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.55);
+      letter-spacing: 0.16em; text-transform: uppercase;
+    }
+    .step-log { margin-top: 22px; display: grid; gap: 9px; }
+    .step-log .l {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12.5px; color: rgba(255,255,255,0.5);
+      font-family: var(--font-mono);
+      transition: color .3s;
+    }
+    .step-log .l i { font-size: 13px; }
+    .step-log .l.done { color: rgba(255,255,255,0.95); }
+    .step-log .l.done i { color: var(--alva); }
+    .step-log .l.active { color: #fff; }
+    .step-log .l.active i { color: var(--alva-hi); animation: pulse 1.4s ease-in-out infinite; }
+    .load-debug { margin-top: 22px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Step 3a: Result */
+    .res-grid {
+      display: grid; grid-template-columns: 240px 1fr; gap: 22px;
+      align-items: start;
+    }
+    .share-card {
+      aspect-ratio: 4 / 5;
+      border-radius: 16px; padding: 20px;
+      background:
+        radial-gradient(120% 100% at 0% 0%, rgba(73,163,166,0.45), transparent 55%),
+        radial-gradient(80% 80% at 100% 100%, rgba(179,136,255,0.35), transparent 50%),
+        linear-gradient(160deg, #0a0a10 0%, #11181f 100%);
+      color: #fff;
+      display: flex; flex-direction: column; justify-content: space-between;
+      border: 1px solid var(--card-line);
+      overflow: hidden;
+    }
+    .share-card .sc-eyebrow { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
+    .share-card .sc-title { font-family: var(--font-display); font-size: 24px; line-height: 1; text-transform: uppercase; letter-spacing: -0.01em; font-weight: 800; margin-top: 8px; }
+    .share-card .sc-arch { font-size: 11px; opacity: 0.7; margin-top: 6px; }
+    .share-card .sc-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+      padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .share-card .sc-grid .k { font-family: var(--font-mono); font-size: 9px; color: rgba(255,255,255,0.5); letter-spacing: 0.16em; text-transform: uppercase; }
+    .share-card .sc-grid .v { font-family: var(--font-display); font-weight: 700; font-size: 16px; margin-top: 2px; }
+    .share-card .sc-grid .v.alva { color: var(--alva-hi); }
+    .share-card .sc-foot { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.5; margin-top: 8px; }
+
+    .res-side .archetype {
+      font-family: var(--font-display);
+      font-size: 22px; line-height: 1.1;
+      text-transform: uppercase; letter-spacing: -0.005em; font-weight: 800;
+    }
+    .res-side .archetype em { font-style: normal; color: var(--alva-hi); }
+    .res-side .desc { color: rgba(255,255,255,0.65); font-size: 12.5px; line-height: 1.55; margin-top: 10px; }
+    .res-side .actions { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .kol-section { margin-top: 28px; }
+    .kol-section-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .kol-section-head .lbl {
+      font-family: var(--font-display); font-size: 14px;
+      text-transform: uppercase; letter-spacing: 0.02em; font-weight: 700;
+    }
+    .kol-section-head .lbl span.count { font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.5); margin-left: 8px; letter-spacing: 0.14em; }
+    .kol-section-head .hint { font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.14em; text-transform: uppercase; }
+
+    .kol-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .kol-card {
+      background: rgba(255,255,255,0.03); color: #fff;
+      border: 1px solid var(--card-line);
+      border-radius: 12px; padding: 12px;
+      display: flex; flex-direction: column; gap: 8px;
+      transition: transform .15s, border-color .15s, background .15s;
+    }
+    .kol-card:hover { transform: translateY(-2px); border-color: rgba(73,163,166,0.5); background: rgba(73,163,166,0.06); }
+    .kol-card .top { display: flex; align-items: center; gap: 8px; }
+    .kol-card .ava {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--alva), #11181f);
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 11px; color: #fff;
+      font-family: var(--font-display);
+      flex-shrink: 0;
+    }
+    .kol-card .who .name { font-weight: 700; font-size: 12.5px; }
+    .kol-card .who .handle { font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.5); }
+    .kol-card .arch { font-size: 11px; color: rgba(255,255,255,0.65); line-height: 1.35; }
+    .kol-card .footline {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 8px; border-top: 1px solid var(--card-line);
+      font-family: var(--font-mono); font-size: 10px;
+      color: rgba(255,255,255,0.55); letter-spacing: 0.06em;
+    }
+    .kol-card .footline .wr.up { color: var(--alva-hi); }
+    .kol-card .footline .wr.dn { color: var(--orange); }
+    .kol-card.rec { background: rgba(73,163,166,0.06); border-color: rgba(73,163,166,0.28); }
+    .kol-card .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--alva); background: var(--alva-dim);
+      padding: 2px 6px; border-radius: 999px;
+      align-self: flex-start;
+    }
+
+    .request-strip {
+      margin-top: 22px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--card-line);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .request-strip .l h4 { font-family: var(--font-display); font-size: 14px; text-transform: uppercase; font-weight: 700; }
+    .request-strip .l p { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 4px; line-height: 1.45; }
+
+    /* Step 3b: Insufficient */
+    .insuff-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: rgba(255,138,76,0.14);
+      color: var(--orange);
+      display: grid; place-items: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+    .insuff-title em { color: var(--orange); font-style: normal; }
+    .stats-row {
+      margin-top: 18px;
+      display: inline-flex;
+      border: 1px solid var(--card-line); border-radius: 10px;
+      overflow: hidden;
+    }
+    .stats-row .cell {
+      padding: 10px 18px; text-align: center;
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+    }
+    .stats-row .cell + .cell { border-left: 1px solid var(--card-line); }
+    .stats-row .cell b {
+      display: block;
+      font-family: var(--font-display); color: #fff;
+      font-size: 18px; font-weight: 800; letter-spacing: 0; margin-bottom: 2px;
+    }
+    .stats-row .cell.target b { color: var(--alva-hi); }
+
+    /* Request modal */
+    .req-area {
+      width: 100%; min-height: 100px; resize: vertical;
+      margin-top: 14px;
+      background: rgba(255,255,255,0.04); color: #fff;
+      border: 1px solid var(--card-line); border-radius: 10px;
+      padding: 12px 14px; font: inherit; font-size: 12.5px;
+      font-family: var(--font-mono);
+    }
+    .req-area:focus { outline: 1px solid var(--alva); border-color: var(--alva); }
+
+    /* Toast */
+    .flow-toast {
+      position: fixed; left: 50%; bottom: 36px; transform: translateX(-50%) translateY(20px);
+      background: var(--text); color: #fff;
+      padding: 9px 16px; border-radius: 999px;
+      font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase;
+      opacity: 0; transition: opacity .25s, transform .25s;
+      pointer-events: none; z-index: 200;
+    }
+    .flow-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 720px) {
+      .res-grid { grid-template-columns: 1fr; }
+      .share-card { max-width: 260px; }
+      .kol-grid { grid-template-columns: repeat(2, 1fr); }
+      .request-strip { flex-direction: column; align-items: flex-start; }
+      .dlg-title { font-size: 22px; }
+      .dlg { padding: 24px; }
+    }
+  </style>
+
+  <!-- 1. Connect / X auth modal — light, matches landing page -->
+  <style>
+    #dlg-connect .dlg {
+      background: var(--bg-soft);
+      color: var(--text);
+      border: 1px solid var(--line);
+      box-shadow: 0 30px 80px -20px rgba(20,20,30,0.25);
+      max-width: 540px;
+      padding: 28px 40px 36px;
+    }
+    #dlg-connect .dlg-close {
+      top: 20px; right: 20px;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    #dlg-connect .dlg-close:hover { background: var(--text); color: #fff; border-color: var(--text); }
+    #dlg-connect .dlg-eyebrow {
+      color: var(--alva);
+      background: var(--alva-dim);
+      border-color: rgba(73,163,166,0.3);
+    }
+    #dlg-connect .dlg-title { color: var(--text); margin-bottom: 14px; }
+    #dlg-connect .dlg-sub { color: var(--muted); font-size: 14.5px; line-height: 1.6; margin-bottom: 24px; }
+    #dlg-connect .trust {
+      display: flex; flex-direction: column; gap: 10px;
+      margin: 0 0 26px;
+      font-size: 13px; color: var(--muted); font-weight: 500;
+    }
+    #dlg-connect .trust span { display: inline-flex; align-items: center; gap: 8px; }
+    #dlg-connect .trust span i { color: var(--alva); font-size: 16px; flex-shrink: 0; }
+    #dlg-connect .cta-full {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%;
+      font-size: 15px; font-weight: 700;
+      color: #fff; background: var(--text);
+      border: 0; padding: 16px 24px;
+      border-radius: 10px;
+      transition: background .15s, transform .15s, box-shadow .15s;
+    }
+    #dlg-connect .cta-full:hover {
+      background: var(--alva);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(73,163,166,0.32);
+    }
+    #dlg-connect .cta-full:active { transform: translateY(0); }
+
+    /* state toggle inside the connect dialog */
+    #dlg-connect [data-state] { display: none; }
+    #dlg-connect[data-state="auth"]    [data-state="auth"]    { display: block; }
+    #dlg-connect[data-state="loading"] [data-state="loading"] { display: block; }
+    #dlg-connect[data-state="loading"] .dlg-close { display: none; }
+
+    /* loading state — light, matches the rest of the modal */
+    #dlg-connect .load-title { margin-bottom: 8px; }
+    #dlg-connect .load-sub { color: var(--muted); font-size: 14.5px; line-height: 1.6; margin-bottom: 28px; }
+    #dlg-connect .l-progress {
+      height: 6px;
+      background: var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 26px;
+    }
+    #dlg-connect .l-progress span {
+      display: block; height: 100%;
+      background: linear-gradient(90deg, var(--alva), var(--alva-hi));
+      width: 0%;
+      animation: lprog 3.2s ease-out forwards;
+    }
+    @keyframes lprog { to { width: 100%; } }
+    #dlg-connect .l-steps {
+      display: flex; flex-direction: column; gap: 12px;
+      margin-bottom: 4px;
+    }
+    #dlg-connect .l-steps .row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; color: var(--muted-2);
+      transition: color .25s ease;
+    }
+    #dlg-connect .l-steps .row i { font-size: 18px; color: var(--muted-2); transition: color .25s ease; }
+    #dlg-connect .l-steps .row.active { color: var(--text); font-weight: 500; }
+    #dlg-connect .l-steps .row.active i { color: var(--alva); animation: pulse 1.4s ease-in-out infinite; }
+    #dlg-connect .l-steps .row.done { color: var(--text); }
+    #dlg-connect .l-steps .row.done i { color: var(--alva); }
+  </style>
+  <div class="dlg-scrim" id="dlg-connect" data-state="auth" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dlg-connect-title">
+    <div class="dlg size-sm">
+      <button class="dlg-close" data-dlg-close data-cursor-label="Close" aria-label="Close"><i class="ph-bold ph-x"></i></button>
+
+      <!-- Auth state -->
+      <div data-state="auth">
+        <h2 class="dlg-title" id="dlg-connect-title">Connect Your X Account</h2>
+        <p class="dlg-sub">We'll read your public following list and backtest every KOL against 15,000+ indexed signals. In about 3 seconds you'll see which follows are alpha and which are noise.</p>
+
+        <div class="trust">
+          <span><i class="ph-fill ph-check-circle"></i> Read-only X scope — no posts, follows, or likes</span>
+          <span><i class="ph-fill ph-check-circle"></i> DMs and timeline never read</span>
+          <span><i class="ph-fill ph-check-circle"></i> Results stay private to you — revoke any time</span>
+        </div>
+
+        <button class="cta-full" id="auth-go" data-cursor-label="Authorize">Authorize with X <i class="ph-bold ph-arrow-right"></i></button>
+      </div>
+
+      <!-- Loading state — same modal frame, content swaps in place -->
+      <div data-state="loading">
+        <h2 class="dlg-title load-title">Auditing Your Feed</h2>
+        <p class="load-sub">Cross-matching your follows against 15,402 indexed sources — this takes about 3 seconds.</p>
+
+        <div class="l-progress"><span></span></div>
+
+        <div class="l-steps" id="l-steps">
+          <div class="row active" data-l="auth"><i class="ph-fill ph-circle-notch"></i> Authorizing with X</div>
+          <div class="row" data-l="follow"><i class="ph ph-circle"></i> Reading your following</div>
+          <div class="row" data-l="match"><i class="ph ph-circle"></i> Matching indexed KOLs</div>
+          <div class="row" data-l="score"><i class="ph ph-circle"></i> Scoring signal vs. market</div>
+          <div class="row" data-l="render"><i class="ph ph-circle"></i> Rendering your taste card</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3a. Result view — full-page light takeover that sits BELOW the
+       sticky nav. Hero: animated flip-in profile card matching the
+       index.html style, then KOL grids, then request strip. -->
+  <style>
+    .result-view {
+      position: fixed; inset: 64px 0 0 0;   /* leave nav visible */
+      z-index: 80;
+      pointer-events: none;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .result-view.open { pointer-events: auto; }
+    /* white scrim that fades in behind the card */
+    .rv-scrim {
+      position: fixed; inset: 64px 0 0 0;
+      background: var(--bg);
+      opacity: 0;
+      transition: opacity .6s ease;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .result-view.open .rv-scrim { opacity: 1; }
+
+    .rv-close {
+      position: fixed;
+      top: 16px; right: 32px;     /* sits inside the nav row, far right */
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--bg-soft);
+      color: var(--muted);
+      display: inline-flex; align-items: center; justify-content: center;
+      line-height: 1;
+      z-index: 60;
+      opacity: 0;
+      transition: opacity .4s .8s ease, background .15s, color .15s, border-color .15s;
+    }
+    .result-view.open .rv-close { opacity: 1; }
+    .rv-close:hover { background: var(--text); color: #fff; border-color: var(--text); }
+    .rv-close i { display: block; line-height: 1; font-size: 14px; }
+
+    .rv-stage {
+      position: relative; z-index: 1;
+      max-width: 1240px; margin: 0 auto;
+      padding: 56px 48px 96px;
+    }
+
+    /* ----- Hero: card + headline + share row ----- */
+    .rv-hero {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center;
+      padding-top: 24px;
+    }
+    .rv-card-stage {
+      perspective: 1600px;
+      width: 460px; max-width: 92vw;
+      margin: 0 auto 36px;
+      transform-style: preserve-3d;
+    }
+    .rv-card {
+      width: 100%; aspect-ratio: 4 / 5;
+      container-type: inline-size;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(73,163,166,0.22), rgba(10,10,16,0) 55%), var(--card);
+      border: 1px solid var(--card-line);
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 32px 80px -20px rgba(20,20,30,0.40),
+        0 12px 28px -10px rgba(20,20,30,0.20);
+      transform-style: preserve-3d;
+      transform:
+        rotateY(var(--tx, 0deg))
+        rotateX(var(--ty, 0deg))
+        rotateY(var(--enter-ry, -90deg))
+        scale(var(--enter-s, 0.7));
+      opacity: var(--enter-o, 0);
+      transition:
+        transform .9s cubic-bezier(.2,.8,.2,1),
+        opacity .6s ease,
+        box-shadow .25s;
+    }
+    .result-view.lit .rv-card {
+      --enter-ry: 0deg;
+      --enter-s: 1;
+      --enter-o: 1;
+    }
+    /* once entrance settles, swap to a faster transition so the
+       cursor-driven tilt feels live, not laggy. */
+    .result-view.tilt .rv-card {
+      transition:
+        transform .25s cubic-bezier(.2,.8,.2,1),
+        box-shadow .25s;
+    }
+
+    /* card-inner reuses the same .pc-* classes as the hero rail. */
+    .rv-card .card-inner {
+      position: relative;
+      width: 100%; height: 100%;
+      border-radius: 14px;
+      padding: 1.71em;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+      color: #fff;
+      font-size: clamp(11px, 3.685cqi, 16px);
+    }
+
+    /* Hero copy under the card */
+    .rv-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(32px, 5vw, 52px); line-height: 1.02;
+      letter-spacing: -0.02em; text-transform: uppercase;
+      color: var(--text);
+      margin: 0 0 14px;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity .5s .55s ease, transform .5s .55s cubic-bezier(.2,.8,.2,1);
+    }
+    .rv-title em { font-style: normal; color: var(--alva); }
+    .rv-sub {
+      max-width: 640px;
+      color: var(--muted); font-size: 16px; line-height: 1.6;
+      margin: 0 0 28px;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity .5s .7s ease, transform .5s .7s cubic-bezier(.2,.8,.2,1);
+    }
+    .result-view.lit .rv-title,
+    .result-view.lit .rv-sub { opacity: 1; transform: translateY(0); }
+
+    /* Share row */
+    .rv-shares {
+      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity .5s .85s ease, transform .5s .85s cubic-bezier(.2,.8,.2,1);
+    }
+    .result-view.lit .rv-shares { opacity: 1; transform: translateY(0); }
+    /* Share row: the four brand share buttons are the primary action.
+       Save-image is a quiet secondary, set apart by a thin divider. */
+    .rv-shares {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+      align-items: center;
+    }
+    .share-btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 13px 22px;
+      border-radius: 9999px;
+      font-size: 14px; font-weight: 700;
+      color: #fff;
+      border: 1px solid transparent;
+      transition: transform .15s, filter .15s, box-shadow .15s, background .15s, color .15s;
+      box-shadow: 0 8px 20px -8px rgba(20,20,30,0.25);
+    }
+    .share-btn i { font-size: 16px; line-height: 1; }
+    .share-btn:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 14px 28px -10px rgba(20,20,30,0.30); }
+    /* brand-coloured by default — share is the headline action */
+    .share-btn[data-share="x"]        { background: #000; }
+    .share-btn[data-share="telegram"] { background: #229ED9; }
+    .share-btn[data-share="discord"]  { background: #5865F2; }
+    .share-btn[data-share="copy"] {
+      background: var(--bg-soft); color: var(--text);
+      border-color: var(--line); box-shadow: none;
+    }
+    .share-btn[data-share="copy"]:hover { background: var(--text); color: #fff; border-color: var(--text); }
+    /* quiet save link — visually separated from the share group */
+    .rv-shares .save-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 14px;
+      margin-left: 6px;
+      color: var(--muted); background: transparent;
+      border: 0; font-size: 13px; font-weight: 500;
+      position: relative;
+    }
+    .rv-shares .save-link::before {
+      content: ""; display: block;
+      width: 1px; height: 22px;
+      background: var(--line);
+      margin-right: 10px;
+    }
+    .rv-shares .save-link i { font-size: 15px; }
+    .rv-shares .save-link:hover { color: var(--text); }
+
+    /* ----- Content below hero ----- */
+    .rv-content {
+      margin-top: 120px;
+      opacity: 0; transform: translateY(16px);
+      transition: opacity .6s 1.0s ease, transform .6s 1.0s cubic-bezier(.2,.8,.2,1);
+    }
+    .result-view.lit .rv-content { opacity: 1; transform: translateY(0); }
+
+    .rv-section { margin-bottom: 56px; }
+    .rv-section-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .rv-section-head h3 {
+      font-family: var(--font-display);
+      font-size: 22px; text-transform: uppercase; letter-spacing: -0.005em;
+      font-weight: 700; color: var(--text); margin: 0;
+    }
+    .rv-section-head h3 span.count {
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--muted); margin-left: 12px; letter-spacing: 0.14em;
+    }
+    .rv-section-head .hint {
+      font-family: var(--font-mono); font-size: 11px;
+      color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase;
+    }
+
+    .rv-kol-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .rv-kol-card {
+      background: var(--bg-soft);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex; flex-direction: column; gap: 12px;
+      transition: transform .15s, border-color .15s, box-shadow .15s;
+    }
+    .rv-kol-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(73,163,166,0.40);
+      box-shadow: 0 12px 24px -10px rgba(20,20,30,0.14);
+    }
+    .rv-kol-card .top { display: flex; align-items: center; gap: 10px; }
+    .rv-kol-card .ava {
+      width: 38px; height: 38px; border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      display: block;
+    }
+    .rv-kol-card .who .name { font-weight: 700; font-size: 13.5px; }
+    .rv-kol-card .who .handle { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+    .rv-kol-card .arch { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+    .rv-kol-card .footline {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 10px; border-top: 1px solid var(--line);
+      font-family: var(--font-mono); font-size: 11px;
+      color: var(--muted); letter-spacing: 0.06em;
+    }
+    .rv-kol-card .footline .wr.up { color: var(--alva); }
+    .rv-kol-card .footline .wr.dn { color: var(--orange); }
+    .rv-kol-card.rec {
+      background: rgba(73,163,166,0.05);
+      border-color: rgba(73,163,166,0.30);
+    }
+    .rv-kol-card .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--alva); background: var(--alva-dim);
+      padding: 3px 8px; border-radius: 999px;
+      align-self: flex-start;
+      border: 1px solid rgba(73,163,166,0.25);
+    }
+
+    .rv-request {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 22px 26px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .rv-request .l h4 {
+      font-family: var(--font-display); font-size: 18px;
+      text-transform: uppercase; letter-spacing: -0.005em; font-weight: 700;
+      color: var(--text); margin: 0;
+    }
+    .rv-request .l p { color: var(--muted); font-size: 13px; margin: 6px 0 0; line-height: 1.5; }
+    .rv-request-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 22px; border-radius: 9999px;
+      background: var(--text); color: #fff; border: 0;
+      font-size: 13.5px; font-weight: 700;
+      transition: transform .15s, background .15s, box-shadow .15s;
+    }
+    .rv-request-btn:hover { background: var(--alva); transform: translateY(-1px); box-shadow: 0 10px 22px -8px rgba(73,163,166,0.35); }
+
+    @media (max-width: 900px) {
+      .rv-stage { padding: 40px 24px 72px; }
+      .rv-card-stage { width: 360px; }
+      .rv-kol-grid { grid-template-columns: repeat(2, 1fr); }
+      .rv-request { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 520px) {
+      .rv-kol-grid { grid-template-columns: 1fr; }
+      .rv-card-stage { width: 88vw; }
+    }
+  </style>
+
+  <div class="result-view" id="result-view" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="rv-title">
+    <div class="rv-scrim"></div>
+
+    <button class="rv-close" data-rv-close data-cursor-label="Close" aria-label="Close result"><i class="ph-bold ph-x"></i></button>
+
+    <div class="rv-stage">
+
+      <section class="rv-hero">
+        <div class="rv-card-stage" id="rv-card-stage">
+          <article class="rv-card" id="rv-card">
+            <div class="card-inner">
+              <div class="pc-head">
+                <div class="pc-id">
+                  <img class="avatar" loading="lazy" decoding="async" src="https://i.pravatar.cc/120?img=15" alt="Your avatar" />
+                  <div>
+                    <div class="pc-name">Your Taste</div>
+                    <div class="pc-handle">@you</div>
+                  </div>
+                </div>
+                <div class="pc-badge">ALVA_TASTE_IDX</div>
+              </div>
+              <div class="pc-score">
+                <div>
+                  <div class="label">Taste Score</div>
+                  <div class="val">62</div>
+                  <div class="type">Patient Macro Watcher</div>
+                </div>
+                <div class="pc-rank">
+                  <svg viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle>
+                    <circle class="ring-fill"  cx="50" cy="50" r="45" fill="none" stroke-width="4"
+                            stroke-dasharray="283" stroke-dashoffset="107"></circle>
+                  </svg>
+                  <div class="ring-text"><span class="l">Archetype</span><span class="v">#04</span></div>
+                </div>
+              </div>
+              <div class="pc-matrix">
+                <div class="row"><span>Style Matrix</span><span>L90D Map</span></div>
+                <div class="dots">
+                  <i class="g"></i><i class="g"></i><i></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="p"></i><i class="g"></i>
+                  <i class="g"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i></i><i class="p"></i><i></i><i class="g"></i>
+                  <i></i><i class="g"></i><i class="g"></i><i></i><i class="p"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i>
+                </div>
+                <div class="legend">
+                  <span class="lg-g">Macro</span><span class="lg-o">Trader</span><span class="lg-p">Growth</span>
+                </div>
+              </div>
+              <div class="pc-providers">
+                <div class="head">Top Matched KOLs</div>
+                <div class="prv alva">
+                  <div class="meta"><span class="handle">@HowardMarksBk</span><span class="stat alva">71% WR</span></div>
+                  <div class="track"><div class="fill" style="width:71%"></div></div>
+                </div>
+                <div class="prv purple">
+                  <div class="meta"><span class="handle">@LynAldenContact</span><span class="stat purple">68% WR</span></div>
+                  <div class="track"><div class="fill" style="width:68%"></div></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <h1 class="rv-title" id="rv-title">You read the tape like a <em>macro watcher.</em></h1>
+        <p class="rv-sub">7 of your 184 follows are indexed by Alva. They cluster around a macro-aware, low-frequency, long-biased style — no momentum traders, no day-trader influence detected. Share your card, or see who you might be missing.</p>
+
+        <div class="rv-shares" role="group" aria-label="Share your taste card">
+          <button class="share-btn" data-share="x" data-cursor-label="X" aria-label="Share to X"><i class="ph-fill ph-x-logo"></i> Share to X</button>
+          <button class="share-btn" data-share="telegram" data-cursor-label="Telegram" aria-label="Share to Telegram"><i class="ph-fill ph-telegram-logo"></i> Telegram</button>
+          <button class="share-btn" data-share="discord" data-cursor-label="Discord" aria-label="Share to Discord"><i class="ph-fill ph-discord-logo"></i> Discord</button>
+          <button class="share-btn" data-share="copy" data-cursor-label="Copy" aria-label="Copy link"><i class="ph-bold ph-link-simple"></i> Copy link</button>
+          <button class="save-link" data-share="save" data-cursor-label="Save" aria-label="Save image"><i class="ph-bold ph-download-simple"></i> Save image</button>
+        </div>
+      </section>
+
+      <div class="rv-content">
+        <section class="rv-section">
+          <div class="rv-section-head">
+            <h3>KOLs you follow<span class="count">7 matched</span></h3>
+            <div class="hint">Click → open profile</div>
+          </div>
+          <div class="rv-kol-grid" id="grid-followed"></div>
+        </section>
+
+        <section class="rv-section">
+          <div class="rv-section-head">
+            <h3>You might have missed<span class="count">4 recommended</span></h3>
+            <div class="hint">Higher win-rate · same archetype</div>
+          </div>
+          <div class="rv-kol-grid" id="grid-recommended"></div>
+        </section>
+
+        <div class="rv-request">
+          <div class="l">
+            <h4>Missing a KOL you swear by?</h4>
+            <p>Tell us the handle. We evaluate and index new sources weekly.</p>
+          </div>
+          <button class="rv-request-btn" data-open-request data-cursor-label="Request">Request missing KOLs <i class="ph-bold ph-arrow-right"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3b. Insufficient modal -->
+  <div class="dlg-scrim" id="dlg-insufficient" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="dlg size-md">
+      <button class="dlg-close" data-dlg-close data-cursor-label="Close" aria-label="Close"><i class="ph-bold ph-x"></i></button>
+      <div class="dlg-eyebrow"><i class="ph-fill ph-warning"></i> Not enough data</div>
+      <div class="insuff-icon"><i class="ph-bold ph-warning"></i></div>
+      <h2 class="dlg-title insuff-title">Only <em>1</em> indexed KOL in your feed</h2>
+      <p class="dlg-sub">We need at least 3 indexed KOLs in your following to build a reliable taste profile. Follow a few more from the leaderboard, or request the ones we're missing.</p>
+
+      <div class="stats-row">
+        <div class="cell"><b>184</b>You follow</div>
+        <div class="cell"><b>1</b>Indexed match</div>
+        <div class="cell target"><b>3+</b>Needed to score</div>
+      </div>
+
+      <div class="dlg-actions">
+        <button class="dlg-btn" data-dlg-close data-cursor-label="Board">Browse leaderboard <i class="ph-bold ph-arrow-right"></i></button>
+        <button class="dlg-btn ghost" data-open-request data-cursor-label="Request">Request missing KOLs</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request missing KOLs modal -->
+  <div class="dlg-scrim" id="dlg-request" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="dlg size-sm">
+      <button class="dlg-close" data-dlg-close data-cursor-label="Close" aria-label="Close"><i class="ph-bold ph-x"></i></button>
+      <div class="dlg-eyebrow"><i class="ph-fill ph-paper-plane-tilt"></i> Coverage request</div>
+      <h2 class="dlg-title">Request missing KOLs</h2>
+      <p class="dlg-sub">One handle per line. We evaluate every request and index high-signal accounts weekly.</p>
+      <textarea class="req-area" placeholder="@elonmusk&#10;@balajis&#10;@RaoulGMI"></textarea>
+      <div class="dlg-actions" style="justify-content: flex-end;">
+        <button class="dlg-btn ghost" data-dlg-close data-cursor-label="Cancel">Cancel</button>
+        <button class="dlg-btn" data-submit-request data-cursor-label="Submit">Submit <i class="ph-bold ph-arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-toast" id="flow-toast"></div>
+
+  <script>
+    /* ============================================================
+       Modal-based audit flow controller. Each step is an independent
+       dialog; "navigation" = closing one and opening the next.
+       ============================================================ */
+    (() => {
+      const dlgs = {
+        connect:      document.getElementById('dlg-connect'),
+        result:       document.getElementById('result-view'),
+        insufficient: document.getElementById('dlg-insufficient'),
+        request:      document.getElementById('dlg-request'),
+      };
+      let loadTimer = 0;
+      let litTimer = 0;
+      let tiltTimer = 0;
+      let scrollLockCount = 0;
+
+      function lockScroll() {
+        if (scrollLockCount++ === 0) document.body.style.overflow = 'hidden';
+      }
+      function unlockScroll() {
+        scrollLockCount = Math.max(0, scrollLockCount - 1);
+        if (scrollLockCount === 0) document.body.style.overflow = '';
+      }
+      function setConnectState(state) {
+        dlgs.connect.setAttribute('data-state', state);
+      }
+      function openDlg(id) {
+        const d = dlgs[id];
+        if (!d) return;
+        d.classList.add('open');
+        d.setAttribute('aria-hidden', 'false');
+        lockScroll();
+        if (id === 'connect') setConnectState('auth');
+        if (id === 'result') {
+          // sequence: open → next frame add .lit (triggers card flip + content fade-in)
+          // → after entrance settles add .tilt to enable cursor-driven 3D
+          clearTimeout(litTimer); clearTimeout(tiltTimer);
+          d.classList.remove('lit','tilt');
+          requestAnimationFrame(() => requestAnimationFrame(() => d.classList.add('lit')));
+          tiltTimer = setTimeout(() => d.classList.add('tilt'), 1100);
+        }
+      }
+      function closeDlg(id) {
+        const d = dlgs[id];
+        if (!d) return;
+        if (!d.classList.contains('open')) return;
+        d.classList.remove('open');
+        d.setAttribute('aria-hidden', 'true');
+        unlockScroll();
+        if (id === 'connect') {
+          stopProgress();
+          clearTimeout(loadTimer);
+          setTimeout(() => setConnectState('auth'), 300);
+        }
+        if (id === 'result') {
+          clearTimeout(litTimer); clearTimeout(tiltTimer);
+          d.classList.remove('lit','tilt');
+          // reset transform vars so reopen flips again from −90deg
+          const card = document.getElementById('rv-card');
+          if (card) { card.style.setProperty('--tx','0deg'); card.style.setProperty('--ty','0deg'); }
+        }
+      }
+      function switchTo(nextId) {
+        const stepIds = ['connect','result','insufficient'];
+        stepIds.forEach(id => { if (id !== nextId) closeDlg(id); });
+        openDlg(nextId);
+      }
+
+      // Hook page CTAs → connect dialog
+      const CTA_SELECTORS = ['.btn-primary', '.btn-dark', '.nav-cta'];
+      CTA_SELECTORS.forEach(sel => {
+        document.querySelectorAll(sel).forEach(btn => {
+          btn.addEventListener('click', (e) => { e.preventDefault(); openDlg('connect'); });
+        });
+      });
+
+      // Close handlers — modal scrims close on backdrop click; the result
+      // view is a full takeover, so only its explicit close button closes it.
+      Object.entries(dlgs).forEach(([id, root]) => {
+        if (id !== 'result') {
+          root.addEventListener('click', (e) => {
+            if (e.target === root) closeDlg(id);
+          });
+        }
+        root.querySelectorAll('[data-dlg-close], [data-rv-close]').forEach(b => {
+          b.addEventListener('click', () => closeDlg(id));
+        });
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (dlgs.request.classList.contains('open')) return closeDlg('request');
+        ['insufficient','result','connect'].forEach(id => {
+          if (dlgs[id].classList.contains('open')) closeDlg(id);
+        });
+      });
+
+      // ----- Cursor-driven 3D tilt on the result hero card -----
+      (() => {
+        const view = dlgs.result;
+        const card = document.getElementById('rv-card');
+        if (!view || !card) return;
+        const MAX_X = 8;  // deg of rotateY (left/right)
+        const MAX_Y = 6;  // deg of rotateX (up/down) — inverted
+        addEventListener('pointermove', (e) => {
+          if (!view.classList.contains('tilt')) return;
+          const w = innerWidth, h = innerHeight;
+          const nx = (e.clientX / w) * 2 - 1;   // −1..1
+          const ny = (e.clientY / h) * 2 - 1;
+          card.style.setProperty('--tx', (nx * MAX_X).toFixed(2) + 'deg');
+          card.style.setProperty('--ty', (-ny * MAX_Y).toFixed(2) + 'deg');
+        }, { passive: true });
+      })();
+
+      // ----- Share button stubs -----
+      document.querySelectorAll('.share-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          const labels = { x: 'Sharing to X', telegram: 'Sharing to Telegram', discord: 'Sharing to Discord', copy: 'Link copied', save: 'Saved image' };
+          const k = b.dataset.share;
+          showToast(labels[k] || 'Shared');
+        });
+      });
+
+      // Authorize → swap connect modal into loading state in-place, then
+      // ~3s later close it and open the result modal.
+      document.getElementById('auth-go').addEventListener('click', () => {
+        setConnectState('loading');
+        startProgress();
+        clearTimeout(loadTimer);
+        loadTimer = setTimeout(() => {
+          stopProgress();
+          closeDlg('connect');
+          openDlg('result');
+        }, 3200);
+      });
+      // expose demo jumps via console for prototype review
+      window.__flowJump = (id) => { clearTimeout(loadTimer); switchTo(id); };
+
+      // Request modal triggers (layered, not switched)
+      document.querySelectorAll('[data-open-request]').forEach(b => {
+        b.addEventListener('click', () => openDlg('request'));
+      });
+      document.querySelector('[data-submit-request]').addEventListener('click', () => {
+        closeDlg('request');
+        showToast('Request submitted · thank you');
+      });
+
+      // ----- Progress animation -----
+      let progRaf = 0, progStart = 0;
+      const logKeys = ['auth','follow','match','score','render'];
+      const stageLabels = {
+        auth: 'authorizing', follow: 'reading follows', match: 'matching index',
+        score: 'scoring signal', render: 'rendering card',
+      };
+      function startProgress() {
+        const progEl = document.querySelector('#dlg-connect .l-progress span');
+        const log    = document.getElementById('l-steps');
+        if (!log) return;
+        if (progEl) { progEl.style.animation = 'none'; void progEl.offsetWidth; progEl.style.animation = ''; }
+        progStart = performance.now();
+        log.querySelectorAll('.row').forEach(el => {
+          el.classList.remove('done','active');
+          el.querySelector('i').className = 'ph ph-circle';
+        });
+        const first = log.querySelector('.row[data-l="auth"]');
+        first.classList.add('active');
+        first.querySelector('i').className = 'ph-fill ph-circle-notch';
+        cancelAnimationFrame(progRaf);
+        const tick = (now) => {
+          const t = Math.min(1, (now - progStart) / 3200);
+          const idx = Math.min(logKeys.length - 1, Math.floor(t * logKeys.length));
+          logKeys.forEach((k, i) => {
+            const row = log.querySelector('.row[data-l="' + k + '"]');
+            if (!row) return;
+            const icon = row.querySelector('i');
+            if (i < idx)        { row.classList.add('done');    row.classList.remove('active'); icon.className = 'ph-fill ph-check-circle'; }
+            else if (i === idx) { row.classList.add('active');  row.classList.remove('done');   icon.className = 'ph-fill ph-circle-notch'; }
+            else                { row.classList.remove('done','active');                         icon.className = 'ph ph-circle'; }
+          });
+          if (t < 1) progRaf = requestAnimationFrame(tick);
+          else {
+            logKeys.forEach((k) => {
+              const row = log.querySelector('.row[data-l="' + k + '"]');
+              if (!row) return;
+              row.classList.add('done'); row.classList.remove('active');
+              row.querySelector('i').className = 'ph-fill ph-check-circle';
+            });
+          }
+        };
+        progRaf = requestAnimationFrame(tick);
+      }
+      function stopProgress() { cancelAnimationFrame(progRaf); }
+
+      // ----- Mock KOL data -----
+      // Avatars use pravatar.cc with stable per-KOL ids so faces don't shuffle
+      // between renders. Each entry's `img` index is fixed.
+      const KOLS_FOLLOWED = [
+        { name: 'Howard Marks',   handle: '@HowardMarksBk',   arch: 'Cycle-aware value',      wr: '71%', dir: 'up', img: 11 },
+        { name: 'Lyn Alden',      handle: '@LynAldenContact', arch: 'Macro structural',       wr: '68%', dir: 'up', img: 47 },
+        { name: 'Raoul Pal',      handle: '@RaoulGMI',        arch: 'Macro / crypto barbell', wr: '62%', dir: 'up', img: 13 },
+        { name: 'Bill Ackman',    handle: '@BillAckman',      arch: 'Activist concentrated',  wr: '64%', dir: 'up', img: 33 },
+        { name: 'Cathie Wood',    handle: '@CathieDWood',     arch: 'High-conviction growth', wr: '58%', dir: 'up', img: 49 },
+        { name: 'Naval Ravikant', handle: '@naval',           arch: 'Generalist long-vol',    wr: '55%', dir: 'up', img: 60 },
+        { name: 'Michael Burry',  handle: '@michaeljburry',   arch: 'Contrarian short-bias',  wr: '49%', dir: 'dn', img: 53 },
+      ];
+      const KOLS_REC = [
+        { name: 'Stan Druckenmiller', handle: '@DruckMiller',    arch: 'Macro tactical',       wr: '66%', img: 7  },
+        { name: 'Joel Greenblatt',    handle: '@JoelGreenblatt', arch: 'Magic-formula value',  wr: '70%', img: 65 },
+        { name: 'Mohamed El-Erian',   handle: '@elerianm',       arch: 'Macro / fixed-income', wr: '63%', img: 68 },
+        { name: 'Josh Brown',         handle: '@ReformedBroker', arch: 'Tactical advisor',     wr: '59%', img: 14 },
+      ];
+
+      function renderGrid(container, list, isRec) {
+        container.innerHTML = '';
+        list.forEach(k => {
+          const card = document.createElement('div');
+          card.className = 'rv-kol-card' + (isRec ? ' rec' : '');
+          card.setAttribute('data-cursor-label', 'Open');
+          card.innerHTML = `
+            ${isRec ? '<span class="badge"><i class="ph-fill ph-sparkle"></i> Recommended</span>' : ''}
+            <div class="top">
+              <img class="ava" loading="lazy" decoding="async" src="https://i.pravatar.cc/96?img=${k.img}" alt="${k.handle} avatar" />
+              <div class="who">
+                <div class="name">${k.name}</div>
+                <div class="handle">${k.handle}</div>
+              </div>
+            </div>
+            <div class="arch">${k.arch}</div>
+            <div class="footline">
+              <span class="wr ${k.dir === 'dn' ? 'dn' : 'up'}">${k.wr} WR</span>
+              <span><i class="ph-bold ph-arrow-up-right"></i></span>
+            </div>
+          `;
+          card.addEventListener('click', () => showToast('Opening ' + k.handle + ' — full Playbook coming soon'));
+          container.appendChild(card);
+        });
+      }
+      renderGrid(document.getElementById('grid-followed'), KOLS_FOLLOWED, false);
+      renderGrid(document.getElementById('grid-recommended'), KOLS_REC, true);
+
+      // ----- Toast -----
+      let toastTimer = 0;
+      function showToast(msg) {
+        const t = document.getElementById('flow-toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+      }
     })();
   </script>
 </body>
