@@ -2338,6 +2338,11 @@
       width: 460px; max-width: 92vw;
       margin: 0 auto 36px;
       transform-style: preserve-3d;
+      /* The hero card is purely decorative — no clickable content inside.
+         The 3D rotateX/Y projection extends its hit-test geometry beyond
+         the visual bounds, which blocks hover on KOL cards sitting just
+         below it. Drop the whole stage out of hit testing. */
+      pointer-events: none;
     }
     .rv-card {
       width: 100%; aspect-ratio: 4 / 5;
@@ -2735,10 +2740,7 @@
       box-shadow: 0 30px 80px -20px rgba(20,20,30,0.25);
       max-width: 560px;
       padding: 28px 36px 32px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
     }
-    #dlg-request .dlg > .dlg-close { position: absolute; }
     #dlg-request .dlg-close {
       top: 20px; right: 20px;
       background: transparent;
@@ -2749,17 +2751,13 @@
     #dlg-request .dlg-title { color: var(--text); margin-bottom: 10px; }
     #dlg-request .dlg-sub   { color: var(--muted); font-size: 14px; line-height: 1.55; margin-bottom: 22px; }
 
-    /* state stack — both children sit in the same grid cell */
-    #dlg-request [data-state] {
-      grid-column: 1; grid-row: 1;
-      visibility: hidden; opacity: 0; pointer-events: none;
-      transition: opacity .22s ease, visibility 0s linear .22s;
-    }
+    /* Only the active state is rendered. Letting the active state drive
+       the dialog height means the modal grows naturally as the user adds
+       KOL rows, rather than being fixed by whichever state happens to be
+       taller. */
+    #dlg-request [data-state] { display: none; }
     #dlg-request[data-state="form"]    [data-state="form"],
-    #dlg-request[data-state="success"] [data-state="success"] {
-      visibility: visible; opacity: 1; pointer-events: auto;
-      transition: opacity .26s ease, visibility 0s linear 0s;
-    }
+    #dlg-request[data-state="success"] [data-state="success"] { display: block; }
 
     /* repeating rows of KOL inputs */
     /* one input per row + a square trash button */
@@ -2862,16 +2860,9 @@
     #dlg-request .req-submit:hover { background: var(--alva); transform: translateY(-1px); box-shadow: 0 12px 26px -10px rgba(73,163,166,0.35); }
     #dlg-request .req-submit[disabled] { opacity: 0.5; pointer-events: none; }
 
-    /* success state — vertically centred in the shared grid cell so it
-       doesn't bunch at the top when the form (taller) sets the height */
-    #dlg-request [data-state="success"] {
-      display: flex; flex-direction: column;
-      justify-content: center;
-      min-height: 100%;
-    }
     #dlg-request .req-success {
       display: flex; flex-direction: column; align-items: center; text-align: center;
-      padding: 24px 0;
+      padding: 16px 0 8px;
     }
     #dlg-request .req-success .check {
       width: 88px; height: 88px; border-radius: 50%;
@@ -3084,46 +3075,17 @@
         if (!view || !card) return;
         const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-        if (fine) {
-          const MAX_X = 8;  // rotateY (left/right)
-          const MAX_Y = 6;  // rotateX (up/down) — inverted
-          addEventListener('pointermove', (e) => {
-            if (!view.classList.contains('tilt')) return;
-            const w = innerWidth, h = innerHeight;
-            const nx = (e.clientX / w) * 2 - 1;
-            const ny = (e.clientY / h) * 2 - 1;
-            card.style.setProperty('--tx', (nx * MAX_X).toFixed(2) + 'deg');
-            card.style.setProperty('--ty', (-ny * MAX_Y).toFixed(2) + 'deg');
-          }, { passive: true });
-        } else {
-          // Scroll-driven version: normalise the card's vertical position
-          // within the viewport to −1..+1 and map to rotateX/Y.
-          const MAX_RY = 6;   // small left/right wobble as the card scrolls
-          const MAX_RX = 12;  // forward/back lean — dominant
-          let scrollRaf = 0;
-          const update = () => {
-            scrollRaf = 0;
-            if (!view.classList.contains('tilt')) return;
-            const rect = card.getBoundingClientRect();
-            if (rect.height === 0) return;
-            const vh = innerHeight;
-            const cy = rect.top + rect.height / 2;
-            const t = Math.max(-1, Math.min(1, (cy - vh / 2) / (vh / 2)));
-            // card above viewport center (t<0) → leans toward viewer (+rotateX)
-            // card below viewport center (t>0) → leans away (−rotateX)
-            const rx = -t * MAX_RX;
-            const ry =  t * MAX_RY;
-            card.style.setProperty('--tx', ry.toFixed(2) + 'deg');
-            card.style.setProperty('--ty', rx.toFixed(2) + 'deg');
-          };
-          const schedule = () => { if (!scrollRaf) scrollRaf = requestAnimationFrame(update); };
-          view.addEventListener('scroll', schedule, { passive: true });
-          addEventListener('resize', schedule, { passive: true });
-          // run once when entrance settles (`.tilt` class is added)
-          new MutationObserver(() => {
-            if (view.classList.contains('tilt')) schedule();
-          }).observe(view, { attributes: true, attributeFilter: ['class'] });
-        }
+        if (!fine) return;  // mobile / touch: no tilt — keep scrolling fast
+        const MAX_X = 8;  // rotateY (left/right)
+        const MAX_Y = 6;  // rotateX (up/down) — inverted
+        addEventListener('pointermove', (e) => {
+          if (!view.classList.contains('tilt')) return;
+          const w = innerWidth, h = innerHeight;
+          const nx = (e.clientX / w) * 2 - 1;
+          const ny = (e.clientY / h) * 2 - 1;
+          card.style.setProperty('--tx', (nx * MAX_X).toFixed(2) + 'deg');
+          card.style.setProperty('--ty', (-ny * MAX_Y).toFixed(2) + 'deg');
+        }, { passive: true });
       })();
 
       // ----- Share button stubs -----

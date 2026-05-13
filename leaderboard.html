@@ -491,6 +491,20 @@
   }
   .lb-row:focus-visible { outline: 2px solid var(--alva); outline-offset: -2px; }
   .lb-row:hover { background: rgba(73,163,166,0.12); }
+  /* All in-row data viz (score bar, win-rate donut, pnl sparkline, signal
+     velocity sparkline) is decorative — the row itself is the only thing
+     the user clicks. Drop the inner elements out of hit testing so cursor
+     can hover the row continuously across every cell, including the SVG
+     stroke geometry that would otherwise create "gaps". */
+  .lb-row .col-score,
+  .lb-row .col-wr,
+  .lb-row .col-pnl,
+  .lb-row .col-spark,
+  .lb-row .col-action,
+  .lb-row svg { pointer-events: none; }
+  .podium-card .podium-spark,
+  .podium-card .donut,
+  .podium-card svg { pointer-events: none; }
   .lb-row:hover .col-rank .num-v { color: var(--alva); }
   /* on hover, also tint the score-bar track + donut track so those cells
      pick up the row hover state instead of staying flat gray */
@@ -1582,9 +1596,7 @@
       box-shadow: 0 30px 80px -20px rgba(20,20,30,0.25);
       max-width: 560px;
       padding: 28px 36px 32px;
-      display: grid; grid-template-columns: minmax(0, 1fr);
     }
-    #dlg-request .dlg > .dlg-close { position: absolute; }
     #dlg-request .dlg-close {
       top: 20px; right: 20px;
       background: transparent;
@@ -1595,16 +1607,10 @@
     #dlg-request .dlg-title { color: var(--text); margin-bottom: 10px; }
     #dlg-request .dlg-sub   { color: var(--muted); font-size: 14px; line-height: 1.55; margin-bottom: 22px; }
 
-    #dlg-request [data-state] {
-      grid-column: 1; grid-row: 1;
-      visibility: hidden; opacity: 0; pointer-events: none;
-      transition: opacity .22s ease, visibility 0s linear .22s;
-    }
+    /* Active state drives the dialog height — modal grows with row count. */
+    #dlg-request [data-state] { display: none; }
     #dlg-request[data-state="form"]    [data-state="form"],
-    #dlg-request[data-state="success"] [data-state="success"] {
-      visibility: visible; opacity: 1; pointer-events: auto;
-      transition: opacity .26s ease, visibility 0s linear 0s;
-    }
+    #dlg-request[data-state="success"] [data-state="success"] { display: block; }
 
     #dlg-request .kol-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
     #dlg-request .kol-row {
@@ -1674,12 +1680,7 @@
     }
     #dlg-request .req-submit:hover { background: var(--alva); transform: translateY(-1px); box-shadow: 0 12px 26px -10px rgba(73,163,166,0.35); }
     #dlg-request .req-submit[disabled] { opacity: 0.5; pointer-events: none; }
-    #dlg-request [data-state="success"] {
-      display: flex; flex-direction: column;
-      justify-content: center;
-      min-height: 100%;
-    }
-    #dlg-request .req-success { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px 0; }
+    #dlg-request .req-success { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px 0 8px; }
     #dlg-request .req-success .check {
       width: 88px; height: 88px; border-radius: 50%;
       background: rgba(73,163,166,0.10); color: var(--alva);
