@@ -2328,15 +2328,26 @@
     }
 
     /* ----- Hero: card + headline + share row ----- */
+    /* Desktop: side-by-side — card on the left, info column on the right.
+       Saves vertical space compared to the original stacked layout.
+       Mobile (≤767) reverts to the centered column further down. */
     .rv-hero {
-      display: flex; flex-direction: column; align-items: center;
-      text-align: center;
+      display: grid;
+      grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
+      column-gap: 56px;
+      align-items: center;
       padding-top: 24px;
+      max-width: 1080px; margin: 0 auto;
+      text-align: left;
+    }
+    .rv-hero-info {
+      display: flex; flex-direction: column;
+      align-items: flex-start;
     }
     .rv-card-stage {
       perspective: 1600px;
-      width: 460px; max-width: 92vw;
-      margin: 0 auto 36px;
+      width: 100%; max-width: 460px;
+      margin: 0;
       transform-style: preserve-3d;
       /* The hero card is purely decorative — no clickable content inside.
          The 3D rotateX/Y projection extends its hit-test geometry beyond
@@ -2416,7 +2427,7 @@
 
     /* Share row */
     .rv-shares {
-      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+      display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-start;
       opacity: 0; transform: translateY(10px);
       transition: opacity .5s .85s ease, transform .5s .85s cubic-bezier(.2,.8,.2,1);
     }
@@ -2424,7 +2435,7 @@
     /* Share row: the four brand share buttons are the primary action.
        Save-image is a quiet secondary, set apart by a thin divider. */
     .rv-shares {
-      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-start;
       align-items: center;
     }
     .share-btn {
@@ -2486,12 +2497,16 @@
       border-radius: 14px;
       padding: 18px;
       display: flex; flex-direction: column; gap: 12px;
-      transition: transform .15s, border-color .15s, box-shadow .15s;
+      /* No translate on hover — shifting the card on :hover moves its
+         hit zone, which causes flicker when the cursor sits near a card
+         edge (enters → shifts → cursor falls outside → un-hovers →
+         snaps back → re-enters). Keep the card static and signal hover
+         via border + shadow only. */
+      transition: border-color .15s, box-shadow .15s, background .15s;
     }
     .rv-kol-card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(73,163,166,0.40);
-      box-shadow: 0 12px 24px -10px rgba(20,20,30,0.14);
+      border-color: rgba(73,163,166,0.50);
+      box-shadow: 0 8px 20px -8px rgba(73,163,166,0.22);
     }
     .rv-kol-card .top { display: flex; align-items: center; gap: 10px; }
     .rv-kol-card .ava {
@@ -2554,7 +2569,8 @@
       .result-view { inset: 56px 0 0 0; }
       .rv-scrim    { inset: 56px 0 0 0; }
       .rv-stage    { padding: 40px 32px 72px; max-width: none; }
-      .rv-card-stage { width: 400px; margin-bottom: 28px; }
+      .rv-hero     { column-gap: 40px; max-width: none; }
+      .rv-card-stage { max-width: 400px; }
       .rv-title    { font-size: clamp(28px, 4.6vw, 44px); }
       .rv-sub      { font-size: 15px; }
       .rv-kol-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
@@ -2566,13 +2582,23 @@
     }
     @media (max-width: 767px) {
       .rv-stage { padding: 24px 16px 56px; }
-      .rv-hero { padding-top: 12px; }
+      /* Revert to the original centered column on phones — side-by-side
+         doesn't earn its keep at narrow widths. */
+      .rv-hero {
+        display: flex; flex-direction: column; align-items: center;
+        text-align: center;
+        padding-top: 12px;
+      }
+      .rv-hero-info {
+        align-items: center; width: 100%;
+        text-align: center;
+      }
       .rv-card-stage { width: 100%; max-width: 360px; margin-bottom: 24px; }
       .rv-title { font-size: 28px; line-height: 1.05; margin-bottom: 12px; }
       .rv-sub   { font-size: 14px; line-height: 1.55; margin-bottom: 22px; }
       /* share row: stack into a vertical column of full-width buttons,
          matching the landing's `.btn-primary` mobile treatment */
-      .rv-shares { flex-direction: column; align-items: stretch; gap: 10px; width: 100%; }
+      .rv-shares { flex-direction: column; align-items: stretch; gap: 10px; width: 100%; justify-content: center; }
       .share-btn {
         width: 100%; justify-content: center;
         padding: 15px 20px; font-size: 15px;
@@ -2666,15 +2692,17 @@
           </article>
         </div>
 
-        <h1 class="rv-title" id="rv-title">You read the tape like a <em>macro watcher.</em></h1>
-        <p class="rv-sub">7 of your 184 follows are indexed by Alva. They cluster around a macro-aware, low-frequency, long-biased style — no momentum traders, no day-trader influence detected. Share your card, or see who you might be missing.</p>
+        <div class="rv-hero-info">
+          <h1 class="rv-title" id="rv-title">You read the tape like a <em>macro watcher.</em></h1>
+          <p class="rv-sub">7 of your 184 follows are indexed by Alva. They cluster around a macro-aware, low-frequency, long-biased style — no momentum traders, no day-trader influence detected. Share your card, or see who you might be missing.</p>
 
-        <div class="rv-shares" role="group" aria-label="Share your taste card">
-          <button class="share-btn" data-share="x" data-cursor-label="X" aria-label="Share to X"><i class="ph-fill ph-x-logo"></i> Share to X</button>
-          <button class="share-btn" data-share="telegram" data-cursor-label="Telegram" aria-label="Share to Telegram"><i class="ph-fill ph-telegram-logo"></i> Telegram</button>
-          <button class="share-btn" data-share="discord" data-cursor-label="Discord" aria-label="Share to Discord"><i class="ph-fill ph-discord-logo"></i> Discord</button>
-          <button class="share-btn" data-share="copy" data-cursor-label="Copy" aria-label="Copy link"><i class="ph-bold ph-link-simple"></i> Copy link</button>
-          <button class="share-btn" data-share="save" data-cursor-label="Save" aria-label="Save image"><i class="ph-bold ph-download-simple"></i> Save image</button>
+          <div class="rv-shares" role="group" aria-label="Share your taste card">
+            <button class="share-btn" data-share="x" data-cursor-label="X" aria-label="Share to X"><i class="ph-fill ph-x-logo"></i> Share to X</button>
+            <button class="share-btn" data-share="telegram" data-cursor-label="Telegram" aria-label="Share to Telegram"><i class="ph-fill ph-telegram-logo"></i> Telegram</button>
+            <button class="share-btn" data-share="discord" data-cursor-label="Discord" aria-label="Share to Discord"><i class="ph-fill ph-discord-logo"></i> Discord</button>
+            <button class="share-btn" data-share="copy" data-cursor-label="Copy" aria-label="Copy link"><i class="ph-bold ph-link-simple"></i> Copy link</button>
+            <button class="share-btn" data-share="save" data-cursor-label="Save" aria-label="Save image"><i class="ph-bold ph-download-simple"></i> Save image</button>
+          </div>
         </div>
       </section>
 
@@ -3075,17 +3103,38 @@
         if (!view || !card) return;
         const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-        if (!fine) return;  // mobile / touch: no tilt — keep scrolling fast
-        const MAX_X = 8;  // rotateY (left/right)
-        const MAX_Y = 6;  // rotateX (up/down) — inverted
-        addEventListener('pointermove', (e) => {
-          if (!view.classList.contains('tilt')) return;
-          const w = innerWidth, h = innerHeight;
-          const nx = (e.clientX / w) * 2 - 1;
-          const ny = (e.clientY / h) * 2 - 1;
-          card.style.setProperty('--tx', (nx * MAX_X).toFixed(2) + 'deg');
-          card.style.setProperty('--ty', (-ny * MAX_Y).toFixed(2) + 'deg');
-        }, { passive: true });
+        if (fine) {
+          // Desktop: cursor-position-driven tilt
+          const MAX_X = 8;  // rotateY (left/right)
+          const MAX_Y = 6;  // rotateX (up/down) — inverted
+          addEventListener('pointermove', (e) => {
+            if (!view.classList.contains('tilt')) return;
+            const w = innerWidth, h = innerHeight;
+            const nx = (e.clientX / w) * 2 - 1;
+            const ny = (e.clientY / h) * 2 - 1;
+            card.style.setProperty('--tx', (nx * MAX_X).toFixed(2) + 'deg');
+            card.style.setProperty('--ty', (-ny * MAX_Y).toFixed(2) + 'deg');
+          }, { passive: true });
+        } else {
+          // Touch: scrollTop-driven tilt. Reading scrollTop is a cheap
+          // property access (no forced layout), so unlike the previous
+          // getBoundingClientRect approach this doesn't fight the
+          // browser's scroll thread. Only rotateX moves — single-axis
+          // forward/back lean as the user scrolls down through the page.
+          const MAX_TILT = 12;     // deg of rotateX at end of range
+          const SCROLL_RANGE = 500; // px of scroll to reach max tilt
+          let scrollRaf = 0;
+          const update = () => {
+            scrollRaf = 0;
+            if (!view.classList.contains('tilt')) return;
+            const t = Math.min(1, Math.max(0, view.scrollTop / SCROLL_RANGE));
+            // scroll down → card leans away (−rotateX)
+            card.style.setProperty('--ty', (-t * MAX_TILT).toFixed(2) + 'deg');
+          };
+          view.addEventListener('scroll', () => {
+            if (!scrollRaf) scrollRaf = requestAnimationFrame(update);
+          }, { passive: true });
+        }
       })();
 
       // ----- Share button stubs -----
