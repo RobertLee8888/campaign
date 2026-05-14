@@ -2323,37 +2323,64 @@
 
     .rv-stage {
       position: relative; z-index: 1;
-      max-width: 1240px; margin: 0 auto;
-      padding: 56px 48px 96px;
+      max-width: 1440px; margin: 0 auto;
+      /* No top padding on the stage — initial top spacing is owned by
+         rv-left's and rv-right's own padding-top, so the sticky pin
+         point stays at the very top of the scroll container. */
+      padding: 0 48px 0;
     }
 
     /* ----- Hero: card + headline + share row ----- */
-    /* Desktop: side-by-side — card on the left, info column on the right.
-       Saves vertical space compared to the original stacked layout.
-       Mobile (≤767) reverts to the centered column further down. */
-    .rv-hero {
+    /* Desktop: left column (card + share buttons) stays put while the right
+       column scrolls. The card shrinks if the viewport isn't tall enough to
+       show the share buttons in full. Mobile (≤767) flattens everything to
+       a single scrolling column. */
+    .rv-split {
       display: grid;
+      /* Left column is fixed at the card's max width (460px). Right
+         column takes whatever's left — at the 1440px stage, that's
+         ~860px, which fits 3 cards per row comfortably. */
       grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
-      column-gap: 56px;
-      align-items: center;
-      padding-top: 24px;
-      max-width: 1080px; margin: 0 auto;
-      text-align: left;
+      column-gap: 64px;
+      align-items: start;
+      max-width: 1440px; margin: 0 auto;
     }
-    .rv-hero-info {
-      display: flex; flex-direction: column;
-      align-items: flex-start;
+    .rv-left {
+      position: sticky;
+      top: 0;
+      /* fills the result-view vertical area (viewport minus nav) */
+      height: calc(100vh - 64px);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;   /* sit at the top, aligned with right column */
+      gap: 28px;
+      /* Initial breathing room above content; padding-top matches
+         rv-right's padding-top so the card top and the first right-side
+         heading sit on the same baseline. */
+      padding: 64px 0 24px;
+      min-width: 0;
     }
     .rv-card-stage {
       perspective: 1600px;
-      width: 100%; max-width: 460px;
-      margin: 0;
+      /* Width is the smaller of: 460px (max card size) OR a width derived
+         from the height budget. The height budget is the viewport minus
+         the nav, rv-left padding (64 top + 24 bottom = 88), and the
+         reserved share-row chunk; 0.8 converts H to W for a 4:5 card. */
+      width: min(460px, calc((100vh - 64px - 88px - 220px) * 0.8));
+      aspect-ratio: 4 / 5;
+      margin: 0 auto;
       transform-style: preserve-3d;
       /* The hero card is purely decorative — no clickable content inside.
          The 3D rotateX/Y projection extends its hit-test geometry beyond
          the visual bounds, which blocks hover on KOL cards sitting just
          below it. Drop the whole stage out of hit testing. */
       pointer-events: none;
+      flex-shrink: 1; min-height: 0;
+    }
+    .rv-right {
+      min-width: 0;
+      padding-top: 64px; padding-bottom: 96px;
     }
     .rv-card {
       width: 100%; aspect-ratio: 4 / 5;
@@ -2367,24 +2394,50 @@
         0 32px 80px -20px rgba(20,20,30,0.40),
         0 12px 28px -10px rgba(20,20,30,0.20);
       transform-style: preserve-3d;
+      /* Compose transforms:
+           translate(intro-dx, intro-dy)   ← moves card to viewport centre during .intro (desktop)
+           rotateY(--tx) rotateX(--ty)     ← cursor-driven tilt (.tilt phase)
+           rotateY(--enter-ry)             ← initial flip-in (−90 → 0)
+           rotateY(--move-ry)              ← desktop centre→left spin (0 → 360)
+           scale(--enter-s)                ← initial scale (0.7 → 1)
+           scale(--intro-scale)            ← intro enlargement (1.3 → 1)
+      */
       transform:
+        translate(var(--intro-dx, 0px), var(--intro-dy, 0px))
         rotateY(var(--tx, 0deg))
         rotateX(var(--ty, 0deg))
         rotateY(var(--enter-ry, -90deg))
-        scale(var(--enter-s, 0.7));
+        rotateY(var(--move-ry, 0deg))
+        scale(var(--enter-s, 0.7))
+        scale(var(--intro-scale, 1));
       opacity: var(--enter-o, 0);
       transition:
         transform .9s cubic-bezier(.2,.8,.2,1),
         opacity .6s ease,
         box-shadow .25s;
+      z-index: 2;
     }
+    /* Phase 1 — flip in at viewport centre, enlarged (desktop only via JS) */
+    .result-view.intro .rv-card {
+      --enter-ry: 0deg;
+      --enter-s: 1;
+      --enter-o: 1;
+      --intro-scale: 1.3;
+    }
+    /* Phase 2 — settle at the natural left-column position */
     .result-view.lit .rv-card {
       --enter-ry: 0deg;
       --enter-s: 1;
       --enter-o: 1;
+      --intro-scale: 1;
     }
-    /* once entrance settles, swap to a faster transition so the
-       cursor-driven tilt feels live, not laggy. */
+    /* Desktop only — add a single Y-axis flip while the card translates
+       from the centre to the left column, so the move isn't a plain
+       slide. Mobile falls back to a simple flip-in with no extra spin. */
+    @media (min-width: 1024px) {
+      .result-view.lit .rv-card { --move-ry: 360deg; }
+    }
+    /* Phase 3 — cursor-driven tilt with a quicker transform transition */
     .result-view.tilt .rv-card {
       transition:
         transform .25s cubic-bezier(.2,.8,.2,1),
@@ -2425,19 +2478,18 @@
     .result-view.lit .rv-title,
     .result-view.lit .rv-sub { opacity: 1; transform: translateY(0); }
 
-    /* Share row */
+    /* Share row — lives inside the sticky left column, paired with the card. */
     .rv-shares {
-      display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-start;
+      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+      align-items: center;
+      width: 100%; max-width: 460px; margin: 0 auto;
       opacity: 0; transform: translateY(10px);
-      transition: opacity .5s .85s ease, transform .5s .85s cubic-bezier(.2,.8,.2,1);
+      /* Delay tuned to fire after the card finishes its centre→left move
+         (.lit triggers the move; the card's .9s transform transition
+         needs to settle before the rest of the page reveals). */
+      transition: opacity .5s 1.0s ease, transform .5s 1.0s cubic-bezier(.2,.8,.2,1);
     }
     .result-view.lit .rv-shares { opacity: 1; transform: translateY(0); }
-    /* Share row: the four brand share buttons are the primary action.
-       Save-image is a quiet secondary, set apart by a thin divider. */
-    .rv-shares {
-      display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-start;
-      align-items: center;
-    }
     .share-btn {
       display: inline-flex; align-items: center; gap: 9px;
       padding: 13px 22px;
@@ -2462,17 +2514,21 @@
     /* save share — same pill shape as the others, distinct neutral colour */
     .share-btn[data-share="save"] { background: #4b5563; }
 
-    /* ----- Content below hero ----- */
+    /* Content below the right-column head — no extra margin since
+       rv-right-head already has its own margin-bottom. */
     .rv-content {
-      margin-top: 120px;
       opacity: 0; transform: translateY(16px);
-      transition: opacity .6s 1.0s ease, transform .6s 1.0s cubic-bezier(.2,.8,.2,1);
+      /* Delay tuned to fire just after .rv-shares so the right column
+         cascades in below the now-settled card on the left. */
+      transition: opacity .6s 1.2s ease, transform .6s 1.2s cubic-bezier(.2,.8,.2,1);
     }
     .result-view.lit .rv-content { opacity: 1; transform: translateY(0); }
 
     .rv-section { margin-bottom: 56px; }
     .rv-section-head {
-      display: flex; align-items: baseline; justify-content: space-between;
+      display: flex; flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
       margin-bottom: 18px;
     }
     .rv-section-head h3 {
@@ -2489,7 +2545,20 @@
       color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase;
     }
 
-    .rv-kol-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .rv-kol-grid {
+      display: grid;
+      /* Auto-fill so the row adapts to whatever width the right column
+         actually has — 3 cards at the 1440px stage (each ~260px), 2
+         cards at narrower widths. minmax keeps each card wide enough
+         for every label to render on a single line. */
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    /* Per-group fixed row heights so every card in the group is the
+       same size. Recommended cards add a badge above the avatar, so
+       they need ~30px more height than the follow cards. */
+    #grid-followed    { grid-auto-rows: 150px; }
+    #grid-recommended { grid-auto-rows: 180px; }
     .rv-kol-card {
       background: var(--bg-soft);
       color: var(--text);
@@ -2497,6 +2566,7 @@
       border-radius: 14px;
       padding: 18px;
       display: flex; flex-direction: column; gap: 12px;
+      overflow: hidden;             /* clip any overflow if a name is unusually long */
       /* No translate on hover — shifting the card on :hover moves its
          hit zone, which causes flicker when the cursor sits near a card
          edge (enters → shifts → cursor falls outside → un-hovers →
@@ -2525,6 +2595,7 @@
       padding-top: 10px; border-top: 1px solid var(--line);
       font-family: var(--font-mono); font-size: 11px;
       color: var(--muted); letter-spacing: 0.06em;
+      margin-top: auto;            /* pin to card bottom regardless of content above */
     }
     .rv-kol-card .footline .wr.up { color: var(--alva); }
     .rv-kol-card .footline .wr.dn { color: var(--orange); }
@@ -2569,12 +2640,30 @@
       .result-view { inset: 56px 0 0 0; }
       .rv-scrim    { inset: 56px 0 0 0; }
       .rv-stage    { padding: 40px 32px 72px; max-width: none; }
-      .rv-hero     { column-gap: 40px; max-width: none; }
-      .rv-card-stage { max-width: 400px; }
+      /* Mobile: cards size to content (no fixed row height), and the
+         shares/right-content reveal uses the original tighter delays
+         since there's no centre→left card move to wait for. */
+      #grid-followed, #grid-recommended { grid-auto-rows: auto; }
+      .rv-shares  { transition: opacity .5s .85s ease, transform .5s .85s cubic-bezier(.2,.8,.2,1); }
+      .rv-content { transition: opacity .6s 1.0s ease, transform .6s 1.0s cubic-bezier(.2,.8,.2,1); }
+      /* Flatten the split — left column stops being sticky, everything
+         flows top-down. Card sits above the right-column content. */
+      .rv-split {
+        display: flex; flex-direction: column;
+        gap: 32px; max-width: none;
+      }
+      .rv-left {
+        position: static; height: auto;
+        flex-direction: column; align-items: center;
+        gap: 20px; padding: 0;
+      }
+      .rv-card-stage { width: 400px; max-width: 100%; aspect-ratio: 4 / 5; }
+      .rv-shares { width: 100%; max-width: 480px; justify-content: center; }
+      .rv-right { padding-top: 8px; padding-bottom: 0; }
+      .rv-right-head { margin-bottom: 32px; text-align: center; }
       .rv-title    { font-size: clamp(28px, 4.6vw, 44px); }
-      .rv-sub      { font-size: 15px; }
+      .rv-sub      { font-size: 15px; margin-left: auto; margin-right: auto; }
       .rv-kol-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-      .rv-content  { margin-top: 80px; }
       .rv-section  { margin-bottom: 44px; }
       .rv-request  { flex-direction: column; align-items: flex-start; gap: 14px; }
       .rv-request-btn { width: 100%; justify-content: center; }
@@ -2582,29 +2671,20 @@
     }
     @media (max-width: 767px) {
       .rv-stage { padding: 24px 16px 56px; }
-      /* Revert to the original centered column on phones — side-by-side
-         doesn't earn its keep at narrow widths. */
-      .rv-hero {
-        display: flex; flex-direction: column; align-items: center;
-        text-align: center;
-        padding-top: 12px;
-      }
-      .rv-hero-info {
-        align-items: center; width: 100%;
-        text-align: center;
-      }
-      .rv-card-stage { width: 100%; max-width: 360px; margin-bottom: 24px; }
+      .rv-split { gap: 24px; }
+      .rv-left { gap: 16px; }
+      .rv-card-stage { width: 100%; max-width: 360px; }
+      .rv-right-head { margin-bottom: 24px; }
       .rv-title { font-size: 28px; line-height: 1.05; margin-bottom: 12px; }
-      .rv-sub   { font-size: 14px; line-height: 1.55; margin-bottom: 22px; }
+      .rv-sub   { font-size: 14px; line-height: 1.55; margin-bottom: 0; }
       /* share row: stack into a vertical column of full-width buttons,
          matching the landing's `.btn-primary` mobile treatment */
-      .rv-shares { flex-direction: column; align-items: stretch; gap: 10px; width: 100%; justify-content: center; }
+      .rv-shares { flex-direction: column; align-items: stretch; gap: 10px; width: 100%; max-width: 360px; justify-content: center; }
       .share-btn {
         width: 100%; justify-content: center;
         padding: 15px 20px; font-size: 15px;
         border-radius: 10px;
       }
-      .rv-content { margin-top: 56px; }
       .rv-section { margin-bottom: 36px; }
       .rv-section-head { margin-bottom: 14px; }
       .rv-section-head h3 { font-size: 18px; }
@@ -2630,14 +2710,15 @@
     }
   </style>
 
-  <div class="result-view" id="result-view" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="rv-title">
+  <div class="result-view" id="result-view" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Your investment taste">
     <div class="rv-scrim"></div>
 
     <button class="rv-close" data-rv-close data-cursor-label="Close" aria-label="Close result"><i class="ph-bold ph-x"></i></button>
 
     <div class="rv-stage">
 
-      <section class="rv-hero">
+      <section class="rv-split">
+        <aside class="rv-left">
         <div class="rv-card-stage" id="rv-card-stage">
           <article class="rv-card" id="rv-card">
             <div class="card-inner">
@@ -2692,21 +2773,17 @@
           </article>
         </div>
 
-        <div class="rv-hero-info">
-          <h1 class="rv-title" id="rv-title">You read the tape like a <em>macro watcher.</em></h1>
-          <p class="rv-sub">7 of your 184 follows are indexed by Alva. They cluster around a macro-aware, low-frequency, long-biased style — no momentum traders, no day-trader influence detected. Share your card, or see who you might be missing.</p>
-
-          <div class="rv-shares" role="group" aria-label="Share your taste card">
-            <button class="share-btn" data-share="x" data-cursor-label="X" aria-label="Share to X"><i class="ph-fill ph-x-logo"></i> Share to X</button>
-            <button class="share-btn" data-share="telegram" data-cursor-label="Telegram" aria-label="Share to Telegram"><i class="ph-fill ph-telegram-logo"></i> Telegram</button>
-            <button class="share-btn" data-share="discord" data-cursor-label="Discord" aria-label="Share to Discord"><i class="ph-fill ph-discord-logo"></i> Discord</button>
-            <button class="share-btn" data-share="copy" data-cursor-label="Copy" aria-label="Copy link"><i class="ph-bold ph-link-simple"></i> Copy link</button>
-            <button class="share-btn" data-share="save" data-cursor-label="Save" aria-label="Save image"><i class="ph-bold ph-download-simple"></i> Save image</button>
-          </div>
+        <div class="rv-shares" role="group" aria-label="Share your taste card">
+          <button class="share-btn" data-share="x" data-cursor-label="X" aria-label="Share to X"><i class="ph-fill ph-x-logo"></i> Share to X</button>
+          <button class="share-btn" data-share="telegram" data-cursor-label="Telegram" aria-label="Share to Telegram"><i class="ph-fill ph-telegram-logo"></i> Telegram</button>
+          <button class="share-btn" data-share="discord" data-cursor-label="Discord" aria-label="Share to Discord"><i class="ph-fill ph-discord-logo"></i> Discord</button>
+          <button class="share-btn" data-share="copy" data-cursor-label="Copy" aria-label="Copy link"><i class="ph-bold ph-link-simple"></i> Copy link</button>
+          <button class="share-btn" data-share="save" data-cursor-label="Save" aria-label="Save image"><i class="ph-bold ph-download-simple"></i> Save image</button>
         </div>
-      </section>
+        </aside>
 
-      <div class="rv-content">
+        <div class="rv-right">
+          <div class="rv-content">
         <section class="rv-section">
           <div class="rv-section-head">
             <h3>KOLs you follow<span class="count">7 matched</span></h3>
@@ -2730,7 +2807,9 @@
           </div>
           <button class="rv-request-btn" data-open-request data-cursor-label="Request">Request missing KOLs <i class="ph-bold ph-arrow-right"></i></button>
         </div>
-      </div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -3030,12 +3109,46 @@
         lockScroll();
         if (id === 'connect') setConnectState('auth');
         if (id === 'result') {
-          // sequence: open → next frame add .lit (triggers card flip + content fade-in)
-          // → after entrance settles add .tilt to enable cursor-driven 3D
           clearTimeout(litTimer); clearTimeout(tiltTimer);
-          d.classList.remove('lit','tilt');
-          requestAnimationFrame(() => requestAnimationFrame(() => d.classList.add('lit')));
-          tiltTimer = setTimeout(() => d.classList.add('tilt'), 1100);
+          d.classList.remove('intro','lit','tilt');
+          const card = document.getElementById('rv-card');
+          const stage = document.getElementById('rv-card-stage');
+          const desktop = matchMedia('(min-width: 1024px)').matches;
+          if (desktop) {
+            // Desktop entrance sequence:
+            //   1. .intro     — card flips in at the centre of the viewport,
+            //                   enlarged to 1.3× scale.
+            //   2. .lit       — card translates to its natural left-column
+            //                   position while doing a single Y-axis flip;
+            //                   then right column + share buttons cascade
+            //                   in via their existing delayed transitions.
+            //   3. .tilt      — cursor-driven 3D tilt is armed.
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              if (stage && card) {
+                const rect = stage.getBoundingClientRect();
+                const dx = innerWidth / 2 - (rect.left + rect.width / 2);
+                const dy = innerHeight / 2 - (rect.top + rect.height / 2);
+                card.style.setProperty('--intro-dx', dx.toFixed(1) + 'px');
+                card.style.setProperty('--intro-dy', dy.toFixed(1) + 'px');
+              }
+              d.classList.add('intro');
+            }));
+            litTimer = setTimeout(() => {
+              if (card) {
+                card.style.setProperty('--intro-dx', '0px');
+                card.style.setProperty('--intro-dy', '0px');
+              }
+              d.classList.remove('intro');
+              d.classList.add('lit');
+            }, 1400);
+            tiltTimer = setTimeout(() => d.classList.add('tilt'), 2400);
+          } else {
+            // Mobile / tablet: skip the centred-enlarged intro. Card flips
+            // in at its natural top-of-column position, no horizontal move,
+            // no extra spin — matches the pre-redesign behaviour.
+            requestAnimationFrame(() => requestAnimationFrame(() => d.classList.add('lit')));
+            tiltTimer = setTimeout(() => d.classList.add('tilt'), 1100);
+          }
         }
       }
       function closeDlg(id) {
@@ -3052,10 +3165,15 @@
         }
         if (id === 'result') {
           clearTimeout(litTimer); clearTimeout(tiltTimer);
-          d.classList.remove('lit','tilt');
+          d.classList.remove('intro','lit','tilt');
           // reset transform vars so reopen flips again from −90deg
           const card = document.getElementById('rv-card');
-          if (card) { card.style.setProperty('--tx','0deg'); card.style.setProperty('--ty','0deg'); }
+          if (card) {
+            card.style.setProperty('--tx','0deg');
+            card.style.setProperty('--ty','0deg');
+            card.style.removeProperty('--intro-dx');
+            card.style.removeProperty('--intro-dy');
+          }
         }
       }
       function switchTo(nextId) {
