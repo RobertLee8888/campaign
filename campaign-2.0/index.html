@@ -1,0 +1,3475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ALVA · They post wins every week. So why are you losing?</title>
+<meta name="description" content="Alva backtests every public call from every X account. Wins, misses, even deleted posts. Then scores the account." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+<style>
+  /* ============================================================
+     TOKENS (carried over from audit.html / leaderboard.html)
+     ============================================================ */
+  :root {
+    --bg:        #f5f5f7;
+    --bg-soft:   #ffffff;
+    --text:      #1a1a1e;
+    --muted:     #6b7280;
+    --muted-2:   #9ca3af;
+    --line:      #e5e5ea;
+    --card:      #0a0a10;
+    --card-line: rgba(255,255,255,0.06);
+    --alva:      #49A3A6;
+    --alva-hi:   #5cb9bc;
+    --alva-dim:  rgba(73,163,166,0.18);
+    --orange:    #ff8a4c;
+    --purple:    #b388ff;
+    --gain:      #22c55e;
+    --gain-hi:   #4ade80;
+    --loss:      #ef4444;
+    --font:         "Inter", system-ui, sans-serif;
+    --font-display: "Space Grotesk", system-ui, sans-serif;
+    --font-mono:    "JetBrains Mono", ui-monospace, monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { background: var(--bg); scroll-behavior: smooth; }
+
+  /* ============================================================
+     SNAP SCROLL — opening ⇄ stage (first two screens only)
+     The snap-active class is toggled by JS only while the user's
+     viewport is still inside the opening-to-stage range. Once the
+     stage has scrolled fully past, snap is disabled so the rest of
+     the page (leaderboard / agents / etc.) scrolls normally.
+     scroll-padding-top accounts for the sticky 64px nav so snap
+     targets align just below it instead of being clipped.
+     scroll-snap-stop: always forces one-screen-at-a-time pagination
+     between opening and stage regardless of how hard the user swipes.
+     ============================================================ */
+  html.snap-active {
+    scroll-snap-type: y mandatory;
+    /* matches the 80px nav-clearance used by smoothScrollTo so snap and
+       programmatic scrolls land at the same Y — no post-scroll jitter */
+    scroll-padding-top: 80px;
+  }
+  .opening, .stage {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  /* Snap is a desktop nicety only — touch scroll (phones, tablets) fights
+     with scroll-snap-stop:always and ends up jamming forward progress. */
+  @media (hover: none) {
+    html.snap-active { scroll-snap-type: none; }
+  }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; }
+
+  /* ============================================================
+     NAV  (faithful to audit.html)
+     ============================================================ */
+  .nav {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(245,245,247,0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    max-width: 1440px; margin: 0 auto;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px;
+    gap: 24px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark { width: 22px; height: 22px; display: grid; place-items: center; }
+  .brand-mark svg { width: 22px; height: 22px; display: block; }
+  .brand-mark .lg-fg { fill: var(--text); }
+  .brand-mark .lg-bg { fill: var(--alva); }
+  .brand-text .name {
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+  .brand-text .sub {
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+  /* nav scrollspy tab bar — tabs sit in a pill container that
+     hosts an animated underline indicator anchored to the active tab */
+  .nav-tabs {
+    position: relative;
+    display: flex; align-items: center; gap: 4px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+  }
+  .nav-tab {
+    position: relative;
+    z-index: 1;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: 13px; font-weight: 600;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: color .2s;
+    font-family: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .nav-tab i { font-size: 13px; opacity: 0.7; transition: opacity .2s, color .2s; }
+  .nav-tab span { line-height: 1; }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab:hover i { opacity: 1; color: var(--alva); }
+  .nav-tab.active { color: #fff; }
+  .nav-tab.active i { color: var(--alva-hi); opacity: 1; }
+  /* the moving pill indicator */
+  .nav-tab-indicator {
+    position: absolute;
+    z-index: 0;
+    top: 4px;
+    left: 0;
+    height: calc(100% - 8px);
+    background: var(--text);
+    border-radius: 999px;
+    transition: transform .35s cubic-bezier(.2,.8,.2,1), width .35s cubic-bezier(.2,.8,.2,1), opacity .2s ease;
+    width: 0;
+    opacity: 0;       /* hidden until a section is active */
+    transform: translateX(0);
+    pointer-events: none;
+    box-shadow: 0 4px 14px rgba(10,10,16,0.22);
+  }
+  /* navbar right-side action cluster (secondary ghost + primary CTA) */
+  .nav-actions {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--text);
+    color: #fff;
+    border: 0;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, transform .15s;
+  }
+  .nav-cta i { color: var(--alva-hi); font-size: 14px; }
+  .nav-cta:hover { background: var(--alva); transform: translateY(-1px); }
+  /* secondary ghost button — link to the For-KOLs card */
+  .nav-cta-ghost {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+    font-family: inherit;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .nav-cta-ghost i { color: var(--alva); font-size: 13px; }
+  .nav-cta-ghost:hover {
+    background: rgba(73,163,166,0.06);
+    border-color: var(--alva);
+    color: var(--alva);
+  }
+  .nav-cta-ghost:hover i { color: var(--alva); }
+
+  /* ============================================================
+     OPENING SECTION  (centered Q1+A1; KOL tweets drift in the back)
+     ============================================================ */
+  .opening {
+    position: relative;
+    min-height: calc(100vh - 64px);
+    overflow: hidden;
+    background: var(--bg);
+    padding: 96px 32px 80px;
+    display: grid;
+    place-items: center;
+  }
+  .opening-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  /* central veil — soft enough that cards traversing the heading band
+     stay partially visible. The heading text itself is at z-index 5 on
+     top of all cards, so it's never obscured. */
+  .opening::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 48% 18% at 50% 50%,
+        rgba(245,245,247,0.78) 0%,
+        rgba(245,245,247,0.5)  45%,
+        rgba(245,245,247,0.18) 75%,
+        rgba(245,245,247,0)    100%);
+  }
+  /* tier-based depth — three strict layers; size, blur, speed, z-index
+     and shadow ALL move in lockstep. A card in `tier-near` is always
+     larger, sharper, faster, and visually in front of any `tier-mid` or
+     `tier-far` card. Cards are fully opaque (background #fff) — no
+     opacity, so overlapping cards never show through to one another. */
+  .float-tweet {
+    position: absolute;
+    left: 0;
+    top: var(--y, 50%);
+    padding: 0.85em 1em;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    will-change: transform;
+    animation: drift var(--dur, 145s) linear infinite;
+    animation-delay: var(--d, 0s);
+  }
+  .float-tweet.tier-far  {
+    width: 210px;
+    font-size: 11px;
+    filter: blur(1.3px);
+    --dur: 240s;
+    z-index: 1;
+    box-shadow: 0 8px 18px -10px rgba(20,20,30,0.10);
+  }
+  .float-tweet.tier-mid  {
+    width: 275px;
+    font-size: 12px;
+    filter: blur(0.5px);
+    --dur: 145s;
+    z-index: 2;
+    box-shadow: 0 14px 28px -12px rgba(20,20,30,0.14);
+  }
+  .float-tweet.tier-near {
+    width: 340px;
+    font-size: 14px;
+    filter: blur(0);
+    --dur: 80s;
+    z-index: 3;
+    box-shadow: 0 22px 44px -14px rgba(20,20,30,0.18);
+  }
+  .float-tweet .ft-head {
+    display: flex; align-items: center; gap: 0.7em;
+    margin-bottom: 0.65em;
+  }
+  .float-tweet .ft-head img {
+    width: 2.4em; height: 2.4em;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  /* Twitter-style: avatar on left, name + handle stacked vertically right */
+  .float-tweet .ft-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+  }
+  /* card text intentionally softened — they're ambient noise, not the
+     content the eye should land on (the H1 + subtitle are) */
+  .float-tweet .ft-name {
+    font-size: 1em;
+    font-weight: 700;
+    color: #2a2a30;
+    line-height: 1.2;
+  }
+  .float-tweet .ft-handle {
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    color: var(--muted-2);
+    letter-spacing: 0.02em;
+    margin-top: 0.12em;
+  }
+  .float-tweet p {
+    font-size: 1em;
+    line-height: 1.5;
+    color: var(--muted);
+    margin: 0;
+  }
+  @keyframes drift {
+    from { transform: translateX(-100vw); }
+    to   { transform: translateX(100vw); }
+  }
+  /* density scales with viewport — only the first 6 are visible by default;
+     wider screens progressively reveal more cards */
+  .float-tweet:nth-child(n+7)  { display: none; }
+  @media (min-width: 760px)  { .float-tweet:nth-child(-n+10) { display: block; } }
+  @media (min-width: 1100px) { .float-tweet:nth-child(-n+14) { display: block; } }
+  @media (min-width: 1440px) { .float-tweet:nth-child(-n+18) { display: block; } }
+  /* centered content overlay */
+  .opening-content {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    max-width: 880px;
+    padding: 0 24px;
+  }
+  .opening h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(40px, 5.6vw, 76px);
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+    text-transform: uppercase;
+    margin: 0 0 28px;
+    color: var(--text);
+    /* page-bg halo around each letter — occludes cards drifting behind */
+    text-shadow:
+      0 0 10px var(--bg),
+      0 0 22px var(--bg),
+      0 0 40px var(--bg),
+      0 0 70px var(--bg);
+  }
+  .opening h1 .alva { color: var(--alva); }
+  /* subtitle — a follow-up question inviting the user to scroll;
+     softer than the H1, sits just above the down-arrow scroll cue */
+  .opening-sub {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(20px, 2.2vw, 30px);
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+    color: #3a3a44;
+    max-width: 740px;
+    margin: 0 auto 36px;
+    text-shadow:
+      0 0 8px var(--bg),
+      0 0 18px var(--bg),
+      0 0 30px var(--bg);
+  }
+  .opening-sub .alva { color: var(--alva); }
+  /* inline X.com glyph — single dark mark, no background shape;
+     sized to read like a letter on the same line */
+  .opening-sub .x-mark {
+    display: inline-block;
+    width: 0.78em;
+    height: 0.78em;
+    margin: 0 0.14em;
+    vertical-align: -0.05em;
+    color: var(--text);
+    /* glow same as the surrounding text-shadow; drop-shadow follows the
+       glyph alpha so the halo wraps the X shape, not its bounding box */
+    filter:
+      drop-shadow(0 0 6px var(--bg))
+      drop-shadow(0 0 12px var(--bg))
+      drop-shadow(0 0 22px var(--bg));
+  }
+  .opening-sub .x-mark svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+    display: block;
+  }
+
+  /* scroll cue — circle ring + arrow both shimmer with the same multi-color
+     gradient sweeping top → bottom. The ring is a thin border made by a
+     ::before (fill = animated gradient) + ::after (page-bg inner disc that
+     masks all but a 1.5px edge). The arrow glyph reuses the same gradient
+     via `background-clip: text`. Both animate in sync. */
+  .opening-arrow {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    isolation: isolate;
+    transition: transform .2s;
+    /* halo of page-bg color so cards drifting behind don't bleed into
+       the ring outline */
+    box-shadow:
+      0 0 24px 10px var(--bg),
+      0 0 48px 20px var(--bg);
+  }
+  .opening-arrow:hover { transform: translateY(-2px); }
+
+  .opening-arrow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      linear-gradient(180deg,
+        var(--text)            0%,
+        var(--text)           33%,
+        rgba(73,163,166,1)    38%,   /* alva */
+        rgba(73,163,166,1)    44%,   /* alva plateau */
+        rgba(255,138,76,1)    48%,
+        rgba(255,138,76,1)    54%,   /* orange plateau */
+        rgba(176,38,255,1)    58%,
+        rgba(176,38,255,1)    64%,   /* purple plateau */
+        var(--text)           70%,
+        var(--text)          100%);
+    background-size: 100% 400%;
+    background-position: 0 0%;
+    animation: arrowShimmer 6.5s linear infinite;
+    z-index: 0;
+  }
+  .opening-arrow::after {
+    /* inner disc the colour of the page bg — masks ::before so only the
+       ring shows; thickness now 2.5px to match the heavier border */
+    content: "";
+    position: absolute;
+    inset: 2.5px;
+    border-radius: inherit;
+    background: var(--bg);
+    z-index: 1;
+  }
+  /* sweep happens in the first ~22% of the cycle (~1.4s), then holds for
+     the remaining ~5s. Direction: bottom → top, opposite to the arrow. */
+  @keyframes arrowShimmer {
+    0%    { background-position: 0 0%;   }   /* band below element */
+    22%   { background-position: 0 100%; }   /* band has passed above */
+    100%  { background-position: 0 100%; }   /* hold for ~5s pause */
+  }
+
+  .opening-arrow i {
+    position: relative;
+    z-index: 2;
+    font-size: 28px;
+    background:
+      linear-gradient(180deg,
+        var(--text)            0%,
+        var(--text)           33%,
+        rgba(73,163,166,1)    38%,
+        rgba(73,163,166,1)    44%,
+        rgba(255,138,76,1)    48%,
+        rgba(255,138,76,1)    54%,
+        rgba(176,38,255,1)    58%,
+        rgba(176,38,255,1)    64%,
+        var(--text)           70%,
+        var(--text)          100%);
+    background-size: 100% 400%;
+    background-position: 0 0%;
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+            color: transparent;
+    animation: bobDown 2.2s ease-in-out infinite,
+               arrowShimmer 6.5s linear infinite;
+  }
+
+  /* hover: invert — black disc + white arrow, no shimmer */
+  .opening-arrow:hover::after { background: var(--text); }
+  .opening-arrow:hover i {
+    background: none;
+    -webkit-text-fill-color: #fff;
+            color: #fff;
+    animation: bobDown 2.2s ease-in-out infinite;
+  }
+  @keyframes bobDown {
+    0%, 100% { transform: translateY(0); opacity: 0.7; }
+    50%      { transform: translateY(4px); opacity: 1; }
+  }
+
+  /* ============================================================
+     HERO STAGE  (left content + right card-stack, attachment style)
+     ============================================================ */
+  /* full-width band — bg extends edge to edge */
+  .stage {
+    position: relative;
+    width: 100%;
+    background: var(--bg-soft);
+    padding: 120px 0 112px;
+  }
+  /* inner container caps content width and centres it */
+  .stage-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 48px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 72px;     /* generous gap so cards don't crowd the text */
+    row-gap: 12px;
+    align-items: center;
+  }
+  /* third grid row: big centred CTA across the full width */
+  .stage .hero-content { grid-column: 1; grid-row: 1; }
+  .stage .card-stack   { grid-column: 2; grid-row: 1; }
+  .stage .hero-cta     {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    /* 3-track grid keeps the button perfectly centred (column 2) while
+       the bubble sits right next to it (column 3, justify-self: start).
+       The empty 1fr on the left mirrors the right 1fr so the button
+       stays at the optical centre regardless of bubble width. */
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    column-gap: 14px;
+    padding-top: 24px;
+  }
+  .stage .hero-cta > .btn-primary { grid-column: 2; justify-self: center; }
+
+  /* ============================================================
+     CTA SOCIAL-PROOF BUBBLE  (stacked avatars + rolling digit counter)
+     Small dark pill that sits immediately to the right of the Initialize
+     Scan button (grid column 3, justify-self: start). A left-pointing
+     CSS triangle (::before) connects it visually to the button like a
+     speech-bubble pointer. The counter is a tabular-nums digit roller —
+     each visible digit is a 16px viewport onto a 0..9 column that
+     translateY's into position with a soft transition.
+     ============================================================ */
+  .cta-proof {
+    position: relative;
+    grid-column: 3;
+    justify-self: start;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 12px 5px 5px;
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 999px;
+    box-shadow: 0 8px 22px rgba(10,10,16,0.20);
+    color: #fff;
+    white-space: nowrap;
+  }
+  /* left-pointing triangle "pointer" — visually anchors the bubble to
+     the button next to it */
+  .cta-proof::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    width: 7px;
+    height: 12px;
+    background: var(--card);
+    clip-path: polygon(100% 0, 0 50%, 100% 100%);
+    transform: translateY(-50%);
+  }
+  .proof-avatars {
+    display: inline-flex; align-items: center;
+    flex-shrink: 0;
+  }
+  .proof-avatars img {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--card);
+    margin-left: -6px;
+    object-fit: cover;
+    background: var(--card-line);
+  }
+  .proof-avatars img:first-child { margin-left: 0; }
+  .proof-count {
+    display: inline-flex;
+    align-items: baseline;
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.005em;
+    height: 16px;
+  }
+  .proof-count .separator { display: inline-block; padding: 0 1px; }
+  .roller {
+    display: inline-block;
+    height: 16px;
+    width: 8px;
+    overflow: hidden;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    vertical-align: bottom;
+  }
+  .roller-stack {
+    display: flex;
+    flex-direction: column;
+    transition: transform .7s cubic-bezier(.22,.8,.22,1);
+    will-change: transform;
+  }
+  .roller-stack > span {
+    height: 16px;
+    line-height: 16px;
+    display: block;
+  }
+  .proof-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-left: 2px;
+  }
+
+  /* horizontal auto-scroll rail (full viewport width, behind veil) */
+  .cards-rail {
+    position: absolute;
+    top: calc(50% + 32px); left: 0; right: 0;
+    transform: translateY(-50%);
+    z-index: 1;
+    padding: 40px 0;
+    /* 3D viewport for the per-card rotateY tilt JS sets on each card */
+    perspective: 1400px;
+    perspective-origin: 50% 50%;
+  }
+  .cards-track {
+    display: flex; gap: 32px;
+    width: max-content;
+    padding-left: 42vw;
+    animation: scrollCards 75s linear infinite;
+    /* keep the rail's perspective alive through this transform so the
+       rotateY on child .perspective-wrap actually renders in 3D, not flat */
+    transform-style: preserve-3d;
+  }
+  .cards-track:hover { animation-play-state: paused; }
+  @keyframes scrollCards {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* left veil — light translucent + backdrop blur so hero text reads clean */
+  .hero-veil {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 60%;
+    z-index: 2;
+    pointer-events: none;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: linear-gradient(to right,
+      rgba(245,245,247,0.96) 0%,
+      rgba(245,245,247,0.92) 60%,
+      rgba(245,245,247,0.55) 86%,
+      rgba(245,245,247,0.0)  100%);
+    mask-image: linear-gradient(to right, black 0%, black 72%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 0%, black 72%, transparent 100%);
+  }
+
+  .hero-content {
+    width: 100%;
+    max-width: 720px;
+    justify-self: start;
+    text-align: left;
+  }
+  /* H1 is a single declarative paragraph — full prose, one style.
+     Smaller size so the longer sentence wraps cleanly to 3-4 lines
+     within the left column. */
+  h1.hero-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(26px, 3.2vw, 38px);
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    margin: 0 0 24px;
+    color: var(--text);
+  }
+  .hero-sub {
+    color: var(--muted);
+    font-size: 17px; line-height: 1.6;
+    max-width: 560px; margin: 0 0 28px;
+  }
+  .hero-sub b { color: var(--text); font-weight: 700; }
+  .hero-actions {
+    display: flex; align-items: center; gap: 22px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  /* inline link inside the hero subtitle — visually identical to the
+     surrounding text (same colour, same weight), only difference is the
+     underline. Hover nudges colour toward alva. */
+  .hero-sub .sub-link {
+    display: inline;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1px;
+    cursor: pointer;
+    transition: color .15s;
+  }
+  .hero-sub .sub-link:hover { color: var(--alva); }
+  .hero-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--muted);
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    transition: color .15s;
+  }
+  .hero-link:hover { color: var(--text); }
+  .hero-link::after {
+    content: "→";
+    margin-left: 2px;
+    transition: transform .2s;
+    opacity: 0.6;
+  }
+  .hero-link:hover::after { transform: translateX(3px); opacity: 1; }
+  .perms {
+    margin-top: 32px;
+    display: flex; flex-wrap: wrap; gap: 18px;
+    font-size: 12px; color: var(--muted); font-weight: 500;
+  }
+  .perms span { display: inline-flex; align-items: center; gap: 6px; }
+  .perms span i { color: var(--alva); font-size: 14px; }
+
+  /* ============================================================
+     CARD STACK  (right column — attachment-style fan of profile cards)
+     5 cards positioned absolutely around the stack centre with varied
+     x / y / rotation. Hover any card: it scales + straightens; the
+     others spread further out via :has(). Pure CSS, no JS.
+     ============================================================ */
+  .card-stack {
+    position: relative;
+    width: 100%;
+    height: clamp(420px, 50vh, 500px);
+    justify-self: end;
+  }
+  .card-stack .perspective-wrap {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 260px;
+    margin: 0;
+    transform:
+      translate(-50%, -50%)
+      translate(calc(var(--sx, 0) + var(--push, 0px)), 0)
+      rotate(var(--srot, 0deg));
+    transition: transform .45s cubic-bezier(.22,.8,.22,1);
+    cursor: pointer;
+  }
+  /* 4 cards in a horizontal row, ~130px apart; rotation varies per
+     card so it feels hand-laid, not algorithmic */
+  .card-stack .perspective-wrap:nth-child(1) { --sx: -195px; --srot: -9deg; z-index: 1; }
+  .card-stack .perspective-wrap:nth-child(2) { --sx:  -65px; --srot:  4deg; z-index: 2; }
+  .card-stack .perspective-wrap:nth-child(3) { --sx:   65px; --srot: -3deg; z-index: 3; }
+  .card-stack .perspective-wrap:nth-child(4) { --sx:  195px; --srot:  8deg; z-index: 4; }
+
+  /* hover handled by JS — .is-hovered class set on the actually-hovered
+     card; --push set on every other card so they slide away horizontally.
+     Pure-CSS :hover/:has(~) was retriggering rapidly when the moved
+     siblings repositioned under the cursor; class-based is stable.
+     The hovered card stays at its own --sx (does NOT jump to centre);
+     only its rotation flattens and it scales up slightly. */
+  .card-stack .perspective-wrap.is-hovered {
+    transform:
+      translate(-50%, -50%)
+      translate(var(--sx, 0), 0)
+      scale(1.07)
+      rotate(0deg);
+    z-index: 20;
+  }
+
+  /* ============================================================
+     PROFILE CARDS  (PRESERVED FROM AUDIT.HTML — do not redesign)
+     ============================================================ */
+  .perspective-wrap {
+    flex-shrink: 0;
+    width: 380px;
+    /* perspective lives on .cards-rail above so all cards share one
+       viewing camera. The 3D rotateY is set per-card by JS via --tilt. */
+  }
+  .card {
+    width: 100%; aspect-ratio: 4 / 5;
+    container-type: inline-size;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--card-line);
+    position: relative;
+    overflow: hidden;
+    transition: transform .25s ease, box-shadow .25s ease;
+    will-change: transform;
+    box-shadow:
+      0 12px 28px -10px rgba(20,20,30,0.18),
+      0 4px 10px -2px rgba(20,20,30,0.08);
+  }
+  .card.c-1 { background: linear-gradient(135deg, rgba(73,163,166,0.22), rgba(10,10,16,0) 55%), var(--card); }
+  .card.c-2 { background: linear-gradient(135deg, rgba(179,136,255,0.22), rgba(10,10,16,0) 55%), var(--card); }
+  .card.c-3 { background: linear-gradient(135deg, rgba(255,138,76,0.20),  rgba(10,10,16,0) 55%), var(--card); }
+  .card.c-4 { background: linear-gradient(135deg, rgba(244,114,182,0.20), rgba(10,10,16,0) 55%), var(--card); }
+  .card.c-5 { background: linear-gradient(135deg, rgba(96,165,250,0.22),  rgba(10,10,16,0) 55%), var(--card); }
+  .card:hover {
+    transform: scale(1.05);
+    box-shadow:
+      0 30px 64px -16px rgba(20,20,30,0.45),
+      0 12px 24px -6px rgba(20,20,30,0.22);
+    z-index: 5;
+  }
+  .cards-track > .perspective-wrap {
+    position: relative; z-index: 1;
+    /* Cover Flow: --tilt sets the 3D rotation, --pull shifts the card
+       toward the viewport centre so edge cards visually compress and
+       overlap their neighbours. Both vars are written per-frame by JS. */
+    transform: translateX(var(--pull, 0px)) rotateY(var(--tilt, 0deg));
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+  }
+  .cards-track > .perspective-wrap:hover { z-index: 10; }
+
+  .card-inner {
+    position: relative;
+    width: 100%; height: 100%;
+    border-radius: 10px;
+    padding: 1.71em;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    color: #fff;
+    font-size: clamp(10px, 3.685cqi, 14px);
+  }
+
+  .pc-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 1.57em;
+  }
+  .pc-id { display: flex; align-items: center; gap: 0.86em; }
+  .avatar {
+    width: 3.14em; height: 3.14em;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--card);
+    flex-shrink: 0;
+  }
+  .pc-name {
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 1.21em;
+    color: #fff; line-height: 1.1;
+  }
+  .pc-handle {
+    font-family: var(--font-mono);
+    font-size: 0.79em; color: var(--muted);
+    margin-top: 0.21em;
+  }
+  .pc-badge {
+    font-family: var(--font-mono);
+    font-size: 0.64em; font-weight: 600;
+    color: var(--muted-2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.36em 0.57em;
+    border: 1px solid var(--card-line);
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+  }
+
+  .pc-score {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.57em;
+  }
+  .pc-score .label {
+    font-family: var(--font-mono);
+    font-size: 0.71em; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.29em;
+  }
+  .pc-score .val {
+    font-family: var(--font-display);
+    font-size: 4.57em; font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--alva);
+    text-shadow: 0 0 18px rgba(73,163,166,0.55);
+  }
+  .pc-score .type {
+    font-family: var(--font-mono);
+    font-size: 0.79em; font-weight: 700;
+    color: var(--alva);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 0.57em;
+    display: inline-flex; align-items: center; gap: 0.57em;
+  }
+  .pc-score .type::before {
+    content: ""; width: 0.43em; height: 0.43em; border-radius: 50%;
+    background: var(--alva);
+    box-shadow: 0 0 8px var(--alva);
+    animation: pingDot 2s ease-in-out infinite;
+  }
+  @keyframes pingDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(1.6); }
+  }
+  .pc-rank {
+    width: 6.29em; height: 6.29em;
+    position: relative;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .pc-rank svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .pc-rank .ring-track { stroke: rgba(255,255,255,0.06); }
+  .pc-rank .ring-fill  { stroke: var(--alva); filter: drop-shadow(0 0 6px rgba(73,163,166,0.7)); }
+  .pc-rank .ring-text {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+  }
+  .pc-rank .ring-text .l {
+    font-size: 0.64em; color: var(--muted);
+    letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .pc-rank .ring-text .v {
+    font-family: var(--font-display);
+    font-size: 1em; font-weight: 700;
+    color: #fff;
+  }
+
+  .pc-matrix { margin-bottom: 1.29em; }
+  .pc-matrix .row {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.71em; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.71em;
+  }
+  .pc-matrix .dots {
+    display: grid; grid-template-columns: repeat(10, 1fr);
+    grid-auto-rows: 0.57em;
+    gap: 0.21em;
+  }
+  .pc-matrix .dots i {
+    display: block;
+    border-radius: 1px;
+    background: rgba(255,255,255,0.05);
+  }
+  .pc-matrix .dots i.g { background: var(--alva);   box-shadow: 0 0 4px rgba(73,163,166,0.6); }
+  .pc-matrix .dots i.o { background: var(--orange); box-shadow: 0 0 4px rgba(255,138,76,0.5); }
+  .pc-matrix .dots i.p { background: var(--purple); box-shadow: 0 0 4px rgba(179,136,255,0.5); }
+  .pc-matrix .legend {
+    display: flex; gap: 1em;
+    margin-top: 0.71em;
+    font-family: var(--font-mono);
+    font-size: 0.64em;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .pc-matrix .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .pc-matrix .legend span::before {
+    content: ""; width: 0.89em; height: 0.33em; border-radius: 1px;
+  }
+  .pc-matrix .legend span.lg-g::before { background: var(--alva); }
+  .pc-matrix .legend span.lg-o::before { background: var(--orange); }
+  .pc-matrix .legend span.lg-p::before { background: var(--purple); }
+
+  .pc-providers { margin-top: auto; }
+  .pc-providers .head {
+    font-family: var(--font-mono);
+    font-size: 0.71em; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--card-line);
+    padding-bottom: 0.57em;
+    margin-bottom: 0.86em;
+  }
+  .pc-providers .prv { margin-bottom: 0.71em; }
+  .pc-providers .prv:last-child { margin-bottom: 0; }
+  .pc-providers .prv .meta {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    margin-bottom: 0.43em;
+  }
+  .pc-providers .prv .meta .handle { color: #fff; }
+  .pc-providers .prv .meta .stat.alva   { color: var(--alva); }
+  .pc-providers .prv .meta .stat.purple { color: var(--purple); }
+  .pc-providers .prv .track {
+    height: 0.29em;
+    background: rgba(255,255,255,0.05);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+  .pc-providers .prv .track .fill {
+    height: 100%; border-radius: 9999px;
+  }
+  .pc-providers .prv.alva   .track .fill { background: var(--alva);   box-shadow: 0 0 8px rgba(73,163,166,0.7); }
+  .pc-providers .prv.purple .track .fill { background: var(--purple); box-shadow: 0 0 8px rgba(179,136,255,0.7); }
+
+  /* ============================================================
+     STATS STRIP (between hero and features)
+     ============================================================ */
+  .stats-strip {
+    padding: 56px 32px;
+    background: var(--bg);   /* grey band between stage and leaderboard */
+  }
+  .stats-wrap {
+    max-width: 1280px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 24px; text-align: center;
+  }
+  .stats-strip .stat .v {
+    font-weight: 900;
+    font-size: 40px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .stats-strip .stat .l {
+    font-size: 12px; font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* ============================================================
+     SECTION FRAME  (features-style; reused for each Q→A section)
+     ============================================================ */
+  .section {
+    position: relative;
+    padding: 120px 32px 96px;
+    background: var(--bg-soft);   /* swapped — was grey */
+  }
+  .section.alt { background: var(--bg); }   /* swapped — was white */
+  .section-wrap { max-width: 1320px; margin: 0 auto; padding: 0 16px; }
+  .section-head { margin-bottom: 48px; max-width: 760px; }
+  /* section-head variant with a right-aligned action button */
+  .section-head.with-action {
+    max-width: none;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .section-head.with-action > div { max-width: 760px; }
+  .section-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+    font-size: 13px;
+    font-weight: 700;
+    transition: background .15s, border-color .15s, transform .15s;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .section-action i { color: var(--alva); font-size: 14px; }
+  .section-action:hover {
+    background: var(--text);
+    color: #fff;
+    border-color: var(--text);
+    transform: translateY(-1px);
+  }
+  .section-action:hover i { color: var(--alva-hi); }
+  .section-head .eyebrow {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 12px;
+  }
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(36px, 4.6vw, 60px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    text-transform: uppercase;
+    margin: 0 0 18px;
+    color: var(--text);
+  }
+  .section-head h2 .alva { color: var(--alva); }
+  .section-head p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.6;
+    max-width: 640px;
+  }
+
+  /* features grid (reused for sub-cards) */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  .feat {
+    padding: 32px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid var(--line);
+    transition: box-shadow .25s ease;
+  }
+  .section.alt .feat { background: var(--bg); }
+  .feat:hover { box-shadow: 0 12px 28px -10px rgba(20,20,30,0.18); }
+  .feat .ic {
+    width: 48px; height: 48px;
+    background: var(--bg);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    color: var(--text);
+    font-size: 22px;
+    margin-bottom: 24px;
+    transition: background .25s, color .25s;
+  }
+  .section.alt .feat .ic { background: #fff; }
+  .feat:hover .ic { background: rgba(73,163,166,0.10); color: var(--alva); }
+  .feat h3 {
+    font-size: 18px; font-weight: 700;
+    margin: 0 0 12px;
+    color: var(--text);
+  }
+  .feat p { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; }
+  .feat .tags { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .feat .tag-pill {
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(73,163,166,0.10);
+    color: var(--alva);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ============================================================
+     AUDIT-YOURS  (main CTA section — Q: who's real in your follows?)
+     Centered, focused, single primary action.
+     ============================================================ */
+  .section.audit-yours { padding-top: 96px; padding-bottom: 96px; }
+  .section.audit-yours .section-head {
+    margin: 0 auto 36px;
+    text-align: center;
+    max-width: 760px;
+  }
+  .section.audit-yours .section-head p { margin-left: auto; margin-right: auto; }
+  .audit-cta-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 22px;
+    flex-wrap: wrap;
+  }
+  .audit-cta-row .btn-primary {
+    padding: 16px 30px;
+    font-size: 15px;
+    border-radius: 999px;
+  }
+  /* a soft preview strip — hints at what the connected result looks like */
+  .audit-preview {
+    margin: 56px auto 0;
+    max-width: 920px;
+    border: 1px dashed var(--line);
+    border-radius: 18px;
+    padding: 18px;
+    background: rgba(255,255,255,0.6);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 18px;
+    align-items: center;
+  }
+  .audit-preview .meta {
+    flex-shrink: 0;
+    padding-right: 18px;
+    border-right: 1px solid var(--line);
+  }
+  .audit-preview .meta b {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--alva);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .audit-preview .meta span {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .audit-preview .row {
+    display: flex; gap: 10px; flex-wrap: wrap; min-width: 0;
+  }
+  .audit-preview .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px 6px 6px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--line);
+    font-size: 12px;
+  }
+  .audit-preview .chip img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+  .audit-preview .chip b { font-weight: 700; }
+  .audit-preview .chip span {
+    font-family: var(--font-mono);
+    color: var(--alva);
+    font-weight: 700;
+  }
+  .audit-preview .chip.miss span { color: var(--loss); }
+
+  /* ============================================================
+     LEADERBOARD (compact preview — full table on alva.ai)
+     ============================================================ */
+  .lb-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .lb-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--line);
+    gap: 16px; flex-wrap: wrap;
+  }
+  .sort-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .sort-tab {
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px; font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .sort-tab:hover:not(.active) { background: rgba(0,0,0,0.04); color: var(--text); }
+  .sort-tab.active {
+    background: var(--text); color: #fff;
+    border-color: var(--text);
+  }
+  .lb-meta {
+    font-family: var(--font-mono);
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 0.06em;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .lb-meta .dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gain);
+    animation: pingDot 2s ease-in-out infinite;
+  }
+  /* leaderboard rows fade out at the bottom — gives an "and there's more"
+     impression without an explicit CTA; the next section visually clips
+     the table since the card has no foot and bottom padding is tight */
+  /* single column header — replaces the per-cell labels in each row */
+  .lb-header {
+    display: grid;
+    grid-template-columns: 40px minmax(220px, 1.4fr) repeat(5, minmax(70px, .55fr)) 100px;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 24px 12px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  /* lb-rows render more rows than fit — the bottom mask fades them out
+     so the table reads as "cut by the section, more on the full board" */
+  .lb-rows {
+    padding: 4px 0 0;
+    max-height: 320px;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom,
+      black 0%, black 65%, rgba(0,0,0,0.55) 88%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom,
+      black 0%, black 65%, rgba(0,0,0,0.55) 88%, transparent 100%);
+  }
+  .lb-card { border-bottom: 0; border-radius: 14px 14px 0 0; }
+  #leaderboard { padding-bottom: 0; }
+  .lb-row {
+    display: grid;
+    grid-template-columns: 40px minmax(220px, 1.4fr) repeat(5, minmax(70px, .55fr)) 100px;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 24px;       /* tighter rows */
+    border-bottom: 1px solid var(--line);
+    transition: background .15s;
+    text-decoration: none; color: inherit;
+  }
+  .lb-row:last-child { border-bottom: 0; }
+  .lb-row:hover { background: rgba(73,163,166,0.04); }
+  .lb-row .idx {
+    font-family: var(--font-mono);
+    font-weight: 700; color: var(--muted);
+    font-size: 13px;
+  }
+  .lb-row .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .lb-row .who img {
+    width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+    background: var(--line);
+  }
+  .lb-row .who b { display: block; font-size: 13px; font-weight: 700; }
+  .lb-row .who span {
+    display: block; margin-top: 1px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+  }
+  /* no more per-cell labels — header row handles column titles */
+  .lb-row .cell .v { font-weight: 700; font-size: 13px; font-family: var(--font-mono); }
+  .lb-row .cell .v.gain { color: var(--gain); }
+  .lb-row .cell .v.loss { color: var(--loss); }
+  .risk-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .risk-pill.low    { background: rgba(34,197,94,0.10);  color: #15803d; }
+  .risk-pill.medium { background: rgba(255,138,76,0.14); color: #c2410c; }
+  .risk-pill.high   { background: rgba(239,68,68,0.10);  color: #b91c1c; }
+  .open-pill {
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: var(--text); color: #fff;
+    font-size: 11px; font-weight: 700;
+  }
+  /* (previous fade-out treatment removed — leaderboard now shows a clean
+     5-row table with explicit header and bordered card) */
+
+  /* ============================================================
+     AGENTS  (persona feat cards + small chat mock)
+     ============================================================ */
+  .agents-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: stretch;
+  }
+  /* left column stretches to match right column height; cards distribute
+     evenly with space-between so the column visually fills the chat-mock */
+  .agents-left {
+    display: flex; flex-direction: column;
+    gap: 8px;
+    justify-content: space-between;
+    align-self: stretch;
+  }
+  .persona-feat {
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: var(--bg-soft);            /* white card on grey section */
+    border: 1px solid var(--line);
+    display: flex; align-items: center; gap: 16px;
+    cursor: pointer;
+    transition: box-shadow .25s ease, border-color .15s ease, background .15s ease;
+    text-align: left;
+    width: 100%;
+    flex-shrink: 0;
+  }
+  .persona-feat:hover { box-shadow: 0 12px 28px -10px rgba(20,20,30,0.18); border-color: rgba(73,163,166,0.32); }
+  .persona-feat.active { border-color: var(--alva); background: rgba(73,163,166,0.06); }
+  .persona-feat img {
+    width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+    flex-shrink: 0;
+    background: var(--line);
+  }
+  /* middle column: name + handle + tags */
+  .persona-feat .pmeta { flex: 1; min-width: 0; }
+  .persona-feat .pname {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    line-height: 1.2;
+  }
+  .persona-feat .phandle {
+    font-family: var(--font-mono);
+    font-size: 11px; color: var(--muted);
+    margin-top: 3px;
+    letter-spacing: 0.02em;
+  }
+  /* tags always visible, single row */
+  .persona-feat .ptags {
+    margin-top: 7px;
+    display: flex;
+    flex-wrap: wrap; gap: 4px;
+  }
+  .persona-feat .ptag {
+    font-family: var(--font-mono);
+    font-size: 9px; font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(73,163,166,0.10);
+    color: var(--alva);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  /* right column: enlarged follower count */
+  .persona-feat .pstats {
+    flex-shrink: 0;
+    text-align: right;
+    padding-left: 8px;
+  }
+  .persona-feat .pstats-n {
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .persona-feat.active .pstats-n { color: var(--alva); }
+  .persona-feat .pstats-lbl {
+    font-family: var(--font-mono);
+    font-size: 9px; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  .chat-mock {
+    padding: 24px;
+    border-radius: 14px;
+    background: var(--card);
+    color: #fff;
+    display: flex; flex-direction: column;
+    gap: 12px;
+    border: 1px solid var(--card-line);
+    min-height: 540px;     /* anchors input at bottom, matches 5-persona column */
+  }
+  .chat-target { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--card-line); }
+  .chat-target img { width: 38px; height: 38px; border-radius: 50%; }
+  .chat-target b { display: block; font-size: 14px; }
+  .chat-target span { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--muted-2); margin-top: 2px; letter-spacing: 0.06em; }
+  .chat-target .live {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    color: var(--alva-hi);
+  }
+  .chat-target .live::before {
+    content: "";
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--alva);
+    box-shadow: 0 0 8px var(--alva);
+    animation: pingDot 2s ease-in-out infinite;
+  }
+  .bubble {
+    max-width: 92%;
+    padding: 13px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .bubble.user {
+    align-self: flex-end;
+    background: rgba(255,255,255,0.10);
+    color: #fff;
+  }
+  .bubble.ai {
+    align-self: flex-start;
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.86);
+    border: 1px solid var(--card-line);
+  }
+  .bubble.ai ol { margin: 8px 0 8px 18px; padding: 0; }
+  .bubble.ai ol li { margin-bottom: 4px; }
+  .bubble.ai b { color: var(--alva-hi); }
+  .bubble.ai .source {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px dashed rgba(255,255,255,0.10);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted-2);
+    letter-spacing: 0.06em;
+  }
+  .bubble.ai .source b { color: var(--alva-hi); }
+  .bubble.ai .source a { color: var(--alva-hi); }
+
+  /* chat-thread expands to fill remaining vertical space; input gets
+     docked at the bottom via the auto top-margin below */
+  .chat-thread {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  /* chat input bar — pinned to bottom of .chat-mock regardless of content height */
+  .chat-input {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--card-line);
+    margin-top: auto;     /* push to bottom */
+    flex-shrink: 0;
+  }
+  .chat-input input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    outline: none;
+    padding: 10px 14px;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 14px;
+  }
+  .chat-input input::placeholder { color: rgba(255,255,255,0.4); }
+  .chat-input button {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    background: var(--alva);
+    color: #fff;
+    border: 0;
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: background .15s, transform .15s;
+  }
+  .chat-input button:hover { background: var(--alva-hi); transform: translateY(-1px); }
+  .chat-input button i { font-size: 16px; }
+
+  /* ============================================================
+     CLOSING / FOR-KOLS  (inverted dark section, audit.html style)
+     ============================================================ */
+  .closing {
+    padding: 120px 32px;
+    background: #0a0a10;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .closing-wrap {
+    max-width: 1200px; width: 100%;
+    margin: 0 auto;
+    position: relative; z-index: 1;
+  }
+  .closing-head { text-align: center; margin-bottom: 64px; }
+  .closing-head .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    color: var(--alva-hi);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .closing h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(36px, 4.6vw, 60px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin: 0 0 20px;
+    color: #fff;
+    text-transform: uppercase;
+  }
+  .closing h2 .alva { color: var(--alva); }
+  .closing-head p {
+    color: rgba(255,255,255,0.55);
+    font-size: 18px;
+    line-height: 1.6;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+  .closing-paths {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .closing-path {
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    padding: 36px;
+  }
+  .closing-path .tag-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700;
+    color: var(--alva-hi);
+    letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background: rgba(73,163,166,0.14);
+  }
+  .closing-path h3 {
+    margin: 18px 0 0;
+    font-family: var(--font-display);
+    font-size: 24px; font-weight: 700;
+    line-height: 1.1;
+    color: #fff;
+  }
+  .closing-path p {
+    margin: 14px 0 0;
+    color: rgba(255,255,255,0.55);
+    font-size: 14px; line-height: 1.6;
+  }
+  .closing-path .actions {
+    margin-top: 22px;
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .btn-on-dark {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px;
+    border-radius: 8px;
+    background: #fff; color: var(--text);
+    border: 0;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    transition: transform .15s;
+  }
+  .btn-on-dark:hover { transform: translateY(-1px); background: #f5f5f7; }
+  .btn-on-dark-ghost {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px;
+    border-radius: 8px;
+    background: transparent; color: rgba(255,255,255,0.85);
+    border: 1px solid rgba(255,255,255,0.18);
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn-on-dark-ghost:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.32); }
+  .closing-trust {
+    margin-top: 56px; text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.16em;
+  }
+
+  /* ============================================================
+     BOTTOM CARDS  (Request + For-KOLs, joined into one composition)
+     - gap: 0  so the cards visually touch in the middle and read as
+       ONE big block — breaks the 2-column macro pattern used by the
+       agents section just above.
+     - Left = DARK (Request), Right = LIGHT (For-KOLs).
+     - Outer wrapper gets the rounded corners + shadow; cards
+       themselves have no radius / no shadow.
+     - CTAs in both cards use .btn-primary.btn-big — same style as
+       the section-2 "Initialize Scan" hero button and the FAB.
+     - Submit form uses align-items: stretch so input height === btn-big.
+     ============================================================ */
+  /* Full-width white band wrapping the cards — provides the bg break
+     between the grey agents section above and the grey footer below. */
+  .bottom-cards {
+    background: var(--bg-soft);
+    padding: 96px 32px 80px;
+  }
+  .bottom-cards-inner {
+    max-width: 1320px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 0;
+    align-items: stretch;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(10,10,16,0.14);
+  }
+  .bcard {
+    border-radius: 0;
+    padding: 48px 44px 44px;
+    display: flex; flex-direction: column;
+    min-width: 0;
+  }
+  /* dark variant — left card (Request) */
+  .bcard.bcard-dark {
+    background: var(--card);
+    color: #fff;
+    border: 0;
+  }
+  .bcard.bcard-dark h3 { color: #fff; }
+  .bcard.bcard-dark p { color: rgba(255,255,255,0.55); }
+  .bcard.bcard-dark .bcard-eyebrow { color: var(--alva-hi); }
+  .bcard.bcard-dark .bcard-trust { color: rgba(255,255,255,0.4); }
+  /* light variant — right card (For-KOLs) */
+  .bcard.bcard-light {
+    background: var(--bg-soft);
+    color: var(--text);
+    border: 0;
+  }
+  .bcard.bcard-light h3 { color: var(--text); }
+  .bcard.bcard-light p { color: var(--muted); }
+  .bcard.bcard-light .bcard-eyebrow { color: var(--alva); }
+  .bcard.bcard-light .bcard-trust { color: var(--muted-2); }
+
+  .bcard-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .bcard h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(22px, 2vw, 28px);
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+  }
+  .bcard p {
+    margin: 12px 0 0;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  /* body takes remaining space so foot anchors to bottom — keeps
+     the two cards' foots vertically aligned even when copy lengths differ */
+  .bcard-body { flex: 1; }
+  .bcard-foot { margin-top: 32px; display: flex; flex-direction: column; gap: 14px; }
+  .bcard-trust {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* Submit form on the dark Request card — restrained small pill input +
+     small pill submit. Height is explicit (44px) so input and button line up
+     to the pixel — no padding+font drift between mono and sans. */
+  .bcard-form {
+    display: flex;
+    gap: 10px;
+    min-width: 0;
+    align-items: stretch;
+  }
+  .bcard-form input {
+    flex: 1; min-width: 0;
+    height: 44px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px;
+    outline: 0;
+    padding: 0 20px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: #fff;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .bcard-form input::placeholder { color: rgba(255,255,255,0.4); }
+  .bcard-form input:focus {
+    border-color: var(--alva);
+    background: rgba(73,163,166,0.08);
+  }
+  .bcard-form button {
+    height: 44px;
+    padding: 0 22px;
+    background: #fff;
+    color: var(--card);
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: background .15s, transform .15s;
+    flex-shrink: 0;
+  }
+  .bcard-form button:hover { background: var(--alva); color: #fff; transform: translateY(-1px); }
+  /* For-KOLs CTA — same compact white pill, same 44px height, lines up
+     visually with the Submit button on the other card */
+  .bcard-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 44px;
+    padding: 0 22px;
+    background: var(--text);
+    color: #fff;
+    border: 0;
+    border-radius: 999px;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: background .15s, transform .15s;
+  }
+  .bcard-cta:hover { background: var(--alva); transform: translateY(-1px); }
+
+  /* ============================================================
+     FOOTER
+     ============================================================ */
+  footer.f {
+    padding: 28px 32px;
+    background: var(--bg-soft);
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+  }
+  .f-inner {
+    max-width: 1440px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+    font-size: 12px;
+  }
+  .f-inner a { color: inherit; margin-right: 16px; }
+  .f-inner a:hover { color: var(--text); }
+  .f-disclaimer { max-width: 580px; line-height: 1.6; }
+
+  /* ============================================================
+     PRIMARY BUTTON  (shared by hero + floating FAB)
+     audit.html-style multi-color shimmer
+     ============================================================ */
+  .btn-primary {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 15px; font-weight: 700;
+    color: #fff;
+    background: var(--alva);
+    border: 0;
+    padding: 14px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform .15s, box-shadow .15s, background .15s;
+    box-shadow: 0 12px 28px rgba(73,163,166,0.32);
+  }
+  /* the site-wide hero CTA — meaningfully bigger than other btn-primary
+     instances (FAB, modal buttons) since it's THE main action */
+  .btn-primary.btn-big {
+    padding: 22px 52px;
+    font-size: 18px;
+    border-radius: 12px;
+    gap: 14px;
+    box-shadow: 0 22px 44px rgba(73,163,166,0.36);
+  }
+  .btn-primary.btn-big i { font-size: 20px; }
+  .btn-primary > * { position: relative; z-index: 1; }
+  .btn-primary i { transition: transform .2s cubic-bezier(.2,.8,.2,1); }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    background: var(--alva-hi);
+    box-shadow: 0 18px 36px rgba(73,163,166,0.42);
+  }
+  .btn-primary:hover i { transform: translateX(3px); }
+  .btn-primary::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(110deg,
+      transparent 30%,
+      rgba(255,255,255,0.32) 42%,
+      rgba(255,255,255,0.18) 50%,
+      rgba(255,138,76,0.28) 58%,
+      rgba(176,38,255,0.30) 64%,
+      transparent 78%);
+    background-size: 250% 100%;
+    background-repeat: no-repeat;
+    background-position: 200% 0;
+    animation: btnShimmer 3.6s ease-in-out infinite;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+  @keyframes btnShimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -150% 0; }
+  }
+
+  /* ============================================================
+     ALVA ATTRIBUTION BADGE  (persistent bottom-right, light card)
+     Cross-site nudge: "this is powered by Alva — see more playbooks"
+     ============================================================ */
+  .alva-badge {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 45;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px;
+    width: 168px;          /* squarer card — fixed width */
+    background: rgba(255,255,255,0.92);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(10,10,16,0.08);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    text-decoration: none;
+    color: var(--text);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .alva-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(10,10,16,0.12);
+  }
+  .alva-badge-mark {
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .alva-badge-mark svg { width: 32px; height: 32px; display: block; }
+  .alva-badge-mark .lg-bg { fill: var(--alva); }
+  .alva-badge-mark .lg-fg { fill: var(--text); }
+  .alva-badge-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+  .alva-badge-text b {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.01em;
+  }
+  .alva-badge-text span {
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* ============================================================
+     FLOATING CTA  (appears only after the hero stage scrolls out)
+     A single button, not a bar — bottom-center, lightweight.
+     ============================================================ */
+  .fab-wrap {
+    position: fixed;
+    left: 50%; bottom: 48px;
+    transform: translate(-50%, 24px);
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .fab-wrap.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+  }
+  /* FAB inherits the FULL .btn-primary.btn-big spec from section 2 — same
+     padding, font, radius, gradient, arrow. The only thing we override here
+     is the box-shadow (a floating fixed button legitimately needs a stronger
+     shadow than the inline hero CTA to read as "elevated"). */
+  .fab-wrap .btn-primary {
+    box-shadow:
+      0 18px 40px rgba(73,163,166,0.42),
+      0 8px 18px rgba(10,10,16,0.18);
+  }
+  /* Idle bob animation — sits on the wrapping .fab-bob so it composes
+     cleanly with both the .fab-wrap entry slide and the button's own
+     hover translate. Subtle 6px range, slow ~3.2s ease so it reads as
+     "alive" rather than fidgety. */
+  .fab-bob {
+    display: block;
+    animation: fabBob 3.2s ease-in-out infinite;
+  }
+  @keyframes fabBob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+
+  /* ============================================================
+     MODAL  (Connect X / methodology — minimal, audit.html-styled)
+     ============================================================ */
+  .modal {
+    position: fixed; inset: 0;
+    z-index: 80;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    background: rgba(10,10,16,0.5);
+    backdrop-filter: blur(8px);
+  }
+  .modal.open { display: flex; }
+  .dialog {
+    width: min(620px, 100%);
+    max-height: 86vh;
+    overflow: auto;
+    border-radius: 14px;
+    background: #fff;
+    padding: 32px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+  }
+  .dialog-head { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
+  .dialog h3 { margin: 10px 0 0; font-family: var(--font-display); font-size: 28px; line-height: 1.1; text-transform: uppercase; letter-spacing: -0.015em; }
+  .dialog p { color: var(--muted); line-height: 1.6; }
+  .dialog .eyebrow {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    color: var(--alva);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+  .close {
+    width: 36px; height: 36px;
+    border: 0; border-radius: 8px;
+    background: var(--bg);
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  /* methodology modal — single flat list, no per-step cards or color chips */
+  .dialog .steps {
+    margin-top: 24px;
+    display: flex; flex-direction: column;
+    border-top: 1px solid var(--line);
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 18px;
+    align-items: baseline;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .step:last-child { border-bottom: 0; }
+  .step .num {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .step .desc { font-size: 14px; color: var(--text); line-height: 1.5; }
+  .step .desc b { color: var(--text); font-weight: 700; }
+  .notice {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px; line-height: 1.55;
+  }
+  .notice b { color: var(--text); font-weight: 700; }
+  .dialog-actions { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .dialog-actions .btn-primary { padding: 12px 22px; font-size: 14px; border-radius: 8px; }
+  .dialog-ghost {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .dialog-ghost:hover { color: var(--text); border-color: var(--muted-2); }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 1100px) {
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+    .agents-grid { grid-template-columns: 1fr; }
+    .closing-paths { grid-template-columns: 1fr; }
+    /* Section 2 stage collapses to single column on tablet/mobile.
+       (The grid lives on .stage-inner, NOT .stage — earlier rule had
+       wrong selector so the layout never actually collapsed.) */
+    .stage { padding: 96px 0 96px; }
+    /* On tablet/phone collapse the 3-col grid to a single column so the
+       bubble stacks below the button instead of trying to sit beside it. */
+    .stage .hero-cta {
+      grid-template-columns: 1fr;
+      row-gap: 16px;
+      justify-items: center;
+    }
+    .stage .hero-cta > .btn-primary { grid-column: 1; }
+    .cta-proof { grid-column: 1; justify-self: center; }
+    /* the left-pointer arrow stops making sense when the bubble is below
+       the button — hide it on the stacked layout */
+    .cta-proof::before { display: none; }
+    .stage-inner {
+      grid-template-columns: 1fr;
+      column-gap: 0;
+      row-gap: 28px;
+      padding: 0 32px;
+    }
+    .stage .hero-content { grid-column: 1; grid-row: 1; max-width: none; }
+    .stage .card-stack   { grid-column: 1; grid-row: 2; justify-self: center; }
+    .stage .hero-cta     { grid-column: 1; grid-row: 3; }
+    .hero-veil { display: none; }                /* veil only makes sense in 2-col */
+    .card-stack { height: clamp(380px, 48vh, 460px); width: 100%; max-width: 520px; }
+    .card-stack .perspective-wrap { width: 220px; }
+    /* 4 cards, tighter spread to fit the narrower mobile column */
+    .card-stack .perspective-wrap:nth-child(1) { --sx: -135px; }
+    .card-stack .perspective-wrap:nth-child(2) { --sx:  -45px; }
+    .card-stack .perspective-wrap:nth-child(3) { --sx:   45px; }
+    .card-stack .perspective-wrap:nth-child(4) { --sx:  135px; }
+    /* drop some floating tweets at tablet width to avoid the centre */
+    .float-tweet { width: 240px; }
+  }
+  @media (max-width: 760px) {
+    /* Disable scroll-snap on phones — touch scrolling fights with
+       scroll-snap-stop:always and ends up jamming forward progress
+       (user can't scroll past the stage to reach leaderboard/agents). */
+    html.snap-active { scroll-snap-type: none; }
+
+    .nav-inner { padding: 0 12px; gap: 8px; }
+    .brand-text { display: none; }              /* free up width for tabs */
+    /* Tabs stay visible on phones — collapsed to icon-only */
+    .nav-tabs { display: flex; padding: 3px; gap: 0; }
+    .nav-tab { padding: 7px 9px; gap: 0; }
+    .nav-tab i { font-size: 16px; opacity: 1; }
+    .nav-tab span { display: none; }            /* hide labels, keep icons */
+    .nav-tab.active i { color: #fff; }
+    .nav-cta { padding: 7px 11px; font-size: 11px; }
+    .nav-cta i { font-size: 12px; }
+    .nav-cta-ghost { display: none; }           /* secondary CTA hides on phone */
+
+    /* opening section — shrink everything on phones */
+    .opening { padding: 56px 18px; min-height: calc(100vh - 64px); }
+    .opening h1 { font-size: clamp(32px, 9vw, 44px); }
+    .opening-sub { font-size: clamp(17px, 5vw, 22px); }
+    .opening-arrow { width: 52px; height: 52px; }
+    .opening-arrow::after { inset: 2px; }
+    .opening-arrow i { font-size: 24px; }
+    .float-tweet { width: 200px !important; font-size: 11px !important; }
+
+    /* Section 2 stage — single column, card-stack below hero content */
+    .stage { min-height: auto; padding: 80px 0 80px; }
+    .stage-inner { padding: 0 20px; row-gap: 24px; }
+    .hero-veil { display: none; }
+    h1.hero-title { font-size: clamp(28px, 7vw, 36px); }
+    .card-stack { height: 360px; max-width: 100%; }
+    .card-stack .perspective-wrap { width: 180px; }
+    .card-stack .perspective-wrap:nth-child(1) { --sx: -100px; --srot: -7deg; }
+    .card-stack .perspective-wrap:nth-child(2) { --sx:  -35px; --srot:  3deg; }
+    .card-stack .perspective-wrap:nth-child(3) { --sx:   35px; --srot: -2deg; }
+    .card-stack .perspective-wrap:nth-child(4) { --sx:  100px; --srot:  6deg; }
+    .section { padding: 80px 18px; }
+    .section-head h2 { font-size: 32px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .stats-strip { padding: 36px 20px; }
+    .stats-wrap { grid-template-columns: 1fr; gap: 18px; }
+    .stats-strip .stat .v { font-size: 32px; }
+    .closing { padding: 80px 18px; }
+    .closing-path { padding: 24px; }
+    .agents-grid { grid-template-columns: 1fr; gap: 24px; }
+    .persona-feat { padding: 12px 14px; gap: 12px; }
+    .persona-feat .pstats-n { font-size: 18px; }
+    /* Mobile bottom-cards — fall back to the previous version's pattern:
+       two separately rounded cards stacked with a gap, no shared shell. */
+    .bottom-cards { padding: 56px 18px; }
+    .bottom-cards-inner {
+      grid-template-columns: 1fr;
+      gap: 16px;
+      border-radius: 0;
+      overflow: visible;
+      box-shadow: none;
+    }
+    .bcard {
+      padding: 32px 24px;
+      border-radius: 20px;
+    }
+    .bcard.bcard-dark {
+      box-shadow: 0 18px 40px rgba(10,10,16,0.16);
+    }
+    .bcard.bcard-light {
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 30px rgba(20,20,30,0.06);
+    }
+    .bcard h3 { font-size: 22px; }
+    .bcard-form { flex-direction: column; gap: 10px; }
+    .bcard-form input { width: 100%; }
+    .bcard-form button { width: 100%; justify-content: center; }
+    .bcard-cta { width: 100%; justify-content: center; }
+    .fab-wrap { left: 16px; right: 16px; transform: translateY(24px); bottom: 16px; }
+    .fab-wrap.visible { transform: translateY(0); }
+    /* On mobile, compact BOTH big-CTA instances together (hero + FAB) so they
+       still read as the same button just sized down for narrow screens. */
+    .btn-primary.btn-big {
+      padding: 16px 24px;
+      font-size: 15px;
+      border-radius: 10px;
+    }
+    .fab-wrap .btn-primary { width: 100%; justify-content: center; }
+    /* alva badge collides with mobile FAB — hide on phones */
+    .alva-badge { display: none; }
+    .hero-actions .btn-primary { padding: 13px 22px; font-size: 14px; }
+    .lb-row { grid-template-columns: 30px minmax(140px, 1.4fr) 80px 100px; }
+    .lb-row .cell.hide-sm { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ NAV ============================================================ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="ALVA">
+      <span class="brand-mark">
+        <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-label="ALVA">
+          <path class="lg-bg" fill-rule="evenodd" clip-rule="evenodd" d="M34.4684 0.397058C38.1369 -0.132341 41.8624 -0.132364 45.5309 0.397058C45.8246 0.439446 46.1194 0.486373 46.7086 0.580652C46.9049 0.612064 47.0035 0.628453 47.0914 0.648035C48.2192 0.899298 49.1009 1.77999 49.3522 2.9078C49.3717 2.99576 49.3872 3.09432 49.4186 3.29061C49.5129 3.8799 49.5598 4.17464 49.6022 4.46835C50.1316 8.13701 50.1316 11.8632 49.6022 15.5318C49.5598 15.8255 49.5128 16.1204 49.4186 16.7096C49.3871 16.906 49.3718 17.0044 49.3522 17.0924C49.1009 18.2202 48.2192 19.1009 47.0914 19.3521C47.0035 19.3717 46.9049 19.3871 46.7086 19.4185C46.1193 19.5128 45.8246 19.5607 45.5309 19.6031C43.6966 19.8678 41.8481 19.9996 39.9996 19.9996C28.9548 20.0001 20.0013 28.9538 20.0006 39.9986H19.9996C19.9997 41.8476 19.8679 43.6971 19.6031 45.5318C19.5608 45.8255 19.5128 46.1203 19.4186 46.7096C19.3871 46.906 19.3718 47.0043 19.3522 47.0924C19.1009 48.2202 18.2202 49.1009 17.0924 49.3521C17.0044 49.3717 16.906 49.3871 16.7096 49.4185C16.1203 49.5128 15.8255 49.5607 15.5318 49.6031C11.8632 50.1326 8.13701 50.1326 4.46837 49.6031C4.17464 49.5607 3.88002 49.5128 3.29064 49.4185C3.0942 49.3871 2.99583 49.3717 2.90783 49.3521C1.78005 49.1009 0.899342 48.2201 0.64806 47.0924C0.628444 47.0043 0.612121 46.9061 0.580677 46.7096C0.486402 46.1203 0.439464 45.8255 0.397083 45.5318C-0.132361 41.8632 -0.132361 38.137 0.397083 34.4683C0.439471 34.1746 0.486392 33.8799 0.580677 33.2906C0.612101 33.0942 0.628467 32.9958 0.64806 32.9078C0.899321 31.78 1.78002 30.8993 2.90783 30.648C2.99585 30.6284 3.09415 30.6121 3.29064 30.5807C3.87992 30.4864 4.17468 30.4394 4.46837 30.3971C6.30257 30.1324 8.15117 29.9996 9.99962 29.9996V29.9976C20.8724 29.9974 29.7188 21.322 29.9928 10.5152L29.9996 9.99862C29.9997 8.15047 30.1314 6.30225 30.3961 4.46835C30.4385 4.1746 30.4864 3.87999 30.5807 3.29061C30.6121 3.09428 30.6275 2.99577 30.6471 2.9078C30.8983 1.7801 31.7792 0.899397 32.9068 0.648035C32.9949 0.628428 33.0933 0.612069 33.2897 0.580652C33.8791 0.486335 34.1746 0.439454 34.4684 0.397058Z" />
+          <path class="lg-fg" fill-rule="evenodd" clip-rule="evenodd" d="M45.5312 30.3971C41.8626 29.8677 38.1372 29.8677 34.4687 30.3971C34.1749 30.4395 33.8794 30.4864 33.29 30.5807C33.0936 30.6121 32.9952 30.6275 32.9071 30.6471C31.7795 30.8984 30.8988 31.7793 30.6474 32.9069C30.6278 32.9949 30.6124 33.0941 30.581 33.2906C30.4867 33.8799 30.4388 34.1747 30.3964 34.4684C29.867 38.1368 29.867 41.8624 30.3964 45.5309C30.4388 45.8246 30.4867 46.1201 30.581 46.7096C30.6124 46.9059 30.6278 47.0044 30.6474 47.0924C30.8987 48.2201 31.7795 49.1009 32.9071 49.3522C32.9952 49.3718 33.0936 49.3872 33.29 49.4186C33.8794 49.5129 34.1749 49.5607 34.4687 49.6031C38.1371 50.1325 41.8627 50.1326 45.5312 49.6031C45.8249 49.5608 46.1196 49.5129 46.7089 49.4186C46.9052 49.3872 47.0038 49.3717 47.0917 49.3522C48.2195 49.1009 49.1012 48.2202 49.3525 47.0924C49.3721 47.0044 49.3874 46.906 49.4189 46.7096C49.5132 46.1201 49.5601 45.8246 49.6025 45.5309C50.1319 41.8624 50.1319 38.1369 49.6025 34.4684C49.5601 34.1747 49.5131 33.8799 49.4189 33.2906C49.3874 33.0941 49.3721 32.9949 49.3525 32.9069C49.1011 31.7792 48.2194 30.8983 47.0917 30.6471C47.0038 30.6275 46.9051 30.6121 46.7089 30.5807C46.1196 30.4864 45.8249 30.4395 45.5312 30.3971ZM15.5322 0.397086C11.8635 -0.132362 8.13731 -0.132362 4.46867 0.397086C4.17498 0.439473 3.88023 0.486393 3.29094 0.580679C3.09461 0.612093 2.9961 0.627503 2.90813 0.647086C1.78049 0.898312 0.899769 1.77928 0.648361 2.90685C0.628742 2.99491 0.612434 3.09405 0.580978 3.29064C0.486706 3.87984 0.43977 4.17467 0.397385 4.46837C-0.132023 8.13688 -0.132004 11.8624 0.397385 15.5309C0.439781 15.8246 0.48666 16.1201 0.580978 16.7096C0.6124 16.906 0.628754 17.0044 0.648361 17.0924C0.899708 18.2201 1.78042 19.1009 2.90813 19.3522C2.99611 19.3718 3.09457 19.3871 3.29094 19.4186C3.88032 19.5129 4.17493 19.5607 4.46867 19.6031C8.13731 20.1326 11.8635 20.1326 15.5322 19.6031C15.8258 19.5608 16.1207 19.5128 16.7099 19.4186C16.9063 19.3871 17.0047 19.3718 17.0927 19.3522C18.2204 19.1009 19.1011 18.2201 19.3525 17.0924C19.3721 17.0044 19.3875 16.9059 19.4189 16.7096C19.5132 16.1201 19.561 15.8246 19.6034 15.5309C20.1328 11.8624 20.1328 8.13685 19.6034 4.46837C19.5611 4.17466 19.5131 3.8799 19.4189 3.29064C19.3874 3.09405 19.3721 2.99491 19.3525 2.90685C19.1011 1.77924 18.2204 0.898318 17.0927 0.647086C17.0047 0.627474 16.9063 0.612111 16.7099 0.580679C16.1207 0.486415 15.8258 0.439463 15.5322 0.397086Z" />
+        </svg>
+      </span>
+      <div class="brand-text">
+        <div class="name">ALVA &middot; Campaign</div>
+        <div class="sub">Live audit engine</div>
+      </div>
+    </a>
+    <nav class="nav-tabs" id="nav-tabs" aria-label="Section tabs">
+      <span class="nav-tab-indicator" id="nav-indicator"></span>
+      <a class="nav-tab" href="#audit-yours" data-section="audit-yours"><i class="ph ph-target"></i><span>KOL Score</span></a>
+      <a class="nav-tab" href="#leaderboard" data-section="leaderboard"><i class="ph ph-chart-line"></i><span>Leaderboard</span></a>
+      <a class="nav-tab" href="#agents" data-section="agents"><i class="ph ph-chats-circle"></i><span>Chat with KOL</span></a>
+    </nav>
+    <div class="nav-actions">
+      <a class="nav-cta-ghost" href="#for-kols"><i class="ph-bold ph-megaphone"></i> For KOLs</a>
+      <button class="nav-cta" data-open="connect"><i class="ph-bold ph-x-logo"></i> Initialize Scan</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============================================================ OPENING SECTION
+       Q1: They post wins every week. So why are you losing?
+       A1: Some really are making money. Most are bullshitting.
+       Visual: KOL tweets drift randomly in the background.
+       ============================================================ -->
+  <section class="opening" id="top">
+    <div class="opening-bg" aria-hidden="true">
+      <!-- 18 free-floating tweet cards from real finance/investment voices on X.
+           Each card has independent y / size / opacity / blur / duration /
+           delay / font-scale. Density scales with viewport via :nth-child
+           media queries; first 6 always visible, more revealed on wider screens. -->
+
+      <!-- always-visible (cards 1-6, mobile-and-up) -->
+      <article class="float-tweet tier-near" data-order="1" style="--y: 32%; --d: -22s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/yardeni" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Ed Yardeni</span><span class="ft-handle">@yardeni · 2h</span></div></div>
+        <p>Productivity boom = SPY 7,000.</p>
+      </article>
+
+      <article class="float-tweet tier-mid" data-order="2" style="--y: 18%; --d: -78s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/lizannsonders" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=LS&background=17171c&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Liz Ann Sonders</span><span class="ft-handle">@LizAnnSonders · 5h</span></div></div>
+        <p>PMI breadth widened to a 3-year high. The cycle has more room than the headline indices suggest. Watch industrials, homebuilders, regional banks.</p>
+      </article>
+
+      <article class="float-tweet tier-far" data-order="3" style="--y: 4%; --d: -195s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/raoulgmi" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=RP&background=b388ff&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Raoul Pal</span><span class="ft-handle">@RaoulGMI · 1d</span></div></div>
+        <p>Everything Code Phase 2 has begun. Global liquidity inflecting up, long-duration assets re-rate first, chart identical to early 2020. Be positioned before the crowd shows up.</p>
+      </article>
+
+      <article class="float-tweet tier-near" data-order="4" style="--y: 38%; --d: -12s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/cryptokaleo" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=K&background=ff8a4c&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">K A L E O</span><span class="ft-handle">@CryptoKaleo · 4h</span></div></div>
+        <p>$ETH 🚀🚀🚀</p>
+      </article>
+
+      <article class="float-tweet tier-near" data-order="5" style="--y: 50%; --d: -45s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/michaeljburry" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=MB&background=0a0a10&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Michael Burry</span><span class="ft-handle">@michaeljburry · 2d</span></div></div>
+        <p>Sell.</p>
+      </article>
+
+      <article class="float-tweet tier-mid" data-order="6" style="--y: 24%; --d: -130s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/semianalysis" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=SA&background=49A3A6&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Dylan Patel</span><span class="ft-handle">@SemiAnalysis_ · 6h</span></div></div>
+        <p>Hyperscaler capex guidance: +40% YoY for FY25. NVDA, AVGO, MRVL direct beneficiaries. Networking still under-modeled by sellside.</p>
+      </article>
+
+      <article class="float-tweet tier-near" data-order="7" style="--y: 56%; --d: -55s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/apompliano" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=AP&background=ff8a4c&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Pomp</span><span class="ft-handle">@APompliano · 3h</span></div></div>
+        <p>BTC = $1M. Eventually.</p>
+      </article>
+
+      <article class="float-tweet tier-far" data-order="8" style="--y: 92%; --d: -88s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/jimchanos" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=JC&background=17171c&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Jim Chanos</span><span class="ft-handle">@JimChanos · 8h</span></div></div>
+        <p>If a company's revenue recognition can't be explained in one paragraph, the equity isn't yours — you are the equity. Software is the most egregious example.</p>
+      </article>
+
+      <article class="float-tweet tier-near" data-order="9" style="--y: 62%; --d: -68s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/cdixon" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CD&background=b388ff&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Chris Dixon</span><span class="ft-handle">@cdixon · 1d</span></div></div>
+        <p>On-chain infra is finally ready.</p>
+      </article>
+
+      <article class="float-tweet tier-far" data-order="10" style="--y: 8%; --d: -120s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/cathiedwood" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CW&background=49A3A6&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Cathie Wood</span><span class="ft-handle">@CathieDWood · 11h</span></div></div>
+        <p>Robotaxi monetization is dramatically under-appreciated. At scale, the unit economics shift TSLA's story away from car sales entirely. Multi-decade thesis.</p>
+      </article>
+
+      <article class="float-tweet tier-mid" data-order="11" style="--y: 78%; --d: -45s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/aswathdamodaran" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=AD&background=0a0a10&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Aswath Damodaran</span><span class="ft-handle">@AswathDamodaran · 9h</span></div></div>
+        <p>Even with bullish assumptions, NVDA's price requires margins above 35% for a full decade. Decide for yourself.</p>
+      </article>
+
+      <article class="float-tweet tier-near" data-order="12" style="--y: 44%; --d: -38s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/chamath" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CP&background=ff8a4c&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Chamath</span><span class="ft-handle">@chamath · 18h</span></div></div>
+        <p>Picks &amp; shovels. Nothing else.</p>
+      </article>
+
+      <article class="float-tweet tier-mid" data-order="13" style="--y: 28%; --d: -100s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/lanceroberts" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=LR&background=49A3A6&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Lance Roberts</span><span class="ft-handle">@LanceRoberts · 5h</span></div></div>
+        <p>Breadth deteriorating 4 weeks running. New highs from a narrowing list. Defensive rotations quietly setting up. Hedge accordingly.</p>
+      </article>
+
+      <article class="float-tweet tier-mid" data-order="14" style="--y: 84%; --d: -22s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/hkuppy" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=HK&background=b388ff&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Harris Kupperman</span><span class="ft-handle">@hkuppy · 2d</span></div></div>
+        <p>Energy infrastructure = the trade of the decade. Nobody is positioned.</p>
+      </article>
+
+      <article class="float-tweet tier-near" data-order="15" style="--y: 68%; --d: -8s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/themarketear" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=ME&background=17171c&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">The Market Ear</span><span class="ft-handle">@themarketear · 4h</span></div></div>
+        <p>Systematic flows flip supportive next week.</p>
+      </article>
+
+      <article class="float-tweet tier-far" data-order="16" style="--y: 88%; --d: -160s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/wallstreetsilv" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=WS&background=0a0a10&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">WallStreetSilver</span><span class="ft-handle">@WallStreetSilv · 12h</span></div></div>
+        <p>Gold $2,800. Silver still cheap.</p>
+      </article>
+
+      <article class="float-tweet tier-far" data-order="17" style="--y: 96%; --d: -210s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/saxena_puru" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=PS&background=ff8a4c&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Puru Saxena</span><span class="ft-handle">@saxena_puru · 6h</span></div></div>
+        <p>AVGO is the most underrated AI infra play. Adding on every dip.</p>
+      </article>
+
+      <article class="float-tweet tier-mid" data-order="18" style="--y: 72%; --d: -55s;">
+        <div class="ft-head"><img src="https://unavatar.io/twitter/stoolpresidente" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=DP&background=17171c&color=fff&bold=true&size=128&font-size=0.5'"><div class="ft-meta"><span class="ft-name">Dave Portnoy</span><span class="ft-handle">@stoolpresidente · 1d</span></div></div>
+        <p>Down 30% this month. Long-term I'll live long enough to see this rip back up.</p>
+      </article>
+    </div>
+
+    <div class="opening-content">
+      <h1>If they're <span class="alva">all winning</span>, why are you losing?</h1>
+      <p class="opening-sub">Who in your <span class="x-mark" aria-label="X"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span> follows is faking it?</p>
+      <button class="opening-arrow" data-scroll-to="audit-yours" aria-label="Scroll to the audit">
+        <i class="ph-bold ph-arrow-down"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============================================================ HERO / AUDIT-YOURS
+       Q2: Want to know which of who you follow is real?
+       A2: We backtest every public call. Connect X.
+       Visual: cards rail of audited profiles drifts behind on the right.
+       ============================================================ -->
+  <section class="stage" id="audit-yours">
+    <div class="stage-inner">
+
+    <!-- left column: hero copy -->
+    <div class="hero-content">
+      <h1 class="hero-title">
+        We built a real-time scoring system that grades every KOL on X by the actual profitability of their public calls — the higher the score, the more money their calls made.
+      </h1>
+      <p class="hero-sub">
+        We track every public call from every covered account, backtest each one against real market data, and refresh the score in real time. Failed calls counted. Deleted posts recovered. <button class="sub-link" data-open="methodology">Learn more →</button>
+      </p>
+      <div class="perms">
+        <span><i class="ph-fill ph-check-circle"></i> We only read your follow list</span>
+        <span><i class="ph-fill ph-check-circle"></i> No personal score is generated</span>
+        <span><i class="ph-fill ph-check-circle"></i> Disconnect anytime</span>
+      </div>
+    </div>
+
+    <!-- right column: 4 audit cards spread horizontally; hover splits siblings apart -->
+    <div class="card-stack" aria-label="Sample audited KOL cards">
+      <div class="perspective-wrap">
+        <article class="card c-1">
+          <div class="card-inner">
+            <div class="pc-head">
+              <div class="pc-id">
+                <img class="avatar" loading="lazy" decoding="async" src="https://unavatar.io/twitter/yardeni" alt="@yardeni avatar" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=128'" />
+                <div>
+                  <div class="pc-name">Yardeni Research</div>
+                  <div class="pc-handle">@yardeni</div>
+                </div>
+              </div>
+              <div class="pc-badge">ALVA_PNL_IDX</div>
+            </div>
+            <div class="pc-score">
+              <div>
+                <div class="label">Account Score</div>
+                <div class="val">84</div>
+                <div class="type">Macro Regime</div>
+              </div>
+              <div class="pc-rank">
+                <svg viewBox="0 0 100 100">
+                  <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle>
+                  <circle class="ring-fill"  cx="50" cy="50" r="45" fill="none" stroke-width="4"
+                          stroke-dasharray="283" stroke-dashoffset="269"></circle>
+                </svg>
+                <div class="ring-text"><span class="l">Rank</span><span class="v">Top 5%</span></div>
+              </div>
+            </div>
+            <div class="pc-matrix">
+              <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
+              <div class="dots"><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="o"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i></div>
+              <div class="legend"><span class="lg-g">Win</span><span class="lg-o">Miss</span><span class="lg-p">Early</span></div>
+            </div>
+            <div class="pc-providers">
+              <div class="head">Best Calls</div>
+              <div class="prv alva">
+                <div class="meta"><span class="handle">SPY long · Mar 2024</span><span class="stat alva">+18.7%</span></div>
+                <div class="track"><div class="fill" style="width:75%"></div></div>
+              </div>
+              <div class="prv purple">
+                <div class="meta"><span class="handle">312 calls · last 3y</span><span class="stat purple">61% WIN</span></div>
+                <div class="track"><div class="fill" style="width:61%"></div></div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="perspective-wrap">
+        <article class="card c-2">
+          <div class="card-inner">
+            <div class="pc-head">
+              <div class="pc-id">
+                <img class="avatar" loading="lazy" decoding="async" src="https://unavatar.io/twitter/lucyliu" alt="@lucyliu avatar" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=LL&background=b388ff&color=fff&bold=true&size=128'" />
+                <div>
+                  <div class="pc-name">Lucy Liu</div>
+                  <div class="pc-handle">@lucyliu</div>
+                </div>
+              </div>
+              <div class="pc-badge">ALVA_PNL_IDX</div>
+            </div>
+            <div class="pc-score">
+              <div>
+                <div class="label">Account Score</div>
+                <div class="val">73</div>
+                <div class="type">AI Large Cap</div>
+              </div>
+              <div class="pc-rank">
+                <svg viewBox="0 0 100 100">
+                  <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle>
+                  <circle class="ring-fill"  cx="50" cy="50" r="45" fill="none" stroke-width="4"
+                          stroke-dasharray="283" stroke-dashoffset="261"></circle>
+                </svg>
+                <div class="ring-text"><span class="l">Rank</span><span class="v">Top 8%</span></div>
+              </div>
+            </div>
+            <div class="pc-matrix">
+              <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
+              <div class="dots"><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i></i></div>
+              <div class="legend"><span class="lg-g">Win</span><span class="lg-o">Miss</span><span class="lg-p">Early</span></div>
+            </div>
+            <div class="pc-providers">
+              <div class="head">Best Calls</div>
+              <div class="prv alva">
+                <div class="meta"><span class="handle">SOUN long · Aug 2024</span><span class="stat alva">+228%</span></div>
+                <div class="track"><div class="fill" style="width:95%"></div></div>
+              </div>
+              <div class="prv purple">
+                <div class="meta"><span class="handle">188 calls · 50% win</span><span class="stat purple">+4.1% MED</span></div>
+                <div class="track"><div class="fill" style="width:50%"></div></div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="perspective-wrap">
+        <article class="card c-3">
+          <div class="card-inner">
+            <div class="pc-head">
+              <div class="pc-id">
+                <img class="avatar" loading="lazy" decoding="async" src="https://unavatar.io/twitter/CryptoKaleo" alt="@CryptoKaleo avatar" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=K&background=ff8a4c&color=fff&bold=true&size=128'" />
+                <div>
+                  <div class="pc-name">K A L E O</div>
+                  <div class="pc-handle">@CryptoKaleo</div>
+                </div>
+              </div>
+              <div class="pc-badge">ALVA_PNL_IDX</div>
+            </div>
+            <div class="pc-score">
+              <div>
+                <div class="label">Account Score</div>
+                <div class="val">67</div>
+                <div class="type">Crypto Momentum</div>
+              </div>
+              <div class="pc-rank">
+                <svg viewBox="0 0 100 100">
+                  <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle>
+                  <circle class="ring-fill"  cx="50" cy="50" r="45" fill="none" stroke-width="4"
+                          stroke-dasharray="283" stroke-dashoffset="233"></circle>
+                </svg>
+                <div class="ring-text"><span class="l">Rank</span><span class="v">Top 18%</span></div>
+              </div>
+            </div>
+            <div class="pc-matrix">
+              <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
+              <div class="dots"><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="o"></i></div>
+              <div class="legend"><span class="lg-g">Win</span><span class="lg-o">Miss</span><span class="lg-p">Early</span></div>
+            </div>
+            <div class="pc-providers">
+              <div class="head">Best Calls</div>
+              <div class="prv alva">
+                <div class="meta"><span class="handle">SOL long · Jan 2024</span><span class="stat alva">+340%</span></div>
+                <div class="track"><div class="fill" style="width:98%"></div></div>
+              </div>
+              <div class="prv purple">
+                <div class="meta"><span class="handle">426 calls · 19% win</span><span class="stat purple">−1.8% MED</span></div>
+                <div class="track"><div class="fill" style="width:19%"></div></div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="perspective-wrap">
+        <article class="card c-4">
+          <div class="card-inner">
+            <div class="pc-head">
+              <div class="pc-id">
+                <img class="avatar" loading="lazy" decoding="async" src="https://unavatar.io/twitter/pickeringenergy" alt="@pickeringenergy avatar" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=PE&background=49A3A6&color=fff&bold=true&size=128'" />
+                <div>
+                  <div class="pc-name">Dan Pickering</div>
+                  <div class="pc-handle">@pickeringenergy</div>
+                </div>
+              </div>
+              <div class="pc-badge">ALVA_PNL_IDX</div>
+            </div>
+            <div class="pc-score">
+              <div>
+                <div class="label">Account Score</div>
+                <div class="val">61</div>
+                <div class="type">Energy Cycle</div>
+              </div>
+              <div class="pc-rank">
+                <svg viewBox="0 0 100 100">
+                  <circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle>
+                  <circle class="ring-fill"  cx="50" cy="50" r="45" fill="none" stroke-width="4"
+                          stroke-dasharray="283" stroke-dashoffset="244"></circle>
+                </svg>
+                <div class="ring-text"><span class="l">Rank</span><span class="v">Top 14%</span></div>
+              </div>
+            </div>
+            <div class="pc-matrix">
+              <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
+              <div class="dots"><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i></div>
+              <div class="legend"><span class="lg-g">Win</span><span class="lg-o">Miss</span><span class="lg-p">Early</span></div>
+            </div>
+            <div class="pc-providers">
+              <div class="head">Best Calls</div>
+              <div class="prv alva">
+                <div class="meta"><span class="handle">XLE long · Feb 2023</span><span class="stat alva">+17.4%</span></div>
+                <div class="track"><div class="fill" style="width:72%"></div></div>
+              </div>
+              <div class="prv purple">
+                <div class="meta"><span class="handle">80 calls · 52% win</span><span class="stat purple">+5.6% MED</span></div>
+                <div class="track"><div class="fill" style="width:52%"></div></div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- third row: big primary CTA, centred across both columns -->
+    <div class="hero-cta">
+      <button class="btn-primary btn-big" data-open="connect">
+        <i class="ph-bold ph-x-logo"></i> Initialize Scan <i class="ph-bold ph-arrow-right"></i>
+      </button>
+      <!-- social-proof bubble — stacked avatars + live-rolling audit count.
+           Count is rendered by JS in #proof-count using .roller elements -->
+      <div class="cta-proof" aria-live="polite">
+        <div class="proof-avatars">
+          <img src="https://unavatar.io/twitter/yardeni" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=64'">
+          <img src="https://unavatar.io/twitter/cathiedwood" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CW&background=b388ff&color=fff&bold=true&size=64'">
+          <img src="https://unavatar.io/twitter/semianalysis" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=SA&background=ff8a4c&color=fff&bold=true&size=64'">
+        </div>
+        <span class="proof-count" id="proof-count" aria-label="Live audit count"></span>
+        <span class="proof-label">audits / 24h</span>
+      </div>
+    </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ STATS STRIP ============================================================ -->
+  <section class="stats-strip">
+    <div class="stats-wrap">
+      <div class="stat">
+        <div class="v">2.4M+</div>
+        <div class="l">Public posts backtested</div>
+      </div>
+      <div class="stat">
+        <div class="v">3,000+</div>
+        <div class="l">Accounts indexed</div>
+      </div>
+      <div class="stat">
+        <div class="v">86</div>
+        <div class="l">Fully audited so far</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ SECTION · LEADERBOARD
+       Q: Want to find more KOLs who actually hold up to audit?
+       ============================================================ -->
+  <section class="section" id="leaderboard">
+    <div class="section-wrap">
+      <div class="section-head with-action">
+        <div>
+          <span class="eyebrow">Discover more</span>
+          <h2>Want to find more KOLs who <span class="alva">actually hold up to audit?</span></h2>
+          <p>Every indexed account ranked across six dimensions — score, best ROI, win rate, risk, signal quality, stability. Refreshed every hour.</p>
+        </div>
+        <a class="section-action" href="#" target="_blank" rel="noreferrer">
+          View full leaderboard <i class="ph-bold ph-arrow-up-right"></i>
+        </a>
+      </div>
+
+      <div class="lb-card">
+        <div class="lb-toolbar">
+          <div class="sort-tabs" role="tablist">
+            <button class="sort-tab active" data-sort="score">Score</button>
+            <button class="sort-tab" data-sort="bestRoi">Best ROI</button>
+            <button class="sort-tab" data-sort="medianRoi">Median ROI</button>
+            <button class="sort-tab" data-sort="winRate">Win rate</button>
+            <button class="sort-tab" data-sort="quality">Quality</button>
+            <button class="sort-tab" data-sort="riskScore">Risk</button>
+          </div>
+          <div class="lb-meta"><span class="dot"></span> Refreshed 27m ago · 86 audited</div>
+        </div>
+        <div class="lb-header">
+          <span class="idx">#</span>
+          <span class="who">KOL</span>
+          <span>Score</span>
+          <span>Best ROI</span>
+          <span>Median</span>
+          <span>Win</span>
+          <span>Quality</span>
+          <span>Risk</span>
+        </div>
+        <div class="lb-rows" id="lb-rows"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ SECTION · AI AGENTS
+       Q: Want to learn how they actually make money?
+       ============================================================ -->
+  <section class="section alt" id="agents">
+    <div class="section-wrap">
+      <div class="section-head">
+        <span class="eyebrow">Learn the playbook</span>
+        <h2>Each KOL's playbook, <span class="alva">distilled into an AI agent.</span></h2>
+        <p>We distill every KOL's operating habits — pick logic, entry timing, stop-loss preferences, risk threshold — into an AI agent grounded in their audited call history. Pick one and ask.</p>
+      </div>
+
+      <div class="agents-grid">
+        <div class="agents-left">
+          <button class="persona-feat active" data-persona="yardeni">
+            <img src="https://unavatar.io/twitter/yardeni" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=128'">
+            <div class="pmeta">
+              <div class="pname">Yardeni Research</div>
+              <div class="phandle">@yardeni</div>
+              <div class="ptags">
+                <span class="ptag">Macro regime</span>
+                <span class="ptag">60–90d</span>
+                <span class="ptag">Low leverage</span>
+              </div>
+            </div>
+            <div class="pstats">
+              <div class="pstats-n">124K</div>
+              <div class="pstats-lbl">followers</div>
+            </div>
+          </button>
+          <button class="persona-feat" data-persona="lucyliu_ai">
+            <img src="https://unavatar.io/twitter/lucyliu" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=LL&background=b388ff&color=fff&bold=true&size=128'">
+            <div class="pmeta">
+              <div class="pname">Lucy Liu</div>
+              <div class="phandle">@lucyliu_ai</div>
+              <div class="ptags">
+                <span class="ptag">AI large cap</span>
+                <span class="ptag">Catalyst-driven</span>
+                <span class="ptag">Stops -12%</span>
+              </div>
+            </div>
+            <div class="pstats">
+              <div class="pstats-n">287K</div>
+              <div class="pstats-lbl">followers</div>
+            </div>
+          </button>
+          <button class="persona-feat" data-persona="semianalysis">
+            <img src="https://unavatar.io/twitter/semianalysis" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=SA&background=49A3A6&color=fff&bold=true&size=128'">
+            <div class="pmeta">
+              <div class="pname">Dylan Patel</div>
+              <div class="phandle">@SemiAnalysis_</div>
+              <div class="ptags">
+                <span class="ptag">AI compute</span>
+                <span class="ptag">Networking</span>
+                <span class="ptag">Channel checks</span>
+              </div>
+            </div>
+            <div class="pstats">
+              <div class="pstats-n">412K</div>
+              <div class="pstats-lbl">followers</div>
+            </div>
+          </button>
+          <button class="persona-feat" data-persona="cathiedwood">
+            <img src="https://unavatar.io/twitter/cathiedwood" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CW&background=49A3A6&color=fff&bold=true&size=128'">
+            <div class="pmeta">
+              <div class="pname">Cathie Wood</div>
+              <div class="phandle">@CathieDWood</div>
+              <div class="ptags">
+                <span class="ptag">Disruptive tech</span>
+                <span class="ptag">Multi-decade</span>
+                <span class="ptag">High conviction</span>
+              </div>
+            </div>
+            <div class="pstats">
+              <div class="pstats-n">1.8M</div>
+              <div class="pstats-lbl">followers</div>
+            </div>
+          </button>
+          <button class="persona-feat" data-persona="aswathdamodaran">
+            <img src="https://unavatar.io/twitter/aswathdamodaran" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=AD&background=0a0a10&color=fff&bold=true&size=128'">
+            <div class="pmeta">
+              <div class="pname">Aswath Damodaran</div>
+              <div class="phandle">@AswathDamodaran</div>
+              <div class="ptags">
+                <span class="ptag">DCF valuation</span>
+                <span class="ptag">Contrarian</span>
+                <span class="ptag">Slow horizon</span>
+              </div>
+            </div>
+            <div class="pstats">
+              <div class="pstats-n">320K</div>
+              <div class="pstats-lbl">followers</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="chat-mock">
+          <div class="chat-target">
+            <img id="agent-avatar" src="https://unavatar.io/twitter/yardeni" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=128'">
+            <div>
+              <b id="agent-name">@yardeni — operating agent</b>
+              <span id="agent-meta">Grounded in 312 audited calls · updated 6h ago</span>
+            </div>
+            <span class="live">LIVE</span>
+          </div>
+
+          <!-- dialogue is rewritten per persona by JS -->
+          <div id="chat-thread" class="chat-thread"></div>
+
+          <!-- input field — type and send jumps to the full Alva chat -->
+          <form class="chat-input" id="chat-input-form">
+            <input id="chat-input-field" type="text" placeholder="Ask anything about their playbook..." />
+            <button type="submit" aria-label="Send">
+              <i class="ph-bold ph-arrow-right"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ BOTTOM CARDS
+       Two dark cards side by side, sitting above the footer.
+       Left card  Q: Don't see the KOL you follow?     (formerly request-card)
+       Right card Q: Are you a KOL on X?               (formerly closing/for-kols)
+       The right card keeps id="for-kols" so the navbar scrollspy still targets it,
+       and the form keeps id="request-card" / id="request-form" for the JS handler.
+       ============================================================ -->
+  <section class="bottom-cards">
+    <div class="bottom-cards-inner">
+      <article class="bcard bcard-dark" id="request-card">
+        <span class="bcard-eyebrow">Request a KOL</span>
+        <div class="bcard-body">
+          <h3>Don't see the KOL you follow?</h3>
+          <p>Drop a handle. We'll backtest them and ping you when the Playbook is ready.</p>
+        </div>
+        <div class="bcard-foot">
+          <form class="bcard-form" id="request-form">
+            <input type="text" placeholder="@handle or x.com/handle" aria-label="Request KOL handle" />
+            <button type="submit">Submit <i class="ph-bold ph-arrow-right"></i></button>
+          </form>
+          <div class="bcard-trust">7-day backtest · You'll be notified</div>
+        </div>
+      </article>
+
+      <article class="bcard bcard-light" id="for-kols">
+        <span class="bcard-eyebrow">For KOLs on X</span>
+        <div class="bcard-body">
+          <h3>Are you a <span class="alva" style="color: var(--alva);">KOL</span> on X?</h3>
+          <p>Real signal stands up to audit. We back-tested every public call from the most-followed accounts and we'd like to do the same for yours.</p>
+        </div>
+        <div class="bcard-foot">
+          <a class="bcard-cta" href="mailto:hello@alva.xyz">Contact us <i class="ph-bold ph-arrow-right"></i></a>
+          <div class="bcard-trust">Private preview · Opt-out anytime · Failed calls counted</div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================================================ FOOTER ============================================================ -->
+<footer class="f">
+  <div class="f-inner">
+    <div class="f-disclaimer">
+      Based on public posts and reconstructed historical signals. Not financial advice. Alva does not recommend trading on any single KOL's calls.
+    </div>
+    <div>
+      <a href="#" data-open="methodology">Methodology</a>
+      <a href="#">Backtest assumptions</a>
+      <a href="#">FAQ</a>
+      <a href="#">Privacy</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================================================ FLOATING CTA (appears only after hero scrolls out) ============================================================ -->
+<div class="fab-wrap" id="fab" aria-hidden="true">
+  <!-- .fab-bob hosts the idle bob animation so it stays independent of
+       (a) the .fab-wrap entry transform and (b) the button's own hover transform -->
+  <div class="fab-bob">
+    <button class="btn-primary btn-big" data-open="connect" aria-label="Initialize Scan">
+      <i class="ph-bold ph-x-logo"></i> Initialize Scan <i class="ph-bold ph-arrow-right"></i>
+    </button>
+  </div>
+</div>
+
+<!-- ============================================================ ALVA ATTRIBUTION BADGE (persistent bottom-right) ============================================================ -->
+<a class="alva-badge" href="https://alva.xyz" target="_blank" rel="noreferrer" aria-label="Powered by Alva — see more playbooks">
+  <span class="alva-badge-mark">
+    <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-label="ALVA">
+      <path class="lg-bg" fill-rule="evenodd" clip-rule="evenodd" d="M34.4684 0.397058C38.1369 -0.132341 41.8624 -0.132364 45.5309 0.397058C45.8246 0.439446 46.1194 0.486373 46.7086 0.580652C46.9049 0.612064 47.0035 0.628453 47.0914 0.648035C48.2192 0.899298 49.1009 1.77999 49.3522 2.9078C49.3717 2.99576 49.3872 3.09432 49.4186 3.29061C49.5129 3.8799 49.5598 4.17464 49.6022 4.46835C50.1316 8.13701 50.1316 11.8632 49.6022 15.5318C49.5598 15.8255 49.5128 16.1204 49.4186 16.7096C49.3871 16.906 49.3718 17.0044 49.3522 17.0924C49.1009 18.2202 48.2192 19.1009 47.0914 19.3521C47.0035 19.3717 46.9049 19.3871 46.7086 19.4185C46.1193 19.5128 45.8246 19.5607 45.5309 19.6031C43.6966 19.8678 41.8481 19.9996 39.9996 19.9996C28.9548 20.0001 20.0013 28.9538 20.0006 39.9986H19.9996C19.9997 41.8476 19.8679 43.6971 19.6031 45.5318C19.5608 45.8255 19.5128 46.1203 19.4186 46.7096C19.3871 46.906 19.3718 47.0043 19.3522 47.0924C19.1009 48.2202 18.2202 49.1009 17.0924 49.3521C17.0044 49.3717 16.906 49.3871 16.7096 49.4185C16.1203 49.5128 15.8255 49.5607 15.5318 49.6031C11.8632 50.1326 8.13701 50.1326 4.46837 49.6031C4.17464 49.5607 3.88002 49.5128 3.29064 49.4185C3.0942 49.3871 2.99583 49.3717 2.90783 49.3521C1.78005 49.1009 0.899342 48.2201 0.64806 47.0924C0.628444 47.0043 0.612121 46.9061 0.580677 46.7096C0.486402 46.1203 0.439464 45.8255 0.397083 45.5318C-0.132361 41.8632 -0.132361 38.137 0.397083 34.4683C0.439471 34.1746 0.486392 33.8799 0.580677 33.2906C0.612101 33.0942 0.628467 32.9958 0.64806 32.9078C0.899321 31.78 1.78002 30.8993 2.90783 30.648C2.99585 30.6284 3.09415 30.6121 3.29064 30.5807C3.87992 30.4864 4.17468 30.4394 4.46837 30.3971C6.30257 30.1324 8.15117 29.9996 9.99962 29.9996V29.9976C20.8724 29.9974 29.7188 21.322 29.9928 10.5152L29.9996 9.99862C29.9997 8.15047 30.1314 6.30225 30.3961 4.46835C30.4385 4.1746 30.4864 3.87999 30.5807 3.29061C30.6121 3.09428 30.6275 2.99577 30.6471 2.9078C30.8983 1.7801 31.7792 0.899397 32.9068 0.648035C32.9949 0.628428 33.0933 0.612069 33.2897 0.580652C33.8791 0.486335 34.1746 0.439454 34.4684 0.397058Z" />
+      <path class="lg-fg" fill-rule="evenodd" clip-rule="evenodd" d="M45.5312 30.3971C41.8626 29.8677 38.1372 29.8677 34.4687 30.3971C34.1749 30.4395 33.8794 30.4864 33.29 30.5807C33.0936 30.6121 32.9952 30.6275 32.9071 30.6471C31.7795 30.8984 30.8988 31.7793 30.6474 32.9069C30.6278 32.9949 30.6124 33.0941 30.581 33.2906C30.4867 33.8799 30.4388 34.1747 30.3964 34.4684C29.867 38.1368 29.867 41.8624 30.3964 45.5309C30.4388 45.8246 30.4867 46.1201 30.581 46.7096C30.6124 46.9059 30.6278 47.0044 30.6474 47.0924C30.8987 48.2201 31.7795 49.1009 32.9071 49.3522C32.9952 49.3718 33.0936 49.3872 33.29 49.4186C33.8794 49.5129 34.1749 49.5607 34.4687 49.6031C38.1371 50.1325 41.8627 50.1326 45.5312 49.6031C45.8249 49.5608 46.1196 49.5129 46.7089 49.4186C46.9052 49.3872 47.0038 49.3717 47.0917 49.3522C48.2195 49.1009 49.1012 48.2202 49.3525 47.0924C49.3721 47.0044 49.3874 46.906 49.4189 46.7096C49.5132 46.1201 49.5601 45.8246 49.6025 45.5309C50.1319 41.8624 50.1319 38.1369 49.6025 34.4684C49.5601 34.1747 49.5131 33.8799 49.4189 33.2906C49.3874 33.0941 49.3721 32.9949 49.3525 32.9069C49.1011 31.7792 48.2194 30.8983 47.0917 30.6471C47.0038 30.6275 46.9051 30.6121 46.7089 30.5807C46.1196 30.4864 45.8249 30.4395 45.5312 30.3971ZM15.5322 0.397086C11.8635 -0.132362 8.13731 -0.132362 4.46867 0.397086C4.17498 0.439473 3.88023 0.486393 3.29094 0.580679C3.09461 0.612093 2.9961 0.627503 2.90813 0.647086C1.78049 0.898312 0.899769 1.77928 0.648361 2.90685C0.628742 2.99491 0.612434 3.09405 0.580978 3.29064C0.486706 3.87984 0.43977 4.17467 0.397385 4.46837C-0.132023 8.13688 -0.132004 11.8624 0.397385 15.5309C0.439781 15.8246 0.48666 16.1201 0.580978 16.7096C0.6124 16.906 0.628754 17.0044 0.648361 17.0924C0.899708 18.2201 1.78042 19.1009 2.90813 19.3522C2.99611 19.3718 3.09457 19.3871 3.29094 19.4186C3.88032 19.5129 4.17493 19.5607 4.46867 19.6031C8.13731 20.1326 11.8635 20.1326 15.5322 19.6031C15.8258 19.5608 16.1207 19.5128 16.7099 19.4186C16.9063 19.3871 17.0047 19.3718 17.0927 19.3522C18.2204 19.1009 19.1011 18.2201 19.3525 17.0924C19.3721 17.0044 19.3875 16.9059 19.4189 16.7096C19.5132 16.1201 19.561 15.8246 19.6034 15.5309C20.1328 11.8624 20.1328 8.13685 19.6034 4.46837C19.5611 4.17466 19.5131 3.8799 19.4189 3.29064C19.3874 3.09405 19.3721 2.99491 19.3525 2.90685C19.1011 1.77924 18.2204 0.898318 17.0927 0.647086C17.0047 0.627474 16.9063 0.612111 16.7099 0.580679C16.1207 0.486415 15.8258 0.439463 15.5322 0.397086Z" />
+    </svg>
+  </span>
+  <span class="alva-badge-text">
+    <b>Powered by Alva</b>
+    <span>Discover more playbooks →</span>
+  </span>
+</a>
+
+<!-- ============================================================ MODALS ============================================================ -->
+<div class="modal" id="modal-connect" aria-hidden="true">
+  <div class="dialog">
+    <div class="dialog-head">
+      <div>
+        <span class="eyebrow">Private discovery</span>
+        <h3>Find the audited KOLs you already follow.</h3>
+      </div>
+      <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <p>Alva privately reads your X following list, matches every covered KOL, and shows where they sit on Score / Best ROI / Win Rate / Risk. We do not generate a personal score for you, and we do not publish your following list.</p>
+    <div class="steps">
+      <div class="step"><span class="num">01</span><span class="desc">Continue with X (private) — single-tap OAuth.</span></div>
+      <div class="step"><span class="num">02</span><span class="desc">We match your following list against indexed accounts.</span></div>
+      <div class="step"><span class="num">03</span><span class="desc">You see ranked Playbooks of who you already follow, plus a list of accounts not yet covered that you can request.</span></div>
+    </div>
+    <div class="notice">Disconnect anytime. We store the match result only. The raw following list is never persisted.</div>
+    <div class="dialog-actions">
+      <button class="btn-primary"><i class="ph-bold ph-x-logo"></i> Connect X privately</button>
+      <button class="dialog-ghost">Paste @handles instead</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal-methodology" aria-hidden="true">
+  <div class="dialog">
+    <div class="dialog-head">
+      <div>
+        <h3>How we score KOLs.</h3>
+      </div>
+      <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <p>Calls are the input. KOLs are the output. We never score a single tweet — we score the account once we have the full call history.</p>
+    <div class="steps">
+      <div class="step"><span class="num">01 Extract</span><span class="desc">NLP identifies each call (ticker, direction, time, confidence). Sentiment posts and replies are filtered out.</span></div>
+      <div class="step"><span class="num">02 Anchor</span><span class="desc">Each call gets an entry point and a verification window from market data.</span></div>
+      <div class="step"><span class="num">03 Backtest</span><span class="desc">Equal-weight, no leverage, failed calls counted, deleted posts recovered from archive data.</span></div>
+      <div class="step"><span class="num">04 Score</span><span class="desc">The full call history is aggregated into a 6-dimension account score: <b>Score · ROI · Win Rate · Quality · Risk · Stability</b>.</span></div>
+    </div>
+    <div class="notice">If a KOL deletes a failed call, the score does not change.</div>
+    <div class="dialog-actions">
+      <a href="#" class="btn-primary">Read the full paper <i class="ph-bold ph-arrow-up-right"></i></a>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ============================================================
+     SCROLL RESTORATION — force every page-load (incl. refresh) to start
+     at the top of the page. Without this, the browser remembers the
+     previous scroll position and tries to restore it after first paint,
+     producing a visible flash of the first screen followed by a jump
+     to the saved position. Always-top is the cleanest fix.
+     ============================================================ */
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  // Defensive: force scroll to top before first paint in case the browser
+  // ignores the manual hint above (older Safari/iOS), and once more on the
+  // load event for any async layout shifts that re-position content.
+  window.scrollTo(0, 0);
+  addEventListener('load', () => window.scrollTo(0, 0));
+
+  /* ============================================================
+     SECTION 2 CARD-STACK HOVER — JS-driven for stability
+     Pure CSS :hover ~ siblings rapidly retriggered as moved cards
+     reposition under the cursor (the classic "jumping cards" bug).
+     Instead: mouseenter on any card adds .is-hovered and writes a
+     --push offset onto every sibling. mouseleave on the whole stack
+     wipes both. State only changes once per cursor entry.
+     ============================================================ */
+  (() => {
+    const stack = document.querySelector('.card-stack');
+    if (!stack) return;
+    const cards = Array.from(stack.querySelectorAll('.perspective-wrap'));
+    const PUSH = 130;  // px; how far non-hovered siblings move horizontally
+
+    cards.forEach((card, idx) => {
+      card.addEventListener('mouseenter', () => {
+        cards.forEach((c, i) => {
+          c.classList.toggle('is-hovered', i === idx);
+          if (i === idx)        c.style.setProperty('--push', '0px');
+          else if (i < idx)     c.style.setProperty('--push', -PUSH + 'px');
+          else                  c.style.setProperty('--push',  PUSH + 'px');
+        });
+      });
+    });
+    stack.addEventListener('mouseleave', () => {
+      cards.forEach(c => {
+        c.classList.remove('is-hovered');
+        c.style.setProperty('--push', '0px');
+      });
+    });
+  })();
+
+  /* ============================================================
+     LEADERBOARD DATA + RENDER
+     ============================================================ */
+  const lbData = [
+    { name:'Yardeni Research', handle:'@yardeni',         theme:'Macro regime',      score:84.2, bestRoi:18.7, medianRoi:7.4,  winRate:61, quality:88, risk:'Low',    riskScore:90, img:'https://unavatar.io/twitter/yardeni' },
+    { name:'Lucy Liu',         handle:'@lucyliu_ai',      theme:'AI / large cap',    score:73.4, bestRoi:228,  medianRoi:4.1,  winRate:50, quality:86, risk:'Medium', riskScore:72, img:'https://unavatar.io/twitter/lucyliu' },
+    { name:'Puru Saxena',      handle:'@saxena_puru',     theme:'Growth / semis',    score:68.0, bestRoi:42.5, medianRoi:6.2,  winRate:54, quality:83, risk:'Low',    riskScore:84, img:'https://unavatar.io/twitter/saxena_puru' },
+    { name:'K A L E O',        handle:'@CryptoKaleo',     theme:'Crypto momentum',   score:67.4, bestRoi:340,  medianRoi:-1.8, winRate:19, quality:78, risk:'High',   riskScore:48, img:'https://unavatar.io/twitter/CryptoKaleo' },
+    { name:'Sly Dawg',         handle:'@sly_dawg33',      theme:'Semis / momentum',  score:66.3, bestRoi:84.0, medianRoi:3.4,  winRate:47, quality:71, risk:'Medium', riskScore:66, img:'https://unavatar.io/twitter/sly_dawg33' },
+    { name:'Dan Pickering',    handle:'@pickeringenergy', theme:'Energy / oil',      score:61.2, bestRoi:17.4, medianRoi:5.6,  winRate:52, quality:62, risk:'Low',    riskScore:83, img:'https://unavatar.io/twitter/pickeringenergy' },
+    { name:'Herman Jin',       handle:'@shanghaojin',     theme:'AI infra / semis',  score:51.3, bestRoi:24.3, medianRoi:3.2,  winRate:46, quality:59, risk:'Medium', riskScore:64, img:'https://unavatar.io/twitter/shanghaojin' }
+  ];
+  const metricMap = {
+    score:     r => r.score,
+    bestRoi:   r => r.bestRoi,
+    medianRoi: r => r.medianRoi,
+    winRate:   r => r.winRate,
+    quality:   r => r.quality,
+    riskScore: r => r.riskScore
+  };
+  function renderLb(key='score') {
+    const sorted = [...lbData].sort((a,b) => metricMap[key](b) - metricMap[key](a));
+    const rowsEl = document.getElementById('lb-rows');
+    rowsEl.innerHTML = sorted.map((r, i) => {
+      const med = r.medianRoi;
+      const medClass = med >= 0 ? 'gain' : 'loss';
+      return `
+        <a class="lb-row" href="#">
+          <div class="idx">${String(i+1).padStart(2,'0')}</div>
+          <div class="who">
+            <img src="${r.img}" alt="${r.handle}">
+            <div>
+              <b>${r.name}</b>
+              <span>${r.handle} · ${r.theme}</span>
+            </div>
+          </div>
+          <div class="cell"><span class="v">${r.score.toFixed(1)}</span></div>
+          <div class="cell hide-sm"><span class="v gain">+${r.bestRoi.toFixed(1)}%</span></div>
+          <div class="cell hide-sm"><span class="v ${medClass}">${med >= 0 ? '+' : ''}${med.toFixed(1)}%</span></div>
+          <div class="cell hide-sm"><span class="v">${r.winRate}%</span></div>
+          <div class="cell hide-sm"><span class="v">${r.quality}</span></div>
+          <div><span class="risk-pill ${r.risk.toLowerCase()}">${r.risk}</span></div>
+        </a>
+      `;
+    }).join('');
+  }
+  renderLb('score');
+  document.querySelectorAll('.sort-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.sort-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderLb(tab.dataset.sort);
+    });
+  });
+
+  /* ============================================================
+     AGENT PERSONA SWITCH
+     ============================================================ */
+  const personaMeta = {
+    yardeni: {
+      name: '@yardeni — operating agent',
+      meta: 'Grounded in 312 audited calls · updated 6h ago',
+      avatar: 'yardeni', initials: 'EY', bg: '49A3A6',
+      q: "What's your signal for a macro regime shift?",
+      a: `Based on my audited call history, three signals anchor most of my regime calls:
+        <ol>
+          <li>Treasury yield curve inversion duration <b>&gt; 90 days</b></li>
+          <li>PMI breaking <b>50</b> for 2+ consecutive months</li>
+          <li>High-yield credit spreads widening <b>&gt; 100bps</b> in &lt; 30d</li>
+        </ol>
+        Average lead time before market acknowledgment: <b>47 days</b>. Best historical match: SPY <b>+18.7%</b> over the Mar 2024 call window.
+        <div class="source">Backed by <b>312 calls</b> · 191 W / 121 L · win rate <b>61%</b> · <a href="#">view source tweets →</a></div>`
+    },
+    lucyliu_ai: {
+      name: '@lucyliu_ai — operating agent',
+      meta: 'Grounded in 188 audited calls · updated 2h ago',
+      avatar: 'lucyliu', initials: 'LL', bg: 'b388ff',
+      q: "Why are you so bullish on ORCL?",
+      a: `Three reasons it's been a high-conviction position for me:
+        <ol>
+          <li>Cloud capex revenue is now compounding at <b>40%+ YoY</b> — accelerating, not decelerating</li>
+          <li>Backlog of contracted RPO sits above <b>$130B</b> — multi-year visibility</li>
+          <li>Multiple is still rerating: trades at <b>~1/3 of MSFT cloud P/E</b></li>
+        </ol>
+        Entry: <b>$140</b> in Sep 2024. Stop: <b>-12%</b> from entry. Result so far: <b>+47%</b> realised.
+        <div class="source">Backed by <b>188 calls</b> · 94 W / 94 L · win rate <b>50%</b> · best ROI <b>+228%</b> on SOUN · <a href="#">view source tweets →</a></div>`
+    },
+    semianalysis: {
+      name: '@SemiAnalysis_ — operating agent',
+      meta: 'Grounded in 244 audited calls · updated 3h ago',
+      avatar: 'semianalysis', initials: 'SA', bg: '49A3A6',
+      q: "Who actually wins the next AI capex cycle?",
+      a: `My channel checks point to a three-tier winner stack, in this order:
+        <ol>
+          <li><b>Networking silicon</b> — switch ASIC TAM is rerating faster than GPU; AVGO + MRVL lead</li>
+          <li><b>Custom accelerator partners</b> — hyperscaler ASIC programs grow <b>2-3×</b> faster than merchant GPU through '26</li>
+          <li><b>Power / cooling supply chain</b> — capacity is the binding constraint, not silicon</li>
+        </ol>
+        Pure GPU exposure (NVDA) is still core but the marginal dollar has moved one layer up the stack.
+        <div class="source">Backed by <b>244 calls</b> · 161 W / 83 L · win rate <b>66%</b> · best ROI <b>+340%</b> on AVGO · <a href="#">view source tweets →</a></div>`
+    },
+    cathiedwood: {
+      name: '@CathieDWood — operating agent',
+      meta: 'Grounded in 506 audited calls · updated 1h ago',
+      avatar: 'cathiedwood', initials: 'CW', bg: '49A3A6',
+      q: "What's your highest-conviction multi-year position?",
+      a: `Across the platforms my framework cares about, two stand on their own:
+        <ol>
+          <li><b>Autonomous mobility</b> — TSLA robotaxi optionality is still mis-priced; price target $2,600 by 2029</li>
+          <li><b>Multi-omic sequencing</b> — PACB + ILMN benefit from <b>cost-per-genome under $200</b></li>
+          <li><b>AI-native software</b> — agentic workflows compress SaaS pricing power, favor toolchain over apps</li>
+        </ol>
+        Drawdowns are the cost of the convex tail. Position sizing scales <b>up</b> as the thesis gets cheaper.
+        <div class="source">Backed by <b>506 calls</b> · 213 W / 293 L · win rate <b>42%</b> · best ROI <b>+1,180%</b> on TSLA '20-'21 · <a href="#">view source tweets →</a></div>`
+    },
+    aswathdamodaran: {
+      name: '@AswathDamodaran — operating agent',
+      meta: 'Grounded in 142 audited calls · updated 12h ago',
+      avatar: 'aswathdamodaran', initials: 'AD', bg: '0a0a10',
+      q: "Is NVDA still a buy at these prices?",
+      a: `Running my updated story-to-numbers model on NVDA:
+        <ol>
+          <li>Revenue path requires <b>$520B by FY30</b> — implies AI capex sustaining ~<b>$1T/yr</b></li>
+          <li>Operating margin must hold above <b>55%</b> through compute commoditization</li>
+          <li>Implied fair value: <b>~$110</b>. Current price embeds an optimistic scenario.</li>
+        </ol>
+        I am <b>not</b> short. The narrative is still intact. But the margin of safety has compressed materially — I'd trim, not add.
+        <div class="source">Backed by <b>142 calls</b> · 89 W / 53 L · win rate <b>63%</b> · median holding <b>18 months</b> · <a href="#">view source tweets →</a></div>`
+    },
+    shanghaojin: {
+      name: '@shanghaojin — operating agent',
+      meta: 'Grounded in 126 audited calls · updated 4h ago',
+      avatar: 'shanghaojin', initials: 'HJ', bg: '0a0a10',
+      q: "Best AI infra play right now?",
+      a: `My current rank order (highest conviction first):
+        <ol>
+          <li><b>ORCL</b> — under-modeled cloud transition + RPO backlog</li>
+          <li><b>CRWV</b> — pure-play GPU-as-a-service, gross margins expanding</li>
+          <li><b>AVGO</b> — networking is the real beneficiary, not just compute</li>
+        </ol>
+        NVDA stays in the portfolio but is no longer the marginal best idea. Stop discipline: <b>-8%</b> from entry on every position.
+        <div class="source">Backed by <b>126 calls</b> · 58 W / 68 L · win rate <b>46%</b> · best call: <b>ORCL + CRWV +24.3%</b> · <a href="#">view source tweets →</a></div>`
+    },
+    apompliano: {
+      name: '@APompliano — operating agent',
+      meta: 'Grounded in 408 audited calls · updated 2h ago',
+      avatar: 'apompliano', initials: 'AP', bg: 'ff8a4c',
+      q: "Why do you keep adding BTC?",
+      a: `Three structural reasons the thesis hasn't changed for me:
+        <ol>
+          <li>Supply schedule is fixed and known — <b>21M cap</b>, post-halving issuance under <b>1%/yr</b></li>
+          <li>Sovereign + corporate adoption has crossed an inflection — <b>$130B+</b> in ETF AUM in 14 months</li>
+          <li>Real rates rolling over is the macro tailwind I've been waiting for</li>
+        </ol>
+        Position: BTC <b>>= 60%</b> of liquid net worth. Multi-year horizon. No stops — drawdowns are entries.
+        <div class="source">Backed by <b>408 calls</b> · 271 W / 137 L · win rate <b>66%</b> · best ROI <b>+612%</b> on BTC '20-'21 · <a href="#">view source tweets →</a></div>`
+    },
+    pickeringenergy: {
+      name: '@pickeringenergy — operating agent',
+      meta: 'Grounded in 80 audited calls · updated 8h ago',
+      avatar: 'pickeringenergy', initials: 'PE', bg: '49A3A6',
+      q: "Is energy still cheap here?",
+      a: `Two structural reasons I'm still adding:
+        <ol>
+          <li>Sector trades at the <b>lowest free cash flow yield</b> vs SPX in a decade</li>
+          <li>Capex discipline is real this cycle — supply growth capped at <b>2-3% / yr</b></li>
+          <li>Buybacks + dividends now <b>10%+ shareholder yield</b> across majors</li>
+        </ol>
+        XLE my preferred vehicle. Stop: <b>-10%</b>. Best historical call: XLE +17.4% from Feb 2023 entry.
+        <div class="source">Backed by <b>80 calls</b> · 42 W / 38 L · win rate <b>52%</b> · median ROI <b>+5.6%</b> · <a href="#">view source tweets →</a></div>`
+    }
+  };
+
+  function renderAgent(key) {
+    const m = personaMeta[key];
+    if (!m) return;
+    const img = document.getElementById('agent-avatar');
+    img.onerror = function () {
+      img.onerror = null;
+      img.src = `https://ui-avatars.com/api/?name=${m.initials}&background=${m.bg}&color=fff&bold=true&size=128`;
+    };
+    img.src = `https://unavatar.io/twitter/${m.avatar}`;
+    document.getElementById('agent-name').textContent = m.name;
+    document.getElementById('agent-meta').textContent = m.meta;
+    document.getElementById('chat-thread').innerHTML = `
+      <div class="bubble user">${m.q}</div>
+      <div class="bubble ai">${m.a}</div>`;
+    document.getElementById('chat-input-field').placeholder = `Ask ${m.name.split(' ')[0]} anything...`;
+  }
+  // initial render
+  renderAgent('yardeni');
+
+  document.querySelectorAll('.persona-feat').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.persona-feat').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderAgent(btn.dataset.persona);
+    });
+  });
+
+  // chat input: send → deep-link to full Alva chat with the persona + question
+  document.getElementById('chat-input-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const field = document.getElementById('chat-input-field');
+    const q = field.value.trim();
+    if (!q) return;
+    const activeBtn = document.querySelector('.persona-feat.active');
+    const persona = activeBtn ? activeBtn.dataset.persona : 'yardeni';
+    const url = `https://alva.ai/chat?kol=${encodeURIComponent(persona)}&q=${encodeURIComponent(q)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  });
+
+  /* ============================================================
+     MODALS
+     ============================================================ */
+  function openModal(name) {
+    const m = document.getElementById('modal-' + name);
+    if (!m) return;
+    m.classList.add('open');
+    m.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(m) {
+    m.classList.remove('open');
+    m.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('click', e => {
+    const opener = e.target.closest('[data-open]');
+    if (opener) { e.preventDefault(); openModal(opener.dataset.open); return; }
+    const closer = e.target.closest('[data-close]');
+    if (closer) { closeModal(closer.closest('.modal')); return; }
+    if (e.target.classList && e.target.classList.contains('modal')) closeModal(e.target);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.modal.open').forEach(closeModal);
+  });
+
+  /* ============================================================
+     SCROLLSPY NAV TABS  +  FLOATING CTA VISIBILITY
+     - Active tab tracks the section currently centered in viewport
+     - Tab pill indicator slides to the active tab
+     - FAB fades in once the hero stage leaves the viewport, fades out
+       when the hero comes back into view
+     ============================================================ */
+  (() => {
+    const tabs = [...document.querySelectorAll('.nav-tab')];
+    const indicator = document.getElementById('nav-indicator');
+    const tabsContainer = document.getElementById('nav-tabs');
+    const fab = document.getElementById('fab');
+    const opening = document.querySelector('.opening');
+    const hero = document.querySelector('.stage');
+    if (!tabs.length || !indicator || !tabsContainer || !fab || !opening || !hero) return;
+
+    const sections = tabs
+      .map(t => ({ id: t.dataset.section, el: document.getElementById(t.dataset.section), tab: t }))
+      .filter(s => s.el);
+
+    function moveIndicator(tab) {
+      const rect = tab.getBoundingClientRect();
+      const parentRect = tabsContainer.getBoundingClientRect();
+      indicator.style.width = rect.width + 'px';
+      indicator.style.transform = `translateX(${rect.left - parentRect.left}px)`;
+    }
+
+    // currentActiveId — single source of truth for which tab is highlighted.
+    // null = no tab active (used while user is still on the opening screen).
+    // Without this, the spy loop and click-handler can both race to call
+    // setActive() on the same frame and produce a visible indicator flicker.
+    let currentActiveId = null;
+    function setActive(id) {
+      if (id === currentActiveId) return;        // no-op if already active
+      const wasCleared = currentActiveId === null;
+      currentActiveId = id;
+      const targetTab = tabs.find(t => t.dataset.section === id);
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.section === id));
+      if (!targetTab) return;
+      if (wasCleared) {
+        // Coming from the cleared state — jump the indicator to position
+        // without a slide-from-0-width animation, then fade in.
+        indicator.style.transition = 'none';
+        moveIndicator(targetTab);
+        // force reflow so the transition: none takes effect before we
+        // re-enable transitions on the next line
+        void indicator.offsetWidth;
+        indicator.style.transition = '';
+      } else {
+        moveIndicator(targetTab);
+      }
+      indicator.style.opacity = '1';
+    }
+    function clearActive() {
+      if (currentActiveId === null) return;
+      currentActiveId = null;
+      tabs.forEach(t => t.classList.remove('active'));
+      indicator.style.opacity = '0';            // hide while no section is active
+    }
+
+    // initial — let the first spy() pass determine the state (it will clearActive
+    // when on the opening screen, since no section has crossed the probe yet)
+    requestAnimationFrame(() => spy());
+    addEventListener('resize', () => {
+      const active = tabs.find(t => t.classList.contains('active'));
+      if (active) moveIndicator(active);
+    });
+
+    // While the page is mid-programmatic-smooth-scroll the spy() loop would
+    // otherwise see every intermediate section pass under the nav baseline
+    // and flicker the indicator through them. We lock spy out during that
+    // window and unlock once the user-initiated scroll has settled.
+    //
+    // We also temporarily strip the .snap-active class during the lock so that
+    // scroll-snap-stop:always doesn't hijack the programmatic scroll on its way
+    // through .opening / .stage (clicking "Leaderboard" while on opening was
+    // otherwise getting force-stopped at .stage's snap line).
+    let scrollLock = false;
+    let scrollLockTimer = 0;
+    function lockScrollSpy(ms = 700) {
+      scrollLock = true;
+      document.documentElement.classList.remove('snap-active');
+      clearTimeout(scrollLockTimer);
+      scrollLockTimer = setTimeout(() => {
+        scrollLock = false;
+        spy();          // re-evaluate snap-active for the new resting position
+      }, ms);
+    }
+
+    // smooth scroll on click (instead of default jump that races with sticky nav)
+    function smoothScrollTo(id) {
+      const target = document.getElementById(id);
+      if (!target) return;
+      const offset = 80; // sticky nav clearance
+      const y = target.getBoundingClientRect().top + scrollY - offset;
+      lockScrollSpy();      // freeze indicator on the clicked tab
+      setActive(id);
+      scrollTo({ top: y, behavior: 'smooth' });
+    }
+    tabs.forEach(t => {
+      t.addEventListener('click', e => {
+        e.preventDefault();
+        smoothScrollTo(t.dataset.section);
+      });
+    });
+    // any element with data-scroll-to anywhere on the page uses the same handler
+    document.querySelectorAll('[data-scroll-to]').forEach(el => {
+      el.addEventListener('click', e => {
+        e.preventDefault();
+        smoothScrollTo(el.dataset.scrollTo);
+      });
+    });
+
+    // scrollspy — pick the section whose top is closest to (but at or above) the
+    // nav baseline. Manual loop is more predictable than IO threshold games here.
+    // Also toggles the html.snap-active class for opening↔stage snap pagination.
+    let raf = 0;
+    function spy() {
+      raf = 0;
+
+      // --- snap mode: active ONLY while the user is in the opening OR exactly
+      // at stage's snap-aligned position. The moment stage's top crosses above
+      // the 80px nav line, the user has "entered" stage and snap deactivates so
+      // they can scroll on to leaderboard / agents without being locked back to
+      // stage by scroll-snap-stop:always.
+      // Re-engages when scrolling back up across the same boundary.
+      const stageRect = hero.getBoundingClientRect();
+      const inSnapZone = stageRect.top > 80;
+      document.documentElement.classList.toggle('snap-active', inSnapZone);
+
+      if (scrollLock) return;                  // mid-click smooth scroll
+      const probe = 120; // a band just below the sticky nav
+      let current = null;                       // null = no section reached yet
+      for (const s of sections) {
+        const top = s.el.getBoundingClientRect().top;
+        if (top - probe <= 0) current = s;
+      }
+      if (current) setActive(current.id);
+      else clearActive();                       // still on the opening screen
+    }
+    addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(spy); }, { passive: true });
+
+    // FAB visibility — hide while either the Opening or the audit-yours
+    // hero is still mostly in view (those sections already host the CTA
+    // and a floating duplicate would compete). Show once both are past.
+    let openingIn = true;
+    let heroIn = false;
+    function updateFab() {
+      const show = !openingIn && !heroIn;
+      fab.classList.toggle('visible', show);
+      fab.setAttribute('aria-hidden', show ? 'false' : 'true');
+    }
+    new IntersectionObserver(([e]) => {
+      openingIn = e.intersectionRatio > 0.25;
+      updateFab();
+    }, { threshold: [0, 0.25, 0.5, 1] }).observe(opening);
+    new IntersectionObserver(([e]) => {
+      heroIn = e.intersectionRatio > 0.25;
+      updateFab();
+    }, { threshold: [0, 0.25, 0.5, 1] }).observe(hero);
+  })();
+
+  /* ============================================================
+     REQUEST FORM INLINE FEEDBACK
+     ============================================================ */
+  document.getElementById('request-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const input = e.target.querySelector('input');
+    const v = input.value.trim();
+    if (!v) return;
+    const card = document.getElementById('request-card');
+    card.innerHTML = `
+      <span class="bcard-eyebrow"><i class="ph-bold ph-check-circle" style="margin-right:6px;"></i> Got it</span>
+      <div class="bcard-body">
+        <h3>We'll ping you when the Playbook is ready.</h3>
+        <p>We'll backtest <b>${v.replace(/</g,'&lt;')}</b>'s public posts within 7 days.</p>
+      </div>
+      <div class="bcard-foot">
+        <div class="bcard-trust">Submitted · We'll email you on completion</div>
+      </div>
+    `;
+    card.classList.add('bcard-dark');
+  });
+
+  /* ============================================================
+     CTA PROOF COUNTER  (rolling digits on the section-2 hero CTA)
+     - 4-digit count (e.g. 1247) padded; commas inserted between thousand
+       groups. Each digit is a .roller (viewport) containing a 0..9 column
+       (.roller-stack); we translateY the column to show the right digit
+       with a smooth ease.
+     - On a random 4–9s interval, the count bumps by 1–3 to feel "live".
+     ============================================================ */
+  (() => {
+    const counter = document.getElementById('proof-count');
+    if (!counter) return;
+    const DIGIT_HEIGHT = 16;       // matches .roller height in CSS
+    const stacks = [];             // one .roller-stack per visible digit slot
+
+    function buildRoller() {
+      const r = document.createElement('span');
+      r.className = 'roller';
+      const stack = document.createElement('span');
+      stack.className = 'roller-stack';
+      for (let i = 0; i <= 9; i++) {
+        const s = document.createElement('span');
+        s.textContent = String(i);
+        stack.appendChild(s);
+      }
+      r.appendChild(stack);
+      return { roller: r, stack };
+    }
+    function buildSeparator(ch) {
+      const s = document.createElement('span');
+      s.className = 'separator';
+      s.textContent = ch;
+      return s;
+    }
+    // Format a number with comma separators, return array of {type:'d'|'s',val}
+    function format(n) {
+      const digits = String(n);
+      const parts = [];
+      for (let i = 0; i < digits.length; i++) {
+        parts.push({ type: 'd', val: digits[i] });
+        const fromRight = digits.length - 1 - i;
+        if (fromRight > 0 && fromRight % 3 === 0) {
+          parts.push({ type: 's', val: ',' });
+        }
+      }
+      return parts;
+    }
+
+    let value = 1200 + Math.floor(Math.random() * 200);  // ~1247 starting feel
+    function render(initial) {
+      const parts = format(value);
+      counter.innerHTML = '';
+      stacks.length = 0;
+      parts.forEach(p => {
+        if (p.type === 's') {
+          counter.appendChild(buildSeparator(p.val));
+        } else {
+          const { roller, stack } = buildRoller();
+          counter.appendChild(roller);
+          stacks.push(stack);
+        }
+      });
+      // position digits — on first render do it without animation
+      const digitChars = parts.filter(p => p.type === 'd').map(p => p.val);
+      stacks.forEach((stack, i) => {
+        const d = parseInt(digitChars[i], 10);
+        if (initial) stack.style.transition = 'none';
+        stack.style.transform = `translateY(-${d * DIGIT_HEIGHT}px)`;
+        if (initial) {
+          // re-enable transition on next frame so subsequent updates animate
+          requestAnimationFrame(() => { stack.style.transition = ''; });
+        }
+      });
+    }
+    function updateInPlace() {
+      const parts = format(value);
+      const digitChars = parts.filter(p => p.type === 'd').map(p => p.val);
+      // if number of digits grew (e.g. crossed 9999 → 10000), re-render
+      if (digitChars.length !== stacks.length) {
+        render(false);
+        return;
+      }
+      stacks.forEach((stack, i) => {
+        const d = parseInt(digitChars[i], 10);
+        stack.style.transform = `translateY(-${d * DIGIT_HEIGHT}px)`;
+      });
+    }
+
+    render(true);
+
+    // Live increment: random pause + random bump (1..3) so it feels organic.
+    function scheduleTick() {
+      const wait = 4000 + Math.random() * 5000;
+      setTimeout(() => {
+        value += 1 + Math.floor(Math.random() * 3);
+        updateInPlace();
+        scheduleTick();
+      }, wait);
+    }
+    scheduleTick();
+  })();
+</script>
+
+</body>
+</html>
