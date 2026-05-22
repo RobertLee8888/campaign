@@ -175,10 +175,15 @@
     border: 0;
     font-size: 13px; font-weight: 700;
     cursor: pointer;
-    transition: background .15s, transform .15s;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+    transition: background .15s, transform .18s ease, box-shadow .18s ease;
   }
-  .nav-cta i { color: var(--alva-hi); font-size: 14px; }
-  .nav-cta:hover { background: var(--alva); transform: translateY(-1px); }
+  .nav-cta i { color: inherit; font-size: 14px; }
+  .nav-cta:hover {
+    background: var(--alva);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 14px 28px rgba(10,10,16,0.20);
+  }
   /* secondary ghost button — link to the For-KOLs card */
   .nav-cta-ghost {
     display: inline-flex; align-items: center; gap: 8px;
@@ -190,15 +195,19 @@
     font-family: inherit;
     font-size: 13px; font-weight: 600;
     cursor: pointer;
-    transition: background .15s, border-color .15s, color .15s;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+    transition: background .15s, border-color .15s, color .15s, transform .18s ease, box-shadow .18s ease;
   }
-  .nav-cta-ghost i { color: var(--alva); font-size: 13px; }
+  .nav-cta-ghost i { color: inherit; font-size: 13px; }
   .nav-cta-ghost:hover {
     background: rgba(73,163,166,0.06);
     border-color: var(--alva);
     color: var(--alva);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(10,10,16,0.12);
   }
-  .nav-cta-ghost:hover i { color: var(--alva); }
+  /* (.nav-cta-ghost:hover i no longer needed — `color: inherit` on the
+     icon means it automatically picks up the hover-state text color.) */
 
   /* ============================================================
      OPENING SECTION  (centered Q1+A1; KOL tweets drift in the back)
@@ -413,7 +422,7 @@
       0 0 24px 10px var(--bg),
       0 0 48px 20px var(--bg);
   }
-  .opening-arrow:hover { transform: translateY(-2px); }
+  .opening-arrow:hover { transform: translateY(-2px) scale(1.02); }
 
   .opening-arrow::before {
     content: "";
@@ -504,40 +513,38 @@
     background: var(--bg-soft);
     padding: 120px 0 112px;
   }
-  /* inner container caps content width and centres it */
+  /* inner container caps content width and centres it.
+     Single row now — the CTA used to live in a second grid row but it's
+     been folded into the .hero-content column (above .perms). */
   .stage-inner {
     max-width: 1440px;
     margin: 0 auto;
     padding: 0 48px;
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    grid-template-rows: auto auto;
     column-gap: 72px;     /* generous gap so cards don't crowd the text */
-    row-gap: 12px;
     align-items: center;
   }
-  /* third grid row: big centred CTA across the full width */
-  .stage .hero-content { grid-column: 1; grid-row: 1; }
-  .stage .card-stack   { grid-column: 2; grid-row: 1; }
-  .stage .hero-cta     {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    /* 3-track grid keeps the button perfectly centred (column 2) while
-       the bubble sits right next to it (column 3, justify-self: start).
-       The empty 1fr on the left mirrors the right 1fr so the button
-       stays at the optical centre regardless of bubble width. */
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+  .stage .hero-content { grid-column: 1; }
+  .stage .card-stack   { grid-column: 2; }
+
+  /* Inline CTA row inside .hero-content — Initialize Scan button +
+     social-proof bubble sit side by side, anchored to the left, and
+     stack above the three perms checks. The button uses the standard
+     .btn-primary size (no .btn-big) so it reads as a single, focused CTA
+     rather than a section-wide hero anchor. */
+  .hero-content .hero-cta {
+    display: inline-flex;
     align-items: center;
-    column-gap: 14px;
-    padding-top: 24px;
+    gap: 14px;
+    margin-top: 8px;
+    flex-wrap: wrap;
   }
-  .stage .hero-cta > .btn-primary { grid-column: 2; justify-self: center; }
 
   /* ============================================================
      CTA SOCIAL-PROOF BUBBLE  (stacked avatars + rolling digit counter)
      Small dark pill that sits immediately to the right of the Initialize
-     Scan button (grid column 3, justify-self: start). A left-pointing
+     Scan button (sibling inside .hero-cta inline-flex row). A left-pointing
      CSS triangle (::before) connects it visually to the button like a
      speech-bubble pointer. The counter is a tabular-nums digit roller —
      each visible digit is a 16px viewport onto a 0..9 column that
@@ -545,8 +552,6 @@
      ============================================================ */
   .cta-proof {
     position: relative;
-    grid-column: 3;
-    justify-self: start;
     display: inline-flex; align-items: center; gap: 8px;
     padding: 5px 12px 5px 5px;
     background: var(--card);
@@ -731,7 +736,7 @@
     transition: transform .2s;
     opacity: 0.6;
   }
-  .hero-link:hover::after { transform: translateX(3px); opacity: 1; }
+  .hero-link:hover::after { opacity: 1; }
   .perms {
     margin-top: 32px;
     display: flex; flex-wrap: wrap; gap: 18px;
@@ -749,7 +754,10 @@
   .card-stack {
     position: relative;
     width: 100%;
-    height: clamp(420px, 50vh, 500px);
+    /* Cards are now ~175px tall (head + score only) — was 325px when
+       they had full matrix/providers content. Stack height shrinks
+       to match so the cards don't float in a sea of empty space. */
+    height: clamp(240px, 32vh, 320px);
     justify-self: end;
   }
   .card-stack .perspective-wrap {
@@ -758,26 +766,29 @@
     left: 50%;
     width: 260px;
     margin: 0;
+    /* Function-list shape MUST match the .is-hovered rule below
+       (translate / translate / scale / rotate) so CSS can interpolate
+       between them smoothly on hover instead of snapping. */
     transform:
       translate(-50%, -50%)
       translate(calc(var(--sx, 0) + var(--push, 0px)), 0)
+      scale(1)
       rotate(var(--srot, 0deg));
     transition: transform .45s cubic-bezier(.22,.8,.22,1);
     cursor: pointer;
   }
   /* 4 cards in a horizontal row, ~130px apart; rotation varies per
-     card so it feels hand-laid, not algorithmic */
+     card so it feels hand-laid, not algorithmic. */
   .card-stack .perspective-wrap:nth-child(1) { --sx: -195px; --srot: -9deg; z-index: 1; }
   .card-stack .perspective-wrap:nth-child(2) { --sx:  -65px; --srot:  4deg; z-index: 2; }
   .card-stack .perspective-wrap:nth-child(3) { --sx:   65px; --srot: -3deg; z-index: 3; }
   .card-stack .perspective-wrap:nth-child(4) { --sx:  195px; --srot:  8deg; z-index: 4; }
 
-  /* hover handled by JS — .is-hovered class set on the actually-hovered
-     card; --push set on every other card so they slide away horizontally.
-     Pure-CSS :hover/:has(~) was retriggering rapidly when the moved
-     siblings repositioned under the cursor; class-based is stable.
-     The hovered card stays at its own --sx (does NOT jump to centre);
-     only its rotation flattens and it scales up slightly. */
+  /* Hover state — function-list shape matches the base rule
+     (translate / translate / scale / rotate) so CSS can interpolate
+     smoothly via the .45s transition. The hovered card scales up
+     and flattens its natural rotation to 0; siblings slide aside via
+     the --push offset set inline by JS. */
   .card-stack .perspective-wrap.is-hovered {
     transform:
       translate(-50%, -50%)
@@ -797,29 +808,34 @@
        viewing camera. The 3D rotateY is set per-card by JS via --tilt. */
   }
   .card {
-    width: 100%; aspect-ratio: 4 / 5;
+    /* Light-tone variant: cream/white card with a subtle colored corner
+       wash per persona. Was dark var(--card); switched to fit the new
+       lighter section palette. */
+    width: 100%; aspect-ratio: 4 / 2.7;
     container-type: inline-size;
     border-radius: 10px;
-    background: var(--card);
-    border: 1px solid var(--card-line);
+    background: #fff;
+    border: 1px solid var(--line);
     position: relative;
     overflow: hidden;
     transition: transform .25s ease, box-shadow .25s ease;
     will-change: transform;
     box-shadow:
-      0 12px 28px -10px rgba(20,20,30,0.18),
-      0 4px 10px -2px rgba(20,20,30,0.08);
+      0 12px 28px -10px rgba(20,20,30,0.12),
+      0 4px 10px -2px rgba(20,20,30,0.05);
   }
-  .card.c-1 { background: linear-gradient(135deg, rgba(73,163,166,0.22), rgba(10,10,16,0) 55%), var(--card); }
-  .card.c-2 { background: linear-gradient(135deg, rgba(179,136,255,0.22), rgba(10,10,16,0) 55%), var(--card); }
-  .card.c-3 { background: linear-gradient(135deg, rgba(255,138,76,0.20),  rgba(10,10,16,0) 55%), var(--card); }
-  .card.c-4 { background: linear-gradient(135deg, rgba(244,114,182,0.20), rgba(10,10,16,0) 55%), var(--card); }
-  .card.c-5 { background: linear-gradient(135deg, rgba(96,165,250,0.22),  rgba(10,10,16,0) 55%), var(--card); }
+  /* per-card colored wash — pulled down to 12–16% opacity since the
+     base is now white instead of near-black */
+  .card.c-1 { background: linear-gradient(135deg, rgba(73,163,166,0.16),  rgba(255,255,255,0) 60%), #fff; }
+  .card.c-2 { background: linear-gradient(135deg, rgba(179,136,255,0.14), rgba(255,255,255,0) 60%), #fff; }
+  .card.c-3 { background: linear-gradient(135deg, rgba(255,138,76,0.14),  rgba(255,255,255,0) 60%), #fff; }
+  .card.c-4 { background: linear-gradient(135deg, rgba(244,114,182,0.14), rgba(255,255,255,0) 60%), #fff; }
+  .card.c-5 { background: linear-gradient(135deg, rgba(96,165,250,0.14),  rgba(255,255,255,0) 60%), #fff; }
   .card:hover {
     transform: scale(1.05);
     box-shadow:
-      0 30px 64px -16px rgba(20,20,30,0.45),
-      0 12px 24px -6px rgba(20,20,30,0.22);
+      0 30px 64px -16px rgba(20,20,30,0.22),
+      0 12px 24px -6px rgba(20,20,30,0.12);
     z-index: 5;
   }
   .cards-track > .perspective-wrap {
@@ -840,7 +856,7 @@
     padding: 1.71em;
     overflow: hidden;
     display: flex; flex-direction: column;
-    color: #fff;
+    color: var(--text);
     font-size: clamp(10px, 3.685cqi, 14px);
   }
 
@@ -854,36 +870,28 @@
     border-radius: 50%;
     object-fit: cover;
     display: block;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: var(--card);
+    border: 1px solid var(--line);
+    background: var(--bg);
     flex-shrink: 0;
   }
   .pc-name {
     font-family: var(--font-display);
     font-weight: 700; font-size: 1.21em;
-    color: #fff; line-height: 1.1;
+    color: var(--text); line-height: 1.1;
   }
   .pc-handle {
     font-family: var(--font-mono);
     font-size: 0.79em; color: var(--muted);
     margin-top: 0.21em;
   }
-  .pc-badge {
-    font-family: var(--font-mono);
-    font-size: 0.64em; font-weight: 600;
-    color: var(--muted-2);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 0.36em 0.57em;
-    border: 1px solid var(--card-line);
-    background: rgba(255,255,255,0.05);
-    border-radius: 4px;
-  }
 
   .pc-score {
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 1.57em;
   }
+  /* trimmed card now stops at pc-score — drop its trailing margin so the
+     bottom of the card hugs the score row, not a gap of empty space */
+  .pc-score:last-child { margin-bottom: 0; }
   .pc-score .label {
     font-family: var(--font-mono);
     font-size: 0.71em; font-weight: 600;
@@ -898,7 +906,8 @@
     line-height: 1;
     letter-spacing: -0.04em;
     color: var(--alva);
-    text-shadow: 0 0 18px rgba(73,163,166,0.55);
+    /* glow softened — was 0.55 alpha on dark, too strong on light */
+    text-shadow: 0 0 14px rgba(73,163,166,0.25);
   }
   .pc-score .type {
     font-family: var(--font-mono);
@@ -926,8 +935,8 @@
     flex-shrink: 0;
   }
   .pc-rank svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  .pc-rank .ring-track { stroke: rgba(255,255,255,0.06); }
-  .pc-rank .ring-fill  { stroke: var(--alva); filter: drop-shadow(0 0 6px rgba(73,163,166,0.7)); }
+  .pc-rank .ring-track { stroke: rgba(10,10,16,0.08); }
+  .pc-rank .ring-fill  { stroke: var(--alva); filter: drop-shadow(0 0 6px rgba(73,163,166,0.35)); }
   .pc-rank .ring-text {
     position: absolute; inset: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -940,82 +949,8 @@
   .pc-rank .ring-text .v {
     font-family: var(--font-display);
     font-size: 1em; font-weight: 700;
-    color: #fff;
+    color: var(--text);
   }
-
-  .pc-matrix { margin-bottom: 1.29em; }
-  .pc-matrix .row {
-    display: flex; justify-content: space-between;
-    font-family: var(--font-mono);
-    font-size: 0.71em; font-weight: 600;
-    color: var(--muted);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-bottom: 0.71em;
-  }
-  .pc-matrix .dots {
-    display: grid; grid-template-columns: repeat(10, 1fr);
-    grid-auto-rows: 0.57em;
-    gap: 0.21em;
-  }
-  .pc-matrix .dots i {
-    display: block;
-    border-radius: 1px;
-    background: rgba(255,255,255,0.05);
-  }
-  .pc-matrix .dots i.g { background: var(--alva);   box-shadow: 0 0 4px rgba(73,163,166,0.6); }
-  .pc-matrix .dots i.o { background: var(--orange); box-shadow: 0 0 4px rgba(255,138,76,0.5); }
-  .pc-matrix .dots i.p { background: var(--purple); box-shadow: 0 0 4px rgba(179,136,255,0.5); }
-  .pc-matrix .legend {
-    display: flex; gap: 1em;
-    margin-top: 0.71em;
-    font-family: var(--font-mono);
-    font-size: 0.64em;
-    color: var(--muted);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-  .pc-matrix .legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .pc-matrix .legend span::before {
-    content: ""; width: 0.89em; height: 0.33em; border-radius: 1px;
-  }
-  .pc-matrix .legend span.lg-g::before { background: var(--alva); }
-  .pc-matrix .legend span.lg-o::before { background: var(--orange); }
-  .pc-matrix .legend span.lg-p::before { background: var(--purple); }
-
-  .pc-providers { margin-top: auto; }
-  .pc-providers .head {
-    font-family: var(--font-mono);
-    font-size: 0.71em; font-weight: 600;
-    color: var(--muted);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--card-line);
-    padding-bottom: 0.57em;
-    margin-bottom: 0.86em;
-  }
-  .pc-providers .prv { margin-bottom: 0.71em; }
-  .pc-providers .prv:last-child { margin-bottom: 0; }
-  .pc-providers .prv .meta {
-    display: flex; justify-content: space-between;
-    font-family: var(--font-mono);
-    font-size: 0.86em;
-    margin-bottom: 0.43em;
-  }
-  .pc-providers .prv .meta .handle { color: #fff; }
-  .pc-providers .prv .meta .stat.alva   { color: var(--alva); }
-  .pc-providers .prv .meta .stat.purple { color: var(--purple); }
-  .pc-providers .prv .track {
-    height: 0.29em;
-    background: rgba(255,255,255,0.05);
-    border-radius: 9999px;
-    overflow: hidden;
-  }
-  .pc-providers .prv .track .fill {
-    height: 100%; border-radius: 9999px;
-  }
-  .pc-providers .prv.alva   .track .fill { background: var(--alva);   box-shadow: 0 0 8px rgba(73,163,166,0.7); }
-  .pc-providers .prv.purple .track .fill { background: var(--purple); box-shadow: 0 0 8px rgba(179,136,255,0.7); }
 
   /* ============================================================
      STATS STRIP (between hero and features)
@@ -1076,7 +1011,8 @@
     border: 1px solid var(--line);
     font-size: 13px;
     font-weight: 700;
-    transition: background .15s, border-color .15s, transform .15s;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+    transition: background .15s, border-color .15s, color .15s, transform .18s ease, box-shadow .18s ease;
     text-decoration: none;
     flex-shrink: 0;
   }
@@ -1085,7 +1021,8 @@
     background: var(--text);
     color: #fff;
     border-color: var(--text);
-    transform: translateY(-1px);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 14px 28px rgba(10,10,16,0.20);
   }
   .section-action:hover i { color: var(--alva-hi); }
   .section-head .eyebrow {
@@ -1309,6 +1246,61 @@
   }
   .lb-card { border-bottom: 0; border-radius: 14px 14px 0 0; }
   #leaderboard { padding-bottom: 0; }
+
+  /* ============================================================
+     LEADERBOARD — DIAGONAL LAYOUT
+     Section is laid out as a 2-col / 2-row grid: title sits TOP-RIGHT
+     and the table sits BOTTOM-LEFT — flipped from the natural reading
+     order so it doesn't repeat the left-content / right-cards pattern
+     used by section 2 directly above it. The lb-card is half width on
+     desktop, so columns are trimmed (only Score + Risk are kept; the
+     others hide via hide-sm).
+     ============================================================ */
+  #leaderboard .section-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 56px;
+    row-gap: 0;
+    align-items: start;
+  }
+  #leaderboard .section-head {
+    grid-column: 2; grid-row: 1;       /* TOP-RIGHT */
+    margin-bottom: 0;
+    max-width: none;
+  }
+  /* Stack the action under the title text instead of pushing it to the
+     far right of the half-width column — keeps the title block tight. */
+  #leaderboard .section-head.with-action {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  #leaderboard .section-head.with-action > div { max-width: none; }
+  #leaderboard .lb-card {
+    grid-column: 1; grid-row: 2;       /* BOTTOM-LEFT */
+    align-self: end;
+    /* Pull the table up so it vertically overlaps with the lower half
+       of the title block — gives the diagonal composition a tighter,
+       interlocked feel instead of a tall vertical gap. */
+    margin-top: -120px;
+    position: relative; z-index: 1;
+  }
+  /* lb-card is half-width on desktop — hide the middle metric columns
+     and tighten the column template so what's left fits cleanly. */
+  #leaderboard .lb-header,
+  #leaderboard .lb-row {
+    grid-template-columns: 32px minmax(140px, 1.3fr) minmax(60px, .7fr) 90px;
+    gap: 12px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  #leaderboard .lb-header .hide-sm,
+  #leaderboard .lb-row .cell.hide-sm { display: none; }
+  /* Sort tabs — fewer columns visible, so a couple of sort options can
+     go away on the secondary table (the deep table on alva.ai keeps all). */
+  #leaderboard .lb-toolbar { padding: 14px 18px; gap: 12px; }
+  #leaderboard .sort-tab { padding: 6px 11px; font-size: 11px; }
+  #leaderboard .lb-meta { font-size: 10px; }
   .lb-row {
     display: grid;
     grid-template-columns: 40px minmax(220px, 1.4fr) repeat(5, minmax(70px, .55fr)) 100px;
@@ -1362,197 +1354,218 @@
      5-row table with explicit header and bordered card) */
 
   /* ============================================================
-     AGENTS  (persona feat cards + small chat mock)
+     LEARN THE PLAYBOOK  (centered handle search + floating bubbles)
+     - Centered controls: big handle input + suggested chips.
+     - Around the centered controls, free-floating speech bubbles
+       drift in and out (see .bubble-card / @keyframes bubbleFloat).
+     - JS just normalises the handle and deep-links to alva.ai/chat.
      ============================================================ */
-  .agents-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 32px;
-    align-items: stretch;
-  }
-  /* left column stretches to match right column height; cards distribute
-     evenly with space-between so the column visually fills the chat-mock */
-  .agents-left {
-    display: flex; flex-direction: column;
-    gap: 8px;
-    justify-content: space-between;
-    align-self: stretch;
-  }
-  .persona-feat {
-    padding: 16px 20px;
-    border-radius: 12px;
-    background: var(--bg-soft);            /* white card on grey section */
-    border: 1px solid var(--line);
-    display: flex; align-items: center; gap: 16px;
-    cursor: pointer;
-    transition: box-shadow .25s ease, border-color .15s ease, background .15s ease;
-    text-align: left;
-    width: 100%;
-    flex-shrink: 0;
-  }
-  .persona-feat:hover { box-shadow: 0 12px 28px -10px rgba(20,20,30,0.18); border-color: rgba(73,163,166,0.32); }
-  .persona-feat.active { border-color: var(--alva); background: rgba(73,163,166,0.06); }
-  .persona-feat img {
-    width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
-    flex-shrink: 0;
-    background: var(--line);
-  }
-  /* middle column: name + handle + tags */
-  .persona-feat .pmeta { flex: 1; min-width: 0; }
-  .persona-feat .pname {
-    font-size: 15px; font-weight: 700; color: var(--text);
-    line-height: 1.2;
-  }
-  .persona-feat .phandle {
-    font-family: var(--font-mono);
-    font-size: 11px; color: var(--muted);
-    margin-top: 3px;
-    letter-spacing: 0.02em;
-  }
-  /* tags always visible, single row */
-  .persona-feat .ptags {
-    margin-top: 7px;
-    display: flex;
-    flex-wrap: wrap; gap: 4px;
-  }
-  .persona-feat .ptag {
-    font-family: var(--font-mono);
-    font-size: 9px; font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 3px;
-    background: rgba(73,163,166,0.10);
-    color: var(--alva);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  /* right column: enlarged follower count */
-  .persona-feat .pstats {
-    flex-shrink: 0;
-    text-align: right;
-    padding-left: 8px;
-  }
-  .persona-feat .pstats-n {
-    font-family: var(--font-display);
-    font-size: 22px; font-weight: 800;
-    color: var(--text);
-    letter-spacing: -0.01em;
-    line-height: 1;
-  }
-  .persona-feat.active .pstats-n { color: var(--alva); }
-  .persona-feat .pstats-lbl {
-    font-family: var(--font-mono);
-    font-size: 9px; font-weight: 600;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-top: 3px;
-  }
-
-  .chat-mock {
-    padding: 24px;
-    border-radius: 14px;
-    background: var(--card);
-    color: #fff;
-    display: flex; flex-direction: column;
-    gap: 12px;
-    border: 1px solid var(--card-line);
-    min-height: 540px;     /* anchors input at bottom, matches 5-persona column */
-  }
-  .chat-target { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--card-line); }
-  .chat-target img { width: 38px; height: 38px; border-radius: 50%; }
-  .chat-target b { display: block; font-size: 14px; }
-  .chat-target span { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--muted-2); margin-top: 2px; letter-spacing: 0.06em; }
-  .chat-target .live {
-    margin-left: auto;
-    display: inline-flex; align-items: center; gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-    color: var(--alva-hi);
-  }
-  .chat-target .live::before {
-    content: "";
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--alva);
-    box-shadow: 0 0 8px var(--alva);
-    animation: pingDot 2s ease-in-out infinite;
-  }
-  .bubble {
-    max-width: 92%;
-    padding: 13px 16px;
-    border-radius: 12px;
-    font-size: 13px;
-    line-height: 1.6;
-  }
-  .bubble.user {
-    align-self: flex-end;
-    background: rgba(255,255,255,0.10);
-    color: #fff;
-  }
-  .bubble.ai {
-    align-self: flex-start;
-    background: rgba(255,255,255,0.04);
-    color: rgba(255,255,255,0.86);
-    border: 1px solid var(--card-line);
-  }
-  .bubble.ai ol { margin: 8px 0 8px 18px; padding: 0; }
-  .bubble.ai ol li { margin-bottom: 4px; }
-  .bubble.ai b { color: var(--alva-hi); }
-  .bubble.ai .source {
-    margin-top: 10px; padding-top: 10px;
-    border-top: 1px dashed rgba(255,255,255,0.10);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--muted-2);
-    letter-spacing: 0.06em;
-  }
-  .bubble.ai .source b { color: var(--alva-hi); }
-  .bubble.ai .source a { color: var(--alva-hi); }
-
-  /* chat-thread expands to fill remaining vertical space; input gets
-     docked at the bottom via the auto top-margin below */
-  .chat-thread {
-    flex: 1;
+  .agents-explore {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    overflow-y: auto;
-    padding-right: 2px;
+    gap: 24px;
+    max-width: 880px;
+    margin: 0 auto;
   }
-  /* chat input bar — pinned to bottom of .chat-mock regardless of content height */
-  .chat-input {
+
+  /* Big handle input — looks like a search bar with a primary CTA
+     bonded on the right. Magnifier sits absolutely on the left. */
+  .agents-search {
+    position: relative;
     display: flex;
-    gap: 8px;
-    padding: 8px;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--card-line);
-    margin-top: auto;     /* push to bottom */
+    align-items: stretch;
+    gap: 0;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: 0 14px 36px rgba(10,10,16,0.08);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .agents-search:focus-within {
+    border-color: var(--alva);
+    box-shadow: 0 14px 36px rgba(73,163,166,0.18);
+  }
+  .agents-search > i {
+    align-self: center;
+    margin-left: 18px;
+    color: var(--muted);
+    font-size: 18px;
     flex-shrink: 0;
   }
-  .chat-input input {
+  .agents-search input {
     flex: 1;
     min-width: 0;
     background: transparent;
     border: 0;
     outline: none;
-    padding: 10px 14px;
-    color: #fff;
-    font-family: var(--font);
+    padding: 0 16px;
+    height: 52px;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--text);
+  }
+  .agents-search input::placeholder { color: var(--muted-2); }
+  .agents-search .btn-primary {
+    flex-shrink: 0;
+    height: 52px;
+    padding: 0 24px;
+    border-radius: 999px;
     font-size: 14px;
   }
-  .chat-input input::placeholder { color: rgba(255,255,255,0.4); }
-  .chat-input button {
-    width: 42px; height: 42px;
-    border-radius: 10px;
-    background: var(--alva);
-    color: #fff;
-    border: 0;
-    cursor: pointer;
-    display: grid; place-items: center;
-    transition: background .15s, transform .15s;
+
+  /* Suggested chips — small avatar + handle pills. Click prefills
+     and submits the search; visual treatment matches the search bar. */
+  .agents-suggested {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 0 6px;
   }
-  .chat-input button:hover { background: var(--alva-hi); transform: translateY(-1px); }
-  .chat-input button i { font-size: 16px; }
+  .agents-suggested-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+  .agents-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px 6px 6px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+    transition: border-color .15s, background .15s, color .15s, transform .18s ease, box-shadow .18s ease;
+  }
+  .agents-chip:hover {
+    border-color: var(--alva);
+    background: rgba(73,163,166,0.06);
+    color: var(--alva);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(10,10,16,0.12);
+  }
+  .agents-chip img {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+
+  /* ============================================================
+     FLOATING KOL SPEECH BUBBLES (LEARN THE PLAYBOOK ambient)
+     - The #agents section is the positioning context.
+     - Each .bubble-card sits at its own --x / --y offset (top/left
+       percent within the section) and fades in/out on a per-card
+       --cycle duration with a staggered --d delay, so the rhythm
+       feels random.
+     - Decorative: pointer-events: none + aria-hidden, so they don't
+       interfere with the centered handle search.
+     - At narrow widths the whole bubble layer hides — there isn't
+       enough horizontal real estate beside the centered controls.
+     ============================================================ */
+  #agents { position: relative; overflow: hidden; min-height: 760px; }
+  .agents-bubbles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  #agents .section-wrap { position: relative; z-index: 1; }
+
+  /* Section head is centered (block + text) — the section is composed
+     symmetrically around the centered search, so the title should
+     anchor on the same axis instead of left-aligning. */
+  #agents .section-head {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 760px;
+  }
+  #agents .section-head p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .bubble-card {
+    position: absolute;
+    top: var(--y, 0%);
+    left: var(--x, 0%);
+    display: flex;
+    align-items: flex-start;                 /* avatar tops aligned with name + bubble */
+    gap: 12px;
+    width: clamp(220px, 22vw, 300px);
+    opacity: 0;
+    transform: scale(0.4);
+    transform-origin: 30% 70%;               /* pop from lower-left, near the avatar */
+    will-change: opacity, transform;
+    animation: bubblePop var(--cycle, 13s) cubic-bezier(.34, 1.56, .64, 1) var(--d, 0s) infinite;
+  }
+  .bubble-card .bc-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--line);
+    border: 2px solid #fff;
+    box-shadow: 0 4px 14px rgba(10,10,16,0.12);
+    flex-shrink: 0;
+  }
+  .bubble-card .bc-content {
+    display: flex; flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+  .bubble-card .bc-name {
+    /* "名字可以大一点" — per the reference image, name is meaningful
+       sized, above the bubble. Avatar tops align with this name. */
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.2;
+    margin-left: 14px;
+    margin-bottom: 6px;
+    letter-spacing: -0.005em;
+  }
+  .bubble-card .bc-bubble {
+    /* Pure white so the bubble pops off the grey section bg
+       — was a near-white tinted color that blended in. */
+    background: #fff;
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 18px;
+    /* Avatars top-align with the name above the bubble, so the bubble's
+       tail-corner (the corner whose radius is squared off to "point" at
+       the avatar) belongs on the TOP-LEFT, not the bottom-left. */
+    border-top-left-radius: 4px;
+    font-size: 14px;
+    line-height: 1.45;
+    box-shadow: 0 14px 36px rgba(10,10,16,0.12), 0 2px 6px rgba(10,10,16,0.06);
+    border: 1px solid rgba(10,10,16,0.04);
+  }
+  @keyframes bubblePop {
+    /* Spring in (0 → 4%), hold visible for most of the cycle
+       (4 → 64%), spring out (64 → 68%), hidden through 100%.
+       With cycle ≈ 22s, that's ~13s of "stay" before disappearing. */
+    0%   { opacity: 0; transform: scale(0.4); }
+    4%   { opacity: 1; transform: scale(1.06); }
+    8%   { opacity: 1; transform: scale(1);    }
+    62%  { opacity: 1; transform: scale(1);    }
+    65%  { opacity: 1; transform: scale(1.06); }
+    68%  { opacity: 0; transform: scale(0.4);  }
+    100% { opacity: 0; transform: scale(0.4);  }
+  }
 
   /* ============================================================
      CLOSING / FOR-KOLS  (inverted dark section, audit.html style)
@@ -1642,9 +1655,14 @@
     border: 0;
     font-size: 14px; font-weight: 700;
     cursor: pointer;
-    transition: transform .15s;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+    transition: transform .18s ease, box-shadow .18s ease, background .15s;
   }
-  .btn-on-dark:hover { transform: translateY(-1px); background: #f5f5f7; }
+  .btn-on-dark:hover {
+    transform: translateY(-2px) scale(1.02);
+    background: #f5f5f7;
+    box-shadow: 0 16px 32px rgba(0,0,0,0.30);
+  }
   .btn-on-dark-ghost {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 12px 22px;
@@ -1653,9 +1671,15 @@
     border: 1px solid rgba(255,255,255,0.18);
     font-size: 14px; font-weight: 700;
     cursor: pointer;
-    transition: background .15s, border-color .15s;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+    transition: background .15s, border-color .15s, transform .18s ease, box-shadow .18s ease;
   }
-  .btn-on-dark-ghost:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.32); }
+  .btn-on-dark-ghost:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.32);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 14px 28px rgba(0,0,0,0.30);
+  }
   .closing-trust {
     margin-top: 56px; text-align: center;
     font-family: var(--font-mono);
@@ -1665,30 +1689,22 @@
   }
 
   /* ============================================================
-     BOTTOM CARDS  (Request + For-KOLs, joined into one composition)
-     - gap: 0  so the cards visually touch in the middle and read as
-       ONE big block — breaks the 2-column macro pattern used by the
-       agents section just above.
-     - Left = DARK (Request), Right = LIGHT (For-KOLs).
-     - Outer wrapper gets the rounded corners + shadow; cards
-       themselves have no radius / no shadow.
-     - CTAs in both cards use .btn-primary.btn-big — same style as
-       the section-2 "Initialize Scan" hero button and the FAB.
-     - Submit form uses align-items: stretch so input height === btn-big.
+     BOTTOM CARD  (single closer — "Request a KOL")
+     - The For-KOLs counterpart used to sit to the right of this card.
+       It moved into the top-nav button + #modal-for-kols modal, so the
+       row is now a single centred card.
+     - Submit uses a 44px small pill (NOT the hero CTA size) so the
+       closer reads as secondary, not a second hero.
      ============================================================ */
-  /* Full-width white band wrapping the cards — provides the bg break
+  /* Full-width white band wrapping the card — provides the bg break
      between the grey agents section above and the grey footer below. */
   .bottom-cards {
     background: var(--bg-soft);
     padding: 96px 32px 80px;
   }
   .bottom-cards-inner {
-    max-width: 1320px;
+    max-width: 920px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1.15fr 1fr;
-    gap: 0;
-    align-items: stretch;
     border-radius: 24px;
     overflow: hidden;
     box-shadow: 0 24px 60px rgba(10,10,16,0.14);
@@ -1699,7 +1715,7 @@
     display: flex; flex-direction: column;
     min-width: 0;
   }
-  /* dark variant — left card (Request) */
+  /* dark variant — Request card (the only bottom card now) */
   .bcard.bcard-dark {
     background: var(--card);
     color: #fff;
@@ -1709,16 +1725,6 @@
   .bcard.bcard-dark p { color: rgba(255,255,255,0.55); }
   .bcard.bcard-dark .bcard-eyebrow { color: var(--alva-hi); }
   .bcard.bcard-dark .bcard-trust { color: rgba(255,255,255,0.4); }
-  /* light variant — right card (For-KOLs) */
-  .bcard.bcard-light {
-    background: var(--bg-soft);
-    color: var(--text);
-    border: 0;
-  }
-  .bcard.bcard-light h3 { color: var(--text); }
-  .bcard.bcard-light p { color: var(--muted); }
-  .bcard.bcard-light .bcard-eyebrow { color: var(--alva); }
-  .bcard.bcard-light .bcard-trust { color: var(--muted-2); }
 
   .bcard-eyebrow {
     font-family: var(--font-mono);
@@ -1789,26 +1795,16 @@
     font-size: 13px; font-weight: 700;
     cursor: pointer;
     display: inline-flex; align-items: center; gap: 6px;
-    transition: background .15s, transform .15s;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+    transition: background .15s, color .15s, transform .18s ease, box-shadow .18s ease;
     flex-shrink: 0;
   }
-  .bcard-form button:hover { background: var(--alva); color: #fff; transform: translateY(-1px); }
-  /* For-KOLs CTA — same compact white pill, same 44px height, lines up
-     visually with the Submit button on the other card */
-  .bcard-cta {
-    display: inline-flex; align-items: center; gap: 8px;
-    height: 44px;
-    padding: 0 22px;
-    background: var(--text);
+  .bcard-form button:hover {
+    background: var(--alva);
     color: #fff;
-    border: 0;
-    border-radius: 999px;
-    font-size: 13px; font-weight: 700;
-    cursor: pointer;
-    align-self: flex-start;
-    transition: background .15s, transform .15s;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 16px 32px rgba(0,0,0,0.30);
   }
-  .bcard-cta:hover { background: var(--alva); transform: translateY(-1px); }
 
   /* ============================================================
      FOOTER
@@ -1830,7 +1826,7 @@
   .f-disclaimer { max-width: 580px; line-height: 1.6; }
 
   /* ============================================================
-     PRIMARY BUTTON  (shared by hero + floating FAB)
+     PRIMARY BUTTON  (used by hero CTA + bottom-card submit + modals)
      audit.html-style multi-color shimmer
      ============================================================ */
   .btn-primary {
@@ -1847,24 +1843,14 @@
     transition: transform .15s, box-shadow .15s, background .15s;
     box-shadow: 0 12px 28px rgba(73,163,166,0.32);
   }
-  /* the site-wide hero CTA — meaningfully bigger than other btn-primary
-     instances (FAB, modal buttons) since it's THE main action */
-  .btn-primary.btn-big {
-    padding: 22px 52px;
-    font-size: 18px;
-    border-radius: 12px;
-    gap: 14px;
-    box-shadow: 0 22px 44px rgba(73,163,166,0.36);
-  }
-  .btn-primary.btn-big i { font-size: 20px; }
   .btn-primary > * { position: relative; z-index: 1; }
-  .btn-primary i { transition: transform .2s cubic-bezier(.2,.8,.2,1); }
   .btn-primary:hover {
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(1.02);
     background: var(--alva-hi);
-    box-shadow: 0 18px 36px rgba(73,163,166,0.42);
+    box-shadow: 0 22px 44px rgba(73,163,166,0.48);
   }
-  .btn-primary:hover i { transform: translateX(3px); }
+  /* (Icon shift on hover removed — internal element movement is out;
+     only the button itself transforms.) */
   .btn-primary::before {
     content: "";
     position: absolute; inset: 0;
@@ -1913,8 +1899,8 @@
     transition: transform .15s ease, box-shadow .15s ease;
   }
   .alva-badge:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 36px rgba(10,10,16,0.12);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 22px 44px rgba(10,10,16,0.18);
   }
   .alva-badge-mark {
     width: 32px; height: 32px;
@@ -1941,46 +1927,6 @@
     font-size: 10px;
     color: var(--muted);
     letter-spacing: 0.04em;
-  }
-
-  /* ============================================================
-     FLOATING CTA  (appears only after the hero stage scrolls out)
-     A single button, not a bar — bottom-center, lightweight.
-     ============================================================ */
-  .fab-wrap {
-    position: fixed;
-    left: 50%; bottom: 48px;
-    transform: translate(-50%, 24px);
-    z-index: 50;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s ease, transform .25s ease;
-  }
-  .fab-wrap.visible {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translate(-50%, 0);
-  }
-  /* FAB inherits the FULL .btn-primary.btn-big spec from section 2 — same
-     padding, font, radius, gradient, arrow. The only thing we override here
-     is the box-shadow (a floating fixed button legitimately needs a stronger
-     shadow than the inline hero CTA to read as "elevated"). */
-  .fab-wrap .btn-primary {
-    box-shadow:
-      0 18px 40px rgba(73,163,166,0.42),
-      0 8px 18px rgba(10,10,16,0.18);
-  }
-  /* Idle bob animation — sits on the wrapping .fab-bob so it composes
-     cleanly with both the .fab-wrap entry slide and the button's own
-     hover translate. Subtle 6px range, slow ~3.2s ease so it reads as
-     "alive" rather than fidgety. */
-  .fab-bob {
-    display: block;
-    animation: fabBob 3.2s ease-in-out infinite;
-  }
-  @keyframes fabBob {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-6px); }
   }
 
   /* ============================================================
@@ -2047,6 +1993,52 @@
   }
   .step .desc { font-size: 14px; color: var(--text); line-height: 1.5; }
   .step .desc b { color: var(--text); font-weight: 700; }
+
+  /* ============================================================
+     FOR-KOLs MODAL — 3 steps laid out as horizontal cards
+     (overrides the generic .step row-style used by methodology).
+     Large display-font numbers in alva, each step is its own
+     bordered tile, side-by-side. Collapses to single column on
+     narrow widths.
+     ============================================================ */
+  #modal-for-kols .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 28px;
+    border-top: 0;
+  }
+  #modal-for-kols .step {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 22px 18px 20px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    /* The generic .step sets border-bottom; restore it so all four
+       sides are present in the card form. */
+    border-bottom: 1px solid var(--line);
+  }
+  #modal-for-kols .step .num {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--alva);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-transform: none;
+  }
+  #modal-for-kols .step .desc {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  @media (max-width: 540px) {
+    #modal-for-kols .steps { grid-template-columns: 1fr; }
+  }
+
   .notice {
     margin-top: 20px;
     padding-top: 16px;
@@ -2066,33 +2058,657 @@
     border-radius: 8px;
     font-size: 14px; font-weight: 700;
     cursor: pointer;
-    transition: color .15s, border-color .15s;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+    transition: color .15s, border-color .15s, transform .18s ease, box-shadow .18s ease;
   }
-  .dialog-ghost:hover { color: var(--text); border-color: var(--muted-2); }
+  .dialog-ghost:hover {
+    color: var(--text);
+    border-color: var(--muted-2);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(10,10,16,0.12);
+  }
+
+  /* ============================================================
+     CONNECT DIALOG  (Initialize Scan steps 1 + 2)
+     Two-stage dialog — auth ask, then loading. Visually distinct
+     from the standard .dialog: compact, centered, icon-led,
+     single primary CTA.
+     ============================================================ */
+  .connect-dialog {
+    position: relative;
+    width: min(440px, 100%);
+    max-height: 86vh;
+    overflow: auto;
+    border-radius: 14px;
+    background: #fff;
+    padding: 44px 36px 36px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+    text-align: center;
+    transform-origin: center;
+  }
+  /* Entrance animation — scale+fade pop when modal opens. Used by
+     #modal-connect AND #modal-for-kols (both are centered .dialog
+     containers, so they share the same entrance). */
+  #modal-connect.modal.open .connect-dialog,
+  #modal-for-kols.modal.open .dialog {
+    animation: connectModalIn .35s cubic-bezier(.16, .84, .44, 1) both;
+    transform-origin: center center;
+  }
+  @keyframes connectModalIn {
+    0%   { opacity: 0; transform: scale(0.92); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .connect-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 32px; height: 32px;
+  }
+  .connect-stage { display: none; flex-direction: column; align-items: center; gap: 0; }
+  .connect-dialog[data-state="auth"]    .connect-auth    { display: flex; }
+  .connect-dialog[data-state="loading"] .connect-loading { display: flex; }
+  .connect-dialog[data-state="loading"] .connect-close { display: none; }
+
+  /* AUTH STATE */
+  .connect-x-mark {
+    width: 72px; height: 72px;
+    display: grid; place-items: center;
+    background: var(--text);
+    color: #fff;
+    border-radius: 18px;
+    margin-bottom: 22px;
+  }
+  .connect-x-mark i { font-size: 36px; }
+  .connect-title {
+    margin: 0 0 12px;
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 800;
+    text-transform: none;
+    letter-spacing: -0.005em;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  .connect-sub {
+    margin: 0 0 22px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+    max-width: 340px;
+  }
+  .connect-perms {
+    display: flex; flex-direction: column;
+    gap: 8px;
+    margin: 0 0 26px;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 320px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .connect-perms span { display: inline-flex; align-items: center; gap: 8px; }
+  .connect-perms i { color: var(--alva); font-size: 14px; }
+  .connect-go {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 24px;
+    font-size: 15px;
+    border-radius: 10px;
+  }
+
+  /* LOADING STATE */
+  .connect-loading { padding: 12px 0 0; gap: 18px; }
+  .connect-spinner { width: 56px; height: 56px; }
+  .connect-spinner svg { width: 100%; height: 100%; animation: connectSpin 1.1s linear infinite; }
+  .connect-spinner circle {
+    stroke: var(--alva);
+    stroke-dasharray: 90;
+    stroke-dashoffset: 30;
+  }
+  @keyframes connectSpin { to { transform: rotate(360deg); } }
+  .connect-status {
+    font-family: var(--font-display);
+    font-size: 18px; font-weight: 700;
+    color: var(--text);
+    min-height: 1.4em;
+    transition: opacity .2s;
+  }
+  .connect-progress {
+    width: 100%;
+    max-width: 320px;
+    height: 4px;
+    background: rgba(10,10,16,0.08);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .connect-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--alva);
+    border-radius: inherit;
+    transition: width 2.4s ease-out;
+  }
+  .connect-loading-sub {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+    max-width: 320px;
+  }
+
+  /* ============================================================
+     FULLSCREEN RESULTS MODAL  (Initialize Scan final step)
+     - Takes the entire viewport instead of a centered 620px card.
+     - Hosts a grid of audited KOL score cards + an inline
+       Request-a-KOL closer matching the homepage bottom card.
+     ============================================================ */
+  .modal.modal-full { padding: 0; align-items: stretch; justify-content: stretch; }
+  .dialog-full {
+    position: relative;        /* anchor for absolute close button */
+    width: 100%;
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    /* Top padding loosened so the title + privacy pill + lead paragraph
+       have real breathing room above the card grid. The close button
+       stays at top: 20px regardless via absolute positioning. */
+    padding: 112px clamp(20px, 4vw, 56px) 56px;
+    overflow: auto;
+    box-shadow: none;
+    background: var(--bg-soft);
+  }
+  .dialog-full-close {
+    position: absolute;
+    top: 20px;
+    right: clamp(20px, 4vw, 56px);
+    z-index: 5;
+  }
+  .dialog-full > .dialog-head { max-width: 1320px; margin: 0 auto; }
+
+  /* Privacy banner — sits centred BELOW the head (auto-margins only work
+     on block elements, so use a block flex with width:max-content). */
+  .results-privacy {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: max-content;
+    max-width: 100%;
+    margin: 22px auto 0;        /* block centring under the title block */
+    padding: 10px 18px;
+    background: rgba(73,163,166,0.08);
+    border: 1px solid rgba(73,163,166,0.20);
+    border-radius: 999px;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .results-privacy i { color: var(--alva); font-size: 16px; flex-shrink: 0; }
+  .results-privacy b { font-weight: 700; color: var(--text); }
+
+  .dialog-full .dialog-lead {
+    max-width: 760px; margin: 18px auto 0;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+    text-align: center;
+  }
+  .dialog-full h3 {
+    font-size: clamp(26px, 3vw, 38px);
+    line-height: 1.12;
+    text-align: center;
+  }
+  .dialog-full > .dialog-head > div { text-align: center; flex: 1; }
+  .dialog-full > .dialog-head { align-items: center; }
+  .alva-text { color: var(--text); }
+
+  /* Grid of audited score cards. The .card primitive already has a
+     fluid container-typed font size, so cells scale within their cell.
+     `perspective` on the grid powers the per-card flip-down entrance
+     defined further below — each card starts folded back behind its
+     own top edge (rotateX -90deg, invisible) and flips down to flat,
+     one after the other. */
+  .results-grid {
+    max-width: 1320px;
+    margin: 48px auto 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    perspective: 1200px;
+    perspective-origin: 50% 0%;
+  }
+  /* Inline request — same bcard treatment as the homepage closer, but
+     visually de-emphasised in this context (smaller, narrower, pushed
+     well below the card grid so it doesn't need to fit above the fold;
+     the user discovers it by scrolling after they've looked through
+     the cards). */
+  .results-request {
+    max-width: 760px;          /* narrower than the grid */
+    margin: 180px auto 0;      /* clearly below the cards fold */
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 18px 44px rgba(10,10,16,0.14);
+  }
+  .results-request .bcard { padding: 28px 32px; }
+  .results-request .bcard h3 {
+    text-transform: none;
+    font-size: clamp(18px, 1.6vw, 22px);
+  }
+  .results-request .bcard p {
+    margin: 8px 0 0;
+    font-size: 13px;
+  }
+  .results-request .bcard-foot { margin-top: 22px; }
+
+  @media (max-width: 760px) {
+    .dialog-full { padding: 36px 18px 40px; }
+    .results-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 32px; }
+    .results-request { margin-top: 64px; }
+    .results-request .bcard { padding: 24px 20px; }
+    .results-privacy { padding: 10px 14px; font-size: 12px; }
+  }
+
+  /* ============================================================
+     RESULTS ENTRANCE  — cards stagger in one by one, then the
+     request card slides in after the last card has landed.
+     JS toggles .is-revealed on the grid + request when the
+     modal opens (so the animation replays on each open).
+     Selectors use > * so they cover both the raw .card and the
+     JS-wrapped .result-card-wrap layouts.
+     ============================================================ */
+  /* ============================================================
+     RESULTS MODAL ENTRANCE — CONSOLIDATED ANIMATION BLOCK
+     ============================================================
+     The previous scale-the-whole-dialog approach didn't read as
+     entrance. New choreography (top-to-bottom):
+
+       t=0     backdrop dim fades in:   bg 0→0.5 alpha   (modalBackdropIn)
+       t=0.10  dialog-full white panel fades in: opacity 0→1   (dialogFullFade)
+       t=0.35  close button              (contentIn, translateY 10→0 + fade)
+       t=0.40  dialog-head (title + h3) (contentIn)
+       t=0.50  results-privacy banner   (contentIn)
+       t=0.60  dialog-lead paragraph    (contentIn)
+       t=0.70+ card grid flips in        (cardFlipDown, 50ms stagger × 12)
+       t≈1.80  results-request fades in
+
+     Each step uses keyframe animations with backwards fill so the
+     pre-animation state (0% keyframe) is applied during the delay
+     window. Once an animation ends, the cascade falls back to the
+     visible state defined inside the `.modal.open` selector — keeping
+     elements visible AND leaving their transforms free for hover.
+     ============================================================ */
+
+  /* (1) Backdrop dim — animate the .modal's background from
+     transparent to the dim alpha. */
+  #modal-results.modal.open {
+    animation: modalBackdropIn .3s ease-out both;
+  }
+  @keyframes modalBackdropIn {
+    0%   { background-color: rgba(10,10,16,0); }
+    100% { background-color: rgba(10,10,16,0.5); }
+  }
+
+  /* (2) The white dialog panel fades in — opacity only, NO scale.
+     Starts at 0.1s (slightly overlapping with backdrop). */
+  #modal-results.modal.open .dialog-full {
+    animation: dialogFullFade .25s ease-out .1s backwards;
+    transform-origin: center center;
+  }
+  @keyframes dialogFullFade {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  /* (3) Top-to-bottom content sequence inside the dialog. Each part
+     fades + translates up. */
+  #modal-results.modal.open .dialog-full-close,
+  #modal-results.modal.open .dialog-full > .dialog-head,
+  #modal-results.modal.open .dialog-full > .results-privacy,
+  #modal-results.modal.open .dialog-full > .dialog-lead {
+    animation: dialogContentIn .4s cubic-bezier(.22, 1, .36, 1) backwards;
+  }
+  #modal-results.modal.open .dialog-full-close            { animation-delay: .35s; }
+  #modal-results.modal.open .dialog-full > .dialog-head   { animation-delay: .40s; }
+  #modal-results.modal.open .dialog-full > .results-privacy { animation-delay: .50s; }
+  #modal-results.modal.open .dialog-full > .dialog-lead   { animation-delay: .60s; }
+  @keyframes dialogContentIn {
+    0%   { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* (4) Card grid — base = hidden */
+  .results-grid > * {
+    opacity: 0;
+    backface-visibility: hidden;
+  }
+  /* When .is-revealed is on the grid: visible (post-animation) AND
+     animation runs with backwards fill so 0% covers the stagger delay. */
+  .results-grid.is-revealed > * {
+    opacity: 1;
+    animation: cardFlipDown .5s cubic-bezier(.22, 1, .36, 1) backwards;
+  }
+  @keyframes cardFlipDown {
+    0%   { opacity: 0; transform: perspective(900px) rotateX(-90deg); transform-origin: center top; }
+    100% { opacity: 1; transform: perspective(900px) rotateX(0deg);   transform-origin: center top; }
+  }
+  /* per-card stagger — 50ms apart, offset 700ms so the cascade
+     starts AFTER the dialog header sequence has finished arriving */
+  .results-grid.is-revealed > :nth-child(1)  { animation-delay:  700ms; }
+  .results-grid.is-revealed > :nth-child(2)  { animation-delay:  750ms; }
+  .results-grid.is-revealed > :nth-child(3)  { animation-delay:  800ms; }
+  .results-grid.is-revealed > :nth-child(4)  { animation-delay:  850ms; }
+  .results-grid.is-revealed > :nth-child(5)  { animation-delay:  900ms; }
+  .results-grid.is-revealed > :nth-child(6)  { animation-delay:  950ms; }
+  .results-grid.is-revealed > :nth-child(7)  { animation-delay: 1000ms; }
+  .results-grid.is-revealed > :nth-child(8)  { animation-delay: 1050ms; }
+  .results-grid.is-revealed > :nth-child(9)  { animation-delay: 1100ms; }
+  .results-grid.is-revealed > :nth-child(10) { animation-delay: 1150ms; }
+  .results-grid.is-revealed > :nth-child(11) { animation-delay: 1200ms; }
+  .results-grid.is-revealed > :nth-child(12) { animation-delay: 1250ms; }
+  .results-grid.is-revealed > :nth-child(n+13) { animation-delay: 1300ms; }
+
+  /* (5) Request card — fades in last */
+  .results-request {
+    opacity: 0;
+    transition: opacity .4s ease-out;
+  }
+  .results-request.is-revealed { opacity: 1; transition-delay: 1800ms; }
+
+  /* ============================================================
+     RESULT CARD WRAP  (card + corner share affordance)
+     The JS wraps each .card in a .result-card-wrap and drops a tiny
+     up-right arrow into the bottom-right corner as a "share/open"
+     affordance. The whole wrap is clickable.
+     ============================================================ */
+  .results-grid > .result-card-wrap {
+    /* Tilt was removed — multiple iterations couldn't shake-proof it
+       on every device/input combo. Plain hover stays (box-shadow grow
+       via .card hover rule below + the global lift via the unified
+       button-hover pattern), which is enough affordance for "this is
+       clickable, click for detail". */
+    position: relative;
+    cursor: pointer;
+    border-radius: 10px;
+  }
+  .results-grid .result-card-wrap > .card {
+    box-shadow: 0 12px 28px -10px rgba(20,20,30,0.12), 0 4px 10px -2px rgba(20,20,30,0.05);
+    transition: box-shadow .2s ease;
+  }
+  .results-grid > .result-card-wrap:hover > .card {
+    box-shadow: 0 24px 48px -12px rgba(20,20,30,0.18), 0 6px 14px -4px rgba(20,20,30,0.10);
+  }
+  /* (Removed the hover-only bottom-right arrow chip — the wrap is
+     clickable on its own, the hover tilt below is the affordance.) */
+
+  /* ============================================================
+     CARD-DETAIL LIGHTBOX
+     - Stacks above the fullscreen results modal.
+     - The clicked card grows from its source rect in place (no jump
+       to centre) via a FLIP-style CSS animation: starts at the source
+       size + position, tips forward (rotateX +18°), then rises to its
+       final size + flat. After the card lands, the share methods on
+       the right stagger in one by one.
+     - CSS variables driven by JS:
+         --cd-x          source-card left in viewport px
+         --cd-y          source-card top  in viewport px
+         --cd-target-w   final card width
+         --cd-init-scale source/target ratio
+     ============================================================ */
+  #modal-card-detail.modal {
+    /* Solid dim — no backdrop-filter blur. Fullscreen blur was the
+       expensive op behind the click jank. */
+    background: rgba(10,10,16,0.62);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+  .cd-stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  .cd-anchor {
+    position: absolute;
+    top: var(--cd-y, 50%);
+    left: var(--cd-x, 50%);
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  /* Left column: enlarged card on top, "View more about [KOL]" card below */
+  .cd-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: var(--cd-target-w, 440px);
+    flex-shrink: 0;
+  }
+  .cd-card-wrap {
+    width: 100%;                  /* fills the cd-left-col width */
+    flex-shrink: 0;
+    transform-origin: center center;
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+  /* Pop-out spring — 0.3s, back-out overshoot ~5%, lives in .modal.open
+     scope (with backwards fill) so post-animation transforms aren't
+     locked. */
+  #modal-card-detail.modal.open .cd-card-wrap {
+    animation: cdGrow 0.3s cubic-bezier(.34, 1.4, .55, 1) backwards;
+  }
+  .cd-card-slot {
+    display: block;
+    /* The enlarged card is a static display — disable hover/click so
+       the .card's :hover scale rule and any pointer feedback don't
+       fire over a card the user can't actually interact with here. */
+    pointer-events: none;
+  }
+  .cd-card-slot .card {
+    width: 100%;
+    box-shadow: 0 30px 80px rgba(10,10,16,0.40);
+  }
+  /* Pure scale grow — no opacity fade. The card is fully visible from
+     frame 0 at its source size, only the scale changes. Dropping the
+     fade was the second half of "make it feel quicker" — the 0.5→1
+     opacity ramp was reading as "loading" rather than "arriving". */
+  @keyframes cdGrow {
+    0%   { transform: scale(var(--cd-init-scale, 0.5)); }
+    100% { transform: scale(1); }
+  }
+
+  /* Share methods float beside the card. Black-pill chips, content-sized
+     (varied widths, not a column of equal-width rows). Each chip flips
+     down from above (rotateX -90 → 0 with origin: top) one after the
+     other AFTER the card has fully landed. */
+  .cd-share {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;        /* widths are content-determined */
+    gap: 10px;
+    background: transparent;
+    padding: 0;
+    perspective: 800px;             /* enables the rotateX flip per-chip */
+  }
+  /* Share-method uses the SAME cascade pattern as the results cards:
+     base = hidden, .modal.open rule = visible + animation w/ backwards
+     fill. After animation ends, the .modal.open rule (opacity 1,
+     rotateX 0) wins → hover transform can override cleanly. */
+  .cd-share > .share-method {
+    opacity: 0;
+    transform: rotateX(-95deg);
+    transform-origin: center top;
+  }
+  #modal-card-detail.modal.open .cd-share > .share-method {
+    opacity: 1;
+    transform: rotateX(0deg);
+    animation: shareFlipDown .42s cubic-bezier(.34, 1.4, .55, 1) backwards;
+  }
+  @keyframes shareFlipDown {
+    0%   { opacity: 0; transform: rotateX(-95deg); }
+    100% { opacity: 1; transform: rotateX(0deg); }
+  }
+  #modal-card-detail.modal.open .cd-share > .share-method:nth-child(1) { animation-delay: .45s; }
+  #modal-card-detail.modal.open .cd-share > .share-method:nth-child(2) { animation-delay: .55s; }
+  #modal-card-detail.modal.open .cd-share > .share-method:nth-child(3) { animation-delay: .65s; }
+  #modal-card-detail.modal.open .cd-share > .share-method:nth-child(4) { animation-delay: .75s; }
+  #modal-card-detail.modal.open .cd-share > .share-method:nth-child(5) { animation-delay: .85s; }
+
+  .share-method {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 22px;
+    background: var(--text);             /* black */
+    border: 0;
+    border-radius: 999px;                /* pill */
+    box-shadow: 0 14px 28px rgba(10,10,16,0.30);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;                         /* white text */
+    cursor: pointer;
+    text-align: left;
+    width: auto;                         /* content-sized → varied widths */
+    white-space: nowrap;
+    transition: background .15s, transform .18s ease, box-shadow .18s ease;
+  }
+  .share-method i {
+    font-size: 17px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .share-method:hover {
+    background: var(--alva);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 22px 44px rgba(10,10,16,0.40);
+  }
+  .share-method.is-active {
+    background: var(--alva);
+  }
+
+  /* "View more about [KOL]" card — sits under the enlarged card.
+     Animates in after the card animation lands (slightly before the
+     share chips begin). */
+  .cd-more {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 22px 26px;
+    background: #fff;
+    border-radius: 10px;            /* match .card border-radius */
+    text-decoration: none;
+    color: var(--text);
+    box-shadow: 0 18px 40px rgba(10,10,16,0.20);
+    cursor: pointer;
+    width: 100%;
+    /* Initial — keyframe animation handles the entrance on modal open. */
+    opacity: 0;
+    transform: scale(0.6);
+    transform-origin: center top;
+    transition: background .15s, color .15s, transform .18s ease, box-shadow .18s ease;
+  }
+  /* Same cascade pattern — base hidden, .modal.open rule visible +
+     animation w/ backwards fill so the hover transform can win after. */
+  #modal-card-detail.modal.open .cd-more {
+    opacity: 1;
+    transform: scale(1);
+    animation: cdMoreEnter .3s cubic-bezier(.34, 1.4, .55, 1) backwards;
+  }
+  @keyframes cdMoreEnter {
+    0%   { opacity: 0; transform: scale(0.6); }
+    100% { opacity: 1; transform: scale(1);   }
+  }
+  .cd-more:hover {
+    background: var(--text);
+    color: #fff;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 26px 56px rgba(10,10,16,0.32);
+  }
+  .cd-more:hover .cd-more-eyebrow { color: rgba(255,255,255,0.6); }
+  .cd-more:hover .cd-more-arrow { color: var(--alva-hi); }
+  .cd-more-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+  }
+  .cd-more-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    transition: color .15s;
+  }
+  .cd-more-name {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.005em;
+    color: inherit;
+  }
+  .cd-more-name b {
+    color: var(--alva);
+    font-weight: 700;
+  }
+  .cd-more:hover .cd-more-name b { color: var(--alva-hi); }
+  .cd-more-arrow {
+    margin-left: auto;
+    font-size: 22px;
+    color: var(--alva);
+    transition: color .15s, transform .15s;
+    flex-shrink: 0;
+  }
+  /* (Removed: arrow translate on cd-more hover — no internal element
+     movement on button hovers per the global rule.) */
+
+  @media (max-width: 760px) {
+    /* On phones the side share panel can't fit beside an enlarged card.
+       Drop it under the card and let the composition centre. */
+    .cd-anchor {
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%);
+      flex-direction: column;
+      gap: 16px;
+    }
+    #modal-card-detail.modal.open .cd-card-wrap {
+      animation: cdGrowMobile 0.3s cubic-bezier(.34, 1.4, .55, 1) backwards;
+    }
+    @keyframes cdGrowMobile {
+      0%   { transform: scale(0.6); }
+      100% { transform: scale(1); }
+    }
+    .cd-share { width: 100%; max-width: var(--cd-target-w, 320px); }
+  }
 
   /* ============================================================
      RESPONSIVE
      ============================================================ */
   @media (max-width: 1100px) {
     .features-grid { grid-template-columns: repeat(2, 1fr); }
-    .agents-grid { grid-template-columns: 1fr; }
     .closing-paths { grid-template-columns: 1fr; }
+    /* Leaderboard diagonal collapses to a single column on tablet — title
+       on top, table below (the table can still be narrower than the title
+       column if desired, but full-width reads cleanest at this size). */
+    #leaderboard .section-wrap {
+      grid-template-columns: 1fr;
+      row-gap: 32px;
+    }
+    #leaderboard .section-head { grid-column: 1; grid-row: 1; }
+    #leaderboard .lb-card {
+      grid-column: 1; grid-row: 2;
+      align-self: stretch;
+      margin-top: 0;        /* no interlock once stacked vertically */
+    }
     /* Section 2 stage collapses to single column on tablet/mobile.
        (The grid lives on .stage-inner, NOT .stage — earlier rule had
        wrong selector so the layout never actually collapsed.) */
     .stage { padding: 96px 0 96px; }
-    /* On tablet/phone collapse the 3-col grid to a single column so the
-       bubble stacks below the button instead of trying to sit beside it. */
-    .stage .hero-cta {
-      grid-template-columns: 1fr;
-      row-gap: 16px;
-      justify-items: center;
-    }
-    .stage .hero-cta > .btn-primary { grid-column: 1; }
-    .cta-proof { grid-column: 1; justify-self: center; }
-    /* the left-pointer arrow stops making sense when the bubble is below
-       the button — hide it on the stacked layout */
-    .cta-proof::before { display: none; }
     .stage-inner {
       grid-template-columns: 1fr;
       column-gap: 0;
@@ -2101,9 +2717,8 @@
     }
     .stage .hero-content { grid-column: 1; grid-row: 1; max-width: none; }
     .stage .card-stack   { grid-column: 1; grid-row: 2; justify-self: center; }
-    .stage .hero-cta     { grid-column: 1; grid-row: 3; }
     .hero-veil { display: none; }                /* veil only makes sense in 2-col */
-    .card-stack { height: clamp(380px, 48vh, 460px); width: 100%; max-width: 520px; }
+    .card-stack { height: clamp(220px, 30vh, 280px); width: 100%; max-width: 520px; }
     .card-stack .perspective-wrap { width: 220px; }
     /* 4 cards, tighter spread to fit the narrower mobile column */
     .card-stack .perspective-wrap:nth-child(1) { --sx: -135px; }
@@ -2145,7 +2760,7 @@
     .stage-inner { padding: 0 20px; row-gap: 24px; }
     .hero-veil { display: none; }
     h1.hero-title { font-size: clamp(28px, 7vw, 36px); }
-    .card-stack { height: 360px; max-width: 100%; }
+    .card-stack { height: 210px; max-width: 100%; }
     .card-stack .perspective-wrap { width: 180px; }
     .card-stack .perspective-wrap:nth-child(1) { --sx: -100px; --srot: -7deg; }
     .card-stack .perspective-wrap:nth-child(2) { --sx:  -35px; --srot:  3deg; }
@@ -2159,15 +2774,21 @@
     .stats-strip .stat .v { font-size: 32px; }
     .closing { padding: 80px 18px; }
     .closing-path { padding: 24px; }
-    .agents-grid { grid-template-columns: 1fr; gap: 24px; }
-    .persona-feat { padding: 12px 14px; gap: 12px; }
-    .persona-feat .pstats-n { font-size: 18px; }
-    /* Mobile bottom-cards — fall back to the previous version's pattern:
-       two separately rounded cards stacked with a gap, no shared shell. */
+    /* Learn the Playbook — input + chips collapse to phone-friendly sizes */
+    .agents-search { flex-wrap: wrap; padding: 8px; border-radius: 18px; }
+    .agents-search > i { margin-left: 10px; }
+    .agents-search input { width: 100%; height: 44px; padding: 0 8px; }
+    .agents-search .btn-primary { width: 100%; height: 44px; justify-content: center; }
+    .agents-chip { font-size: 11px; padding: 5px 10px 5px 5px; }
+    .agents-chip img { width: 20px; height: 20px; }
+    /* Hide the ambient bubble layer on phones — the centered controls
+       claim the whole column and there's no room around them. */
+    .agents-bubbles { display: none; }
+    #agents { min-height: 0; }
+    /* Mobile bottom card — keep the rounded, separately-shadowed
+       Request card so it doesn't feel like a stretched bar. */
     .bottom-cards { padding: 56px 18px; }
     .bottom-cards-inner {
-      grid-template-columns: 1fr;
-      gap: 16px;
       border-radius: 0;
       overflow: visible;
       box-shadow: none;
@@ -2179,27 +2800,13 @@
     .bcard.bcard-dark {
       box-shadow: 0 18px 40px rgba(10,10,16,0.16);
     }
-    .bcard.bcard-light {
-      border: 1px solid var(--line);
-      box-shadow: 0 12px 30px rgba(20,20,30,0.06);
-    }
     .bcard h3 { font-size: 22px; }
     .bcard-form { flex-direction: column; gap: 10px; }
     .bcard-form input { width: 100%; }
     .bcard-form button { width: 100%; justify-content: center; }
-    .bcard-cta { width: 100%; justify-content: center; }
-    .fab-wrap { left: 16px; right: 16px; transform: translateY(24px); bottom: 16px; }
-    .fab-wrap.visible { transform: translateY(0); }
-    /* On mobile, compact BOTH big-CTA instances together (hero + FAB) so they
-       still read as the same button just sized down for narrow screens. */
-    .btn-primary.btn-big {
-      padding: 16px 24px;
-      font-size: 15px;
-      border-radius: 10px;
-    }
-    .fab-wrap .btn-primary { width: 100%; justify-content: center; }
-    /* alva badge collides with mobile FAB — hide on phones */
-    .alva-badge { display: none; }
+    /* Inline hero CTA stays on the left, but if the bubble can't fit
+       on the same line on a phone it wraps cleanly under the button. */
+    .hero-content .hero-cta { gap: 12px; }
     .hero-actions .btn-primary { padding: 13px 22px; font-size: 14px; }
     .lb-row { grid-template-columns: 30px minmax(140px, 1.4fr) 80px 100px; }
     .lb-row .cell.hide-sm { display: none; }
@@ -2233,7 +2840,7 @@
       <a class="nav-tab" href="#agents" data-section="agents"><i class="ph ph-chats-circle"></i><span>Chat with KOL</span></a>
     </nav>
     <div class="nav-actions">
-      <a class="nav-cta-ghost" href="#for-kols"><i class="ph-bold ph-megaphone"></i> For KOLs</a>
+      <button class="nav-cta-ghost" type="button" data-open="for-kols"><i class="ph-bold ph-megaphone"></i> For KOLs</button>
       <button class="nav-cta" data-open="connect"><i class="ph-bold ph-x-logo"></i> Initialize Scan</button>
     </div>
   </div>
@@ -2370,6 +2977,25 @@
       <p class="hero-sub">
         We track every public call from every covered account, backtest each one against real market data, and refresh the score in real time. Failed calls counted. Deleted posts recovered. <button class="sub-link" data-open="methodology">Learn more →</button>
       </p>
+
+      <!-- Primary CTA + live social-proof bubble, sized down and placed on the
+           left above the perms checks. The bubble's ::before triangle anchors
+           it visually to the button on the right of it. -->
+      <div class="hero-cta">
+        <button class="btn-primary" data-open="connect">
+          <i class="ph-bold ph-x-logo"></i> Initialize Scan <i class="ph-bold ph-arrow-right"></i>
+        </button>
+        <div class="cta-proof" aria-live="polite">
+          <div class="proof-avatars">
+            <img src="https://unavatar.io/twitter/yardeni" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=64'">
+            <img src="https://unavatar.io/twitter/cathiedwood" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CW&background=b388ff&color=fff&bold=true&size=64'">
+            <img src="https://unavatar.io/twitter/semianalysis" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=SA&background=ff8a4c&color=fff&bold=true&size=64'">
+          </div>
+          <span class="proof-count" id="proof-count" aria-label="Live audit count"></span>
+          <span class="proof-label">audits / 24h</span>
+        </div>
+      </div>
+
       <div class="perms">
         <span><i class="ph-fill ph-check-circle"></i> We only read your follow list</span>
         <span><i class="ph-fill ph-check-circle"></i> No personal score is generated</span>
@@ -2390,7 +3016,6 @@
                   <div class="pc-handle">@yardeni</div>
                 </div>
               </div>
-              <div class="pc-badge">ALVA_PNL_IDX</div>
             </div>
             <div class="pc-score">
               <div>
@@ -2407,22 +3032,6 @@
                 <div class="ring-text"><span class="l">Rank</span><span class="v">Top 5%</span></div>
               </div>
             </div>
-            <div class="pc-matrix">
-              <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
-              <div class="dots"><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="o"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i><i></i><i class="g"></i><i></i><i class="g"></i><i class="g"></i></div>
-              <div class="legend"><span class="lg-g">Win</span><span class="lg-o">Miss</span><span class="lg-p">Early</span></div>
-            </div>
-            <div class="pc-providers">
-              <div class="head">Best Calls</div>
-              <div class="prv alva">
-                <div class="meta"><span class="handle">SPY long · Mar 2024</span><span class="stat alva">+18.7%</span></div>
-                <div class="track"><div class="fill" style="width:75%"></div></div>
-              </div>
-              <div class="prv purple">
-                <div class="meta"><span class="handle">312 calls · last 3y</span><span class="stat purple">61% WIN</span></div>
-                <div class="track"><div class="fill" style="width:61%"></div></div>
-              </div>
-            </div>
           </div>
         </article>
       </div>
@@ -2437,7 +3046,6 @@
                   <div class="pc-handle">@lucyliu</div>
                 </div>
               </div>
-              <div class="pc-badge">ALVA_PNL_IDX</div>
             </div>
             <div class="pc-score">
               <div>
@@ -2454,22 +3062,6 @@
                 <div class="ring-text"><span class="l">Rank</span><span class="v">Top 8%</span></div>
               </div>
             </div>
-            <div class="pc-matrix">
-              <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
-              <div class="dots"><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i></i></div>
-              <div class="legend"><span class="lg-g">Win</span><span class="lg-o">Miss</span><span class="lg-p">Early</span></div>
-            </div>
-            <div class="pc-providers">
-              <div class="head">Best Calls</div>
-              <div class="prv alva">
-                <div class="meta"><span class="handle">SOUN long · Aug 2024</span><span class="stat alva">+228%</span></div>
-                <div class="track"><div class="fill" style="width:95%"></div></div>
-              </div>
-              <div class="prv purple">
-                <div class="meta"><span class="handle">188 calls · 50% win</span><span class="stat purple">+4.1% MED</span></div>
-                <div class="track"><div class="fill" style="width:50%"></div></div>
-              </div>
-            </div>
           </div>
         </article>
       </div>
@@ -2484,7 +3076,6 @@
                   <div class="pc-handle">@CryptoKaleo</div>
                 </div>
               </div>
-              <div class="pc-badge">ALVA_PNL_IDX</div>
             </div>
             <div class="pc-score">
               <div>
@@ -2501,22 +3092,6 @@
                 <div class="ring-text"><span class="l">Rank</span><span class="v">Top 18%</span></div>
               </div>
             </div>
-            <div class="pc-matrix">
-              <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
-              <div class="dots"><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="o"></i></div>
-              <div class="legend"><span class="lg-g">Win</span><span class="lg-o">Miss</span><span class="lg-p">Early</span></div>
-            </div>
-            <div class="pc-providers">
-              <div class="head">Best Calls</div>
-              <div class="prv alva">
-                <div class="meta"><span class="handle">SOL long · Jan 2024</span><span class="stat alva">+340%</span></div>
-                <div class="track"><div class="fill" style="width:98%"></div></div>
-              </div>
-              <div class="prv purple">
-                <div class="meta"><span class="handle">426 calls · 19% win</span><span class="stat purple">−1.8% MED</span></div>
-                <div class="track"><div class="fill" style="width:19%"></div></div>
-              </div>
-            </div>
           </div>
         </article>
       </div>
@@ -2531,7 +3106,6 @@
                   <div class="pc-handle">@pickeringenergy</div>
                 </div>
               </div>
-              <div class="pc-badge">ALVA_PNL_IDX</div>
             </div>
             <div class="pc-score">
               <div>
@@ -2548,42 +3122,8 @@
                 <div class="ring-text"><span class="l">Rank</span><span class="v">Top 14%</span></div>
               </div>
             </div>
-            <div class="pc-matrix">
-              <div class="row"><span>Signal Matrix</span><span>L30D Map</span></div>
-              <div class="dots"><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="o"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="o"></i></div>
-              <div class="legend"><span class="lg-g">Win</span><span class="lg-o">Miss</span><span class="lg-p">Early</span></div>
-            </div>
-            <div class="pc-providers">
-              <div class="head">Best Calls</div>
-              <div class="prv alva">
-                <div class="meta"><span class="handle">XLE long · Feb 2023</span><span class="stat alva">+17.4%</span></div>
-                <div class="track"><div class="fill" style="width:72%"></div></div>
-              </div>
-              <div class="prv purple">
-                <div class="meta"><span class="handle">80 calls · 52% win</span><span class="stat purple">+5.6% MED</span></div>
-                <div class="track"><div class="fill" style="width:52%"></div></div>
-              </div>
-            </div>
           </div>
         </article>
-      </div>
-    </div>
-
-    <!-- third row: big primary CTA, centred across both columns -->
-    <div class="hero-cta">
-      <button class="btn-primary btn-big" data-open="connect">
-        <i class="ph-bold ph-x-logo"></i> Initialize Scan <i class="ph-bold ph-arrow-right"></i>
-      </button>
-      <!-- social-proof bubble — stacked avatars + live-rolling audit count.
-           Count is rendered by JS in #proof-count using .roller elements -->
-      <div class="cta-proof" aria-live="polite">
-        <div class="proof-avatars">
-          <img src="https://unavatar.io/twitter/yardeni" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=64'">
-          <img src="https://unavatar.io/twitter/cathiedwood" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CW&background=b388ff&color=fff&bold=true&size=64'">
-          <img src="https://unavatar.io/twitter/semianalysis" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=SA&background=ff8a4c&color=fff&bold=true&size=64'">
-        </div>
-        <span class="proof-count" id="proof-count" aria-label="Live audit count"></span>
-        <span class="proof-label">audits / 24h</span>
       </div>
     </div>
 
@@ -2640,10 +3180,10 @@
           <span class="idx">#</span>
           <span class="who">KOL</span>
           <span>Score</span>
-          <span>Best ROI</span>
-          <span>Median</span>
-          <span>Win</span>
-          <span>Quality</span>
+          <span class="hide-sm">Best ROI</span>
+          <span class="hide-sm">Median</span>
+          <span class="hide-sm">Win</span>
+          <span class="hide-sm">Quality</span>
           <span>Risk</span>
         </div>
         <div class="lb-rows" id="lb-rows"></div>
@@ -2655,133 +3195,96 @@
        Q: Want to learn how they actually make money?
        ============================================================ -->
   <section class="section alt" id="agents">
+    <!-- Free-floating KOL speech bubbles drift in and out around the
+         centered search. Each bubble = avatar + large KOL name + a
+         gray rounded speech rect with a sample of that KOL talking.
+         Decorative — JS isn't required; CSS animations stagger them. -->
+    <div class="agents-bubbles" aria-hidden="true">
+      <article class="bubble-card" style="--x: 2%;  --y: 12%; --d: 0s;    --cycle: 22s;">
+        <img class="bc-avatar" src="https://unavatar.io/twitter/yardeni" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=128'">
+        <div class="bc-content"><div class="bc-name">Ed Yardeni</div><div class="bc-bubble">Hey — if you're asking about positioning here, I'd lean into industrials before the breadth catches up.</div></div>
+      </article>
+      <article class="bubble-card" style="--x: 70%; --y: 6%;  --d: -3.8s; --cycle: 24s;">
+        <img class="bc-avatar" src="https://unavatar.io/twitter/cathiedwood" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CW&background=49A3A6&color=fff&bold=true&size=128'">
+        <div class="bc-content"><div class="bc-name">Cathie Wood</div><div class="bc-bubble">Honestly, I'd hold your TSLA and add on dips — the robotaxi narrative is still mis-priced.</div></div>
+      </article>
+      <article class="bubble-card" style="--x: 0%;  --y: 56%; --d: -8.6s; --cycle: 22s;">
+        <img class="bc-avatar" src="https://unavatar.io/twitter/semianalysis" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=SA&background=49A3A6&color=fff&bold=true&size=128'">
+        <div class="bc-content"><div class="bc-name">Dylan Patel</div><div class="bc-bubble">If you're picking one AI infra name today, I'd go AVGO over NVDA — networking is the under-modelled leg.</div></div>
+      </article>
+      <article class="bubble-card" style="--x: 72%; --y: 54%; --d: -12.4s; --cycle: 24s;">
+        <img class="bc-avatar" src="https://unavatar.io/twitter/aswathdamodaran" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=AD&background=0a0a10&color=fff&bold=true&size=128'">
+        <div class="bc-content"><div class="bc-name">Aswath Damodaran</div><div class="bc-bubble">My honest take on your NVDA position: trim, don't add. Margin of safety is gone here.</div></div>
+      </article>
+      <article class="bubble-card" style="--x: 26%; --y: 90%; --d: -16.2s; --cycle: 22s;">
+        <img class="bc-avatar" src="https://unavatar.io/twitter/apompliano" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=AP&background=ff8a4c&color=fff&bold=true&size=128'">
+        <div class="bc-content"><div class="bc-name">Pomp</div><div class="bc-bubble">If BTC pulls back below 90k, that's the spot to add. Multi-year horizon — drawdowns are entries.</div></div>
+      </article>
+      <article class="bubble-card" style="--x: 58%; --y: 92%; --d: -19.8s; --cycle: 23s;">
+        <img class="bc-avatar" src="https://unavatar.io/twitter/lizannsonders" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=LS&background=17171c&color=fff&bold=true&size=128'">
+        <div class="bc-content"><div class="bc-name">Liz Ann Sonders</div><div class="bc-bubble">One more I'd flag for you — homebuilders. The breadth signal is quietly setting up there.</div></div>
+      </article>
+    </div>
+
     <div class="section-wrap">
       <div class="section-head">
         <span class="eyebrow">Learn the playbook</span>
         <h2>Each KOL's playbook, <span class="alva">distilled into an AI agent.</span></h2>
-        <p>We distill every KOL's operating habits — pick logic, entry timing, stop-loss preferences, risk threshold — into an AI agent grounded in their audited call history. Pick one and ask.</p>
+        <p>We distill every KOL's operating habits — pick logic, entry timing, stop-loss preferences, risk threshold — into an AI agent grounded in their audited call history. Pick anyone.</p>
       </div>
 
-      <div class="agents-grid">
-        <div class="agents-left">
-          <button class="persona-feat active" data-persona="yardeni">
-            <img src="https://unavatar.io/twitter/yardeni" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=128'">
-            <div class="pmeta">
-              <div class="pname">Yardeni Research</div>
-              <div class="phandle">@yardeni</div>
-              <div class="ptags">
-                <span class="ptag">Macro regime</span>
-                <span class="ptag">60–90d</span>
-                <span class="ptag">Low leverage</span>
-              </div>
-            </div>
-            <div class="pstats">
-              <div class="pstats-n">124K</div>
-              <div class="pstats-lbl">followers</div>
-            </div>
+      <!-- Centered handle search + suggested chips. The static chat-mock
+           that used to live below was dropped — its content moved into
+           the free-floating speech bubbles around this section. -->
+      <div class="agents-explore">
+        <form class="agents-search" id="agents-search-form">
+          <i class="ph-bold ph-magnifying-glass"></i>
+          <input
+            id="agents-search-input"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Type any KOL on X — @handle or paste a profile URL"
+            aria-label="KOL X handle">
+          <button type="submit" class="btn-primary">
+            <i class="ph-bold ph-chats-circle"></i> Open playbook chat
           </button>
-          <button class="persona-feat" data-persona="lucyliu_ai">
-            <img src="https://unavatar.io/twitter/lucyliu" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=LL&background=b388ff&color=fff&bold=true&size=128'">
-            <div class="pmeta">
-              <div class="pname">Lucy Liu</div>
-              <div class="phandle">@lucyliu_ai</div>
-              <div class="ptags">
-                <span class="ptag">AI large cap</span>
-                <span class="ptag">Catalyst-driven</span>
-                <span class="ptag">Stops -12%</span>
-              </div>
-            </div>
-            <div class="pstats">
-              <div class="pstats-n">287K</div>
-              <div class="pstats-lbl">followers</div>
-            </div>
-          </button>
-          <button class="persona-feat" data-persona="semianalysis">
-            <img src="https://unavatar.io/twitter/semianalysis" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=SA&background=49A3A6&color=fff&bold=true&size=128'">
-            <div class="pmeta">
-              <div class="pname">Dylan Patel</div>
-              <div class="phandle">@SemiAnalysis_</div>
-              <div class="ptags">
-                <span class="ptag">AI compute</span>
-                <span class="ptag">Networking</span>
-                <span class="ptag">Channel checks</span>
-              </div>
-            </div>
-            <div class="pstats">
-              <div class="pstats-n">412K</div>
-              <div class="pstats-lbl">followers</div>
-            </div>
-          </button>
-          <button class="persona-feat" data-persona="cathiedwood">
-            <img src="https://unavatar.io/twitter/cathiedwood" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CW&background=49A3A6&color=fff&bold=true&size=128'">
-            <div class="pmeta">
-              <div class="pname">Cathie Wood</div>
-              <div class="phandle">@CathieDWood</div>
-              <div class="ptags">
-                <span class="ptag">Disruptive tech</span>
-                <span class="ptag">Multi-decade</span>
-                <span class="ptag">High conviction</span>
-              </div>
-            </div>
-            <div class="pstats">
-              <div class="pstats-n">1.8M</div>
-              <div class="pstats-lbl">followers</div>
-            </div>
-          </button>
-          <button class="persona-feat" data-persona="aswathdamodaran">
-            <img src="https://unavatar.io/twitter/aswathdamodaran" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=AD&background=0a0a10&color=fff&bold=true&size=128'">
-            <div class="pmeta">
-              <div class="pname">Aswath Damodaran</div>
-              <div class="phandle">@AswathDamodaran</div>
-              <div class="ptags">
-                <span class="ptag">DCF valuation</span>
-                <span class="ptag">Contrarian</span>
-                <span class="ptag">Slow horizon</span>
-              </div>
-            </div>
-            <div class="pstats">
-              <div class="pstats-n">320K</div>
-              <div class="pstats-lbl">followers</div>
-            </div>
-          </button>
-        </div>
+        </form>
 
-        <div class="chat-mock">
-          <div class="chat-target">
-            <img id="agent-avatar" src="https://unavatar.io/twitter/yardeni" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=128'">
-            <div>
-              <b id="agent-name">@yardeni — operating agent</b>
-              <span id="agent-meta">Grounded in 312 audited calls · updated 6h ago</span>
-            </div>
-            <span class="live">LIVE</span>
-          </div>
-
-          <!-- dialogue is rewritten per persona by JS -->
-          <div id="chat-thread" class="chat-thread"></div>
-
-          <!-- input field — type and send jumps to the full Alva chat -->
-          <form class="chat-input" id="chat-input-form">
-            <input id="chat-input-field" type="text" placeholder="Ask anything about their playbook..." />
-            <button type="submit" aria-label="Send">
-              <i class="ph-bold ph-arrow-right"></i>
-            </button>
-          </form>
+        <div class="agents-suggested" aria-label="Suggested KOLs">
+          <span class="agents-suggested-label">Or try</span>
+          <button class="agents-chip" type="button" data-handle="yardeni">
+            <img src="https://unavatar.io/twitter/yardeni" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=64'">
+            @yardeni
+          </button>
+          <button class="agents-chip" type="button" data-handle="cathiedwood">
+            <img src="https://unavatar.io/twitter/cathiedwood" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CW&background=49A3A6&color=fff&bold=true&size=64'">
+            @CathieDWood
+          </button>
+          <button class="agents-chip" type="button" data-handle="semianalysis">
+            <img src="https://unavatar.io/twitter/semianalysis" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=SA&background=49A3A6&color=fff&bold=true&size=64'">
+            @SemiAnalysis_
+          </button>
+          <button class="agents-chip" type="button" data-handle="aswathdamodaran">
+            <img src="https://unavatar.io/twitter/aswathdamodaran" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=AD&background=0a0a10&color=fff&bold=true&size=64'">
+            @AswathDamodaran
+          </button>
+          <button class="agents-chip" type="button" data-handle="apompliano">
+            <img src="https://unavatar.io/twitter/apompliano" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=AP&background=ff8a4c&color=fff&bold=true&size=64'">
+            @APompliano
+          </button>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ============================================================ BOTTOM CARDS
-       Two dark cards side by side, sitting above the footer.
-       Left card  Q: Don't see the KOL you follow?     (formerly request-card)
-       Right card Q: Are you a KOL on X?               (formerly closing/for-kols)
-       The right card keeps id="for-kols" so the navbar scrollspy still targets it,
-       and the form keeps id="request-card" / id="request-form" for the JS handler.
+  <!-- ============================================================ BOTTOM CARD
+       Single dark "Request a KOL" closer above the footer.
+       The For-KOLs entry moved into the top-nav button + #modal-for-kols.
        ============================================================ -->
   <section class="bottom-cards">
     <div class="bottom-cards-inner">
       <article class="bcard bcard-dark" id="request-card">
-        <span class="bcard-eyebrow">Request a KOL</span>
         <div class="bcard-body">
           <h3>Don't see the KOL you follow?</h3>
           <p>Drop a handle. We'll backtest them and ping you when the Playbook is ready.</p>
@@ -2792,18 +3295,6 @@
             <button type="submit">Submit <i class="ph-bold ph-arrow-right"></i></button>
           </form>
           <div class="bcard-trust">7-day backtest · You'll be notified</div>
-        </div>
-      </article>
-
-      <article class="bcard bcard-light" id="for-kols">
-        <span class="bcard-eyebrow">For KOLs on X</span>
-        <div class="bcard-body">
-          <h3>Are you a <span class="alva" style="color: var(--alva);">KOL</span> on X?</h3>
-          <p>Real signal stands up to audit. We back-tested every public call from the most-followed accounts and we'd like to do the same for yours.</p>
-        </div>
-        <div class="bcard-foot">
-          <a class="bcard-cta" href="mailto:hello@alva.xyz">Contact us <i class="ph-bold ph-arrow-right"></i></a>
-          <div class="bcard-trust">Private preview · Opt-out anytime · Failed calls counted</div>
         </div>
       </article>
     </div>
@@ -2827,17 +3318,6 @@
   </div>
 </footer>
 
-<!-- ============================================================ FLOATING CTA (appears only after hero scrolls out) ============================================================ -->
-<div class="fab-wrap" id="fab" aria-hidden="true">
-  <!-- .fab-bob hosts the idle bob animation so it stays independent of
-       (a) the .fab-wrap entry transform and (b) the button's own hover transform -->
-  <div class="fab-bob">
-    <button class="btn-primary btn-big" data-open="connect" aria-label="Initialize Scan">
-      <i class="ph-bold ph-x-logo"></i> Initialize Scan <i class="ph-bold ph-arrow-right"></i>
-    </button>
-  </div>
-</div>
-
 <!-- ============================================================ ALVA ATTRIBUTION BADGE (persistent bottom-right) ============================================================ -->
 <a class="alva-badge" href="https://alva.xyz" target="_blank" rel="noreferrer" aria-label="Powered by Alva — see more playbooks">
   <span class="alva-badge-mark">
@@ -2853,25 +3333,66 @@
 </a>
 
 <!-- ============================================================ MODALS ============================================================ -->
+
+<!-- ============================================================ CONNECT MODAL (Initialize Scan step 1+2)
+     Two-state dialog used as the gate between the Initialize Scan CTA
+     and the fullscreen results modal:
+       (1) auth   — single-CTA OAuth-style permission ask
+       (2) loading — spinner + progress bar + status text
+     After loading the dialog closes itself and opens #modal-results.
+     Styled deliberately differently from the For-KOLs modal (compact,
+     icon-led, single primary action — no numbered steps list) so the
+     flow doesn't read like a generic info dialog.
+     ============================================================ -->
 <div class="modal" id="modal-connect" aria-hidden="true">
+  <div class="dialog connect-dialog" data-state="auth">
+    <button class="close connect-close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
+
+    <div class="connect-stage connect-auth">
+      <div class="connect-x-mark"><i class="ph-bold ph-x-logo"></i></div>
+      <h3 class="connect-title">Continue with X to scan your follows</h3>
+      <p class="connect-sub">We read your follow list and match it against the KOLs we've already audited. Nothing else is requested, nothing is stored.</p>
+      <div class="connect-perms">
+        <span><i class="ph-fill ph-check-circle"></i> Reading list only</span>
+        <span><i class="ph-fill ph-check-circle"></i> No personal score is generated</span>
+        <span><i class="ph-fill ph-check-circle"></i> Disconnect anytime</span>
+      </div>
+      <button class="btn-primary connect-go" id="connect-go-btn" type="button">
+        <i class="ph-bold ph-x-logo"></i> Continue with X
+      </button>
+    </div>
+
+    <div class="connect-stage connect-loading" aria-live="polite">
+      <div class="connect-spinner" aria-hidden="true">
+        <svg viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="20" fill="none" stroke-width="4" stroke-linecap="round"></circle>
+        </svg>
+      </div>
+      <div class="connect-status" id="connect-status">Reading your follow list…</div>
+      <div class="connect-progress"><div class="connect-progress-fill" id="connect-progress-fill"></div></div>
+      <div class="connect-loading-sub">Scanning 1,200+ follows against our audited index. This usually takes a couple of seconds.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal-for-kols" aria-hidden="true">
   <div class="dialog">
     <div class="dialog-head">
       <div>
-        <span class="eyebrow">Private discovery</span>
-        <h3>Find the audited KOLs you already follow.</h3>
+        <span class="eyebrow">For KOLs on X</span>
+        <h3>Are you a <span style="color: var(--alva);">KOL</span> on X?</h3>
       </div>
       <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
     </div>
-    <p>Alva privately reads your X following list, matches every covered KOL, and shows where they sit on Score / Best ROI / Win Rate / Risk. We do not generate a personal score for you, and we do not publish your following list.</p>
+    <p>Real signal stands up to audit. We back-tested every public call from the most-followed accounts on X — and we'd like to do the same for yours.</p>
     <div class="steps">
-      <div class="step"><span class="num">01</span><span class="desc">Continue with X (private) — single-tap OAuth.</span></div>
-      <div class="step"><span class="num">02</span><span class="desc">We match your following list against indexed accounts.</span></div>
-      <div class="step"><span class="num">03</span><span class="desc">You see ranked Playbooks of who you already follow, plus a list of accounts not yet covered that you can request.</span></div>
+      <div class="step"><span class="num">01</span><span class="desc">Send us your X handle. We'll backtest the full call history end-to-end.</span></div>
+      <div class="step"><span class="num">02</span><span class="desc">You preview the Playbook privately before anything goes live.</span></div>
+      <div class="step"><span class="num">03</span><span class="desc">Approve to publish, or opt out — no public footprint either way.</span></div>
     </div>
-    <div class="notice">Disconnect anytime. We store the match result only. The raw following list is never persisted.</div>
+    <div class="notice">Private preview · Opt-out anytime · Failed calls counted. We do not score posts in isolation, only the full account history.</div>
     <div class="dialog-actions">
-      <button class="btn-primary"><i class="ph-bold ph-x-logo"></i> Connect X privately</button>
-      <button class="dialog-ghost">Paste @handles instead</button>
+      <a class="btn-primary" href="mailto:hello@alva.xyz"><i class="ph-bold ph-paper-plane-tilt"></i> Contact us</a>
     </div>
   </div>
 </div>
@@ -2898,6 +3419,387 @@
   </div>
 </div>
 
+<!-- ============================================================ FULLSCREEN RESULTS MODAL
+     Opens at the end of the Initialize Scan flow (after the connect-modal
+     primary button is clicked). Demonstrates what a user sees once their
+     X follow list has been matched against the indexed KOLs: a grid of
+     audited score cards + an inline Request a KOL closer for KOLs not yet
+     in the index.
+     ============================================================ -->
+<div class="modal modal-full" id="modal-results" aria-hidden="true">
+  <div class="dialog dialog-full">
+    <!-- Close button absolute-anchored to the dialog so growing the
+         top padding doesn't push it down with the title. -->
+    <button class="close dialog-full-close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
+    <div class="dialog-head">
+      <div>
+        <span class="eyebrow">Scan complete</span>
+        <h3>From <span class="alva-text">@<span id="results-handle">you</span></span>'s X — <span style="color: var(--alva);">23 of your follows</span> have audited playbooks.</h3>
+      </div>
+    </div>
+    <!-- Privacy banner — absorbs the framing that used to live in the
+         removed connect modal (private OAuth, read-only, no personal
+         score, disconnect anytime). Sits as a thin pill under the head. -->
+    <div class="results-privacy">
+      <i class="ph-fill ph-shield-check"></i>
+      <span><b>Privately connected via X</b> — reading list only · no personal score is generated · disconnect anytime</span>
+    </div>
+    <p class="dialog-lead">We only score KOLs already in our index. The 23 cards below are everyone you follow who's been audited — ranked by Alva Score. If someone you follow isn't here, request a backtest at the bottom and we'll ping you when their Playbook is ready.</p>
+
+    <div class="results-grid">
+      <article class="card c-1">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/yardeni" alt="@yardeni" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=EY&background=49A3A6&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">Yardeni Research</div>
+                <div class="pc-handle">@yardeni</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">84</div>
+              <div class="type">Macro Regime</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="269"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 5%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="card c-3">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/cathiedwood" alt="@CathieDWood" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CW&background=49A3A6&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">Cathie Wood</div>
+                <div class="pc-handle">@CathieDWood</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">78</div>
+              <div class="type">Disruptive Tech</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="265"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 7%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="card c-2">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/semianalysis" alt="@SemiAnalysis_" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=SA&background=49A3A6&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">Dylan Patel</div>
+                <div class="pc-handle">@SemiAnalysis_</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">76</div>
+              <div class="type">AI Compute</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="263"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 9%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="card c-2">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/lucyliu" alt="@lucyliu_ai" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=LL&background=b388ff&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">Lucy Liu</div>
+                <div class="pc-handle">@lucyliu_ai</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">73</div>
+              <div class="type">AI Large Cap</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="261"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 12%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="card c-1">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/aswathdamodaran" alt="@AswathDamodaran" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=AD&background=0a0a10&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">Aswath Damodaran</div>
+                <div class="pc-handle">@AswathDamodaran</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">71</div>
+              <div class="type">DCF Valuation</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="258"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 13%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="card c-3">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/CryptoKaleo" alt="@CryptoKaleo" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=K&background=ff8a4c&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">K A L E O</div>
+                <div class="pc-handle">@CryptoKaleo</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">67</div>
+              <div class="type">Crypto Momentum</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="233"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 18%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="card c-4">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/lizannsonders" alt="@LizAnnSonders" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=LS&background=17171c&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">Liz Ann Sonders</div>
+                <div class="pc-handle">@LizAnnSonders</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">64</div>
+              <div class="type">Cycle Breadth</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="245"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 22%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="card c-1">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/pickeringenergy" alt="@pickeringenergy" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=PE&background=49A3A6&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">Dan Pickering</div>
+                <div class="pc-handle">@pickeringenergy</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">61</div>
+              <div class="type">Energy Cycle</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="244"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 25%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="card c-3">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/apompliano" alt="@APompliano" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=AP&background=ff8a4c&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">Pomp</div>
+                <div class="pc-handle">@APompliano</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">59</div>
+              <div class="type">Bitcoin Maximalist</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="232"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 28%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="card c-2">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/chamath" alt="@chamath" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=CP&background=ff8a4c&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">Chamath</div>
+                <div class="pc-handle">@chamath</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">56</div>
+              <div class="type">Picks &amp; Shovels</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="225"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 32%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="card c-4">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/RaoulGMI" alt="@RaoulGMI" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=RP&background=b388ff&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">Raoul Pal</div>
+                <div class="pc-handle">@RaoulGMI</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">54</div>
+              <div class="type">Global Liquidity</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="218"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 36%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="card c-1">
+        <div class="card-inner">
+          <div class="pc-head">
+            <div class="pc-id">
+              <img class="avatar" loading="lazy" src="https://unavatar.io/twitter/michaeljburry" alt="@michaeljburry" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=MB&background=0a0a10&color=fff&bold=true&size=128'">
+              <div>
+                <div class="pc-name">Michael Burry</div>
+                <div class="pc-handle">@michaeljburry</div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-score">
+            <div>
+              <div class="label">Account Score</div>
+              <div class="val">52</div>
+              <div class="type">Tail-Risk Bear</div>
+            </div>
+            <div class="pc-rank">
+              <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="210"></circle></svg>
+              <div class="ring-text"><span class="l">Rank</span><span class="v">Top 42%</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- Inline Request a KOL — matches the homepage bottom dark card. -->
+    <section class="results-request">
+      <article class="bcard bcard-dark">
+        <div class="bcard-body">
+          <h3>Don't see a KOL you follow?</h3>
+          <p>Drop a handle. We'll backtest them and ping you when the Playbook is ready.</p>
+        </div>
+        <div class="bcard-foot">
+          <form class="bcard-form" id="results-request-form">
+            <input type="text" placeholder="@handle or x.com/handle" aria-label="Request KOL handle" />
+            <button type="submit">Submit <i class="ph-bold ph-arrow-right"></i></button>
+          </form>
+          <div class="bcard-trust">7-day backtest · You'll be notified</div>
+        </div>
+      </article>
+    </section>
+  </div>
+</div>
+
+<!-- ============================================================ CARD-DETAIL MODAL
+     A lightbox-style overlay that anchors the enlarged card to where
+     the user clicked it. JS sets CSS variables (--cd-x, --cd-y,
+     --cd-init-scale, --cd-target-w) on .cd-anchor; CSS animation
+     grows the cloned card from its source rect to the target size
+     with a 3D dip-then-rise. After the card lands, the share methods
+     stagger in on the right.
+     ============================================================ -->
+<div class="modal" id="modal-card-detail" aria-hidden="true">
+  <div class="cd-stage" id="cd-stage">
+    <div class="cd-anchor" id="cd-anchor">
+      <div class="cd-left-col">
+        <div class="cd-card-wrap">
+          <div class="cd-card-slot" id="cd-card-slot"></div>
+        </div>
+        <a class="cd-more" id="cd-more" href="#">
+          <span class="cd-more-text">
+            <span class="cd-more-eyebrow">Open full Playbook</span>
+            <span class="cd-more-name"><b id="cd-more-name">this KOL</b>'s audited calls + scoring breakdown</span>
+          </span>
+          <i class="ph-bold ph-arrow-up-right cd-more-arrow"></i>
+        </a>
+      </div>
+      <div class="cd-share">
+        <button class="share-method" type="button" data-share="copy">
+          <i class="ph-bold ph-link"></i> Copy link
+        </button>
+        <button class="share-method" type="button" data-share="x">
+          <i class="ph-bold ph-x-logo"></i> Share on X
+        </button>
+        <button class="share-method" type="button" data-share="reddit">
+          <i class="ph-bold ph-reddit-logo"></i> Share on Reddit
+        </button>
+        <button class="share-method" type="button" data-share="linkedin">
+          <i class="ph-bold ph-linkedin-logo"></i> Share on LinkedIn
+        </button>
+        <button class="share-method" type="button" data-share="download">
+          <i class="ph-bold ph-download-simple"></i> Download image
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   /* ============================================================
      SCROLL RESTORATION — force every page-load (incl. refresh) to start
@@ -2917,17 +3819,16 @@
 
   /* ============================================================
      SECTION 2 CARD-STACK HOVER — JS-driven for stability
-     Pure CSS :hover ~ siblings rapidly retriggered as moved cards
-     reposition under the cursor (the classic "jumping cards" bug).
-     Instead: mouseenter on any card adds .is-hovered and writes a
-     --push offset onto every sibling. mouseleave on the whole stack
-     wipes both. State only changes once per cursor entry.
+     Pure CSS :hover ~ siblings retriggered as moved cards slid under
+     the cursor (classic "jumping cards" bug). JS-managed instead:
+     mouseenter on any card adds .is-hovered + writes --push on each
+     sibling; mouseleave on the stack wipes both.
      ============================================================ */
   (() => {
     const stack = document.querySelector('.card-stack');
     if (!stack) return;
     const cards = Array.from(stack.querySelectorAll('.perspective-wrap'));
-    const PUSH = 130;  // px; how far non-hovered siblings move horizontally
+    const PUSH = 130;
 
     cards.forEach((card, idx) => {
       card.addEventListener('mouseenter', () => {
@@ -2942,7 +3843,7 @@
     stack.addEventListener('mouseleave', () => {
       cards.forEach(c => {
         c.classList.remove('is-hovered');
-        c.style.setProperty('--push', '0px');
+        c.style.removeProperty('--push');
       });
     });
   })();
@@ -3003,176 +3904,197 @@
   });
 
   /* ============================================================
-     AGENT PERSONA SWITCH
+     LEADERBOARD LIVE SHUFFLE — every ~4.5s, swap a random adjacent
+     pair of rows with a FLIP animation so the table looks alive
+     (rank 3 climbs to 2, etc). Rank labels (.idx) snap to their
+     new positions immediately on swap so the numbers stay
+     anchored to position, not to row.
      ============================================================ */
-  const personaMeta = {
-    yardeni: {
-      name: '@yardeni — operating agent',
-      meta: 'Grounded in 312 audited calls · updated 6h ago',
-      avatar: 'yardeni', initials: 'EY', bg: '49A3A6',
-      q: "What's your signal for a macro regime shift?",
-      a: `Based on my audited call history, three signals anchor most of my regime calls:
-        <ol>
-          <li>Treasury yield curve inversion duration <b>&gt; 90 days</b></li>
-          <li>PMI breaking <b>50</b> for 2+ consecutive months</li>
-          <li>High-yield credit spreads widening <b>&gt; 100bps</b> in &lt; 30d</li>
-        </ol>
-        Average lead time before market acknowledgment: <b>47 days</b>. Best historical match: SPY <b>+18.7%</b> over the Mar 2024 call window.
-        <div class="source">Backed by <b>312 calls</b> · 191 W / 121 L · win rate <b>61%</b> · <a href="#">view source tweets →</a></div>`
-    },
-    lucyliu_ai: {
-      name: '@lucyliu_ai — operating agent',
-      meta: 'Grounded in 188 audited calls · updated 2h ago',
-      avatar: 'lucyliu', initials: 'LL', bg: 'b388ff',
-      q: "Why are you so bullish on ORCL?",
-      a: `Three reasons it's been a high-conviction position for me:
-        <ol>
-          <li>Cloud capex revenue is now compounding at <b>40%+ YoY</b> — accelerating, not decelerating</li>
-          <li>Backlog of contracted RPO sits above <b>$130B</b> — multi-year visibility</li>
-          <li>Multiple is still rerating: trades at <b>~1/3 of MSFT cloud P/E</b></li>
-        </ol>
-        Entry: <b>$140</b> in Sep 2024. Stop: <b>-12%</b> from entry. Result so far: <b>+47%</b> realised.
-        <div class="source">Backed by <b>188 calls</b> · 94 W / 94 L · win rate <b>50%</b> · best ROI <b>+228%</b> on SOUN · <a href="#">view source tweets →</a></div>`
-    },
-    semianalysis: {
-      name: '@SemiAnalysis_ — operating agent',
-      meta: 'Grounded in 244 audited calls · updated 3h ago',
-      avatar: 'semianalysis', initials: 'SA', bg: '49A3A6',
-      q: "Who actually wins the next AI capex cycle?",
-      a: `My channel checks point to a three-tier winner stack, in this order:
-        <ol>
-          <li><b>Networking silicon</b> — switch ASIC TAM is rerating faster than GPU; AVGO + MRVL lead</li>
-          <li><b>Custom accelerator partners</b> — hyperscaler ASIC programs grow <b>2-3×</b> faster than merchant GPU through '26</li>
-          <li><b>Power / cooling supply chain</b> — capacity is the binding constraint, not silicon</li>
-        </ol>
-        Pure GPU exposure (NVDA) is still core but the marginal dollar has moved one layer up the stack.
-        <div class="source">Backed by <b>244 calls</b> · 161 W / 83 L · win rate <b>66%</b> · best ROI <b>+340%</b> on AVGO · <a href="#">view source tweets →</a></div>`
-    },
-    cathiedwood: {
-      name: '@CathieDWood — operating agent',
-      meta: 'Grounded in 506 audited calls · updated 1h ago',
-      avatar: 'cathiedwood', initials: 'CW', bg: '49A3A6',
-      q: "What's your highest-conviction multi-year position?",
-      a: `Across the platforms my framework cares about, two stand on their own:
-        <ol>
-          <li><b>Autonomous mobility</b> — TSLA robotaxi optionality is still mis-priced; price target $2,600 by 2029</li>
-          <li><b>Multi-omic sequencing</b> — PACB + ILMN benefit from <b>cost-per-genome under $200</b></li>
-          <li><b>AI-native software</b> — agentic workflows compress SaaS pricing power, favor toolchain over apps</li>
-        </ol>
-        Drawdowns are the cost of the convex tail. Position sizing scales <b>up</b> as the thesis gets cheaper.
-        <div class="source">Backed by <b>506 calls</b> · 213 W / 293 L · win rate <b>42%</b> · best ROI <b>+1,180%</b> on TSLA '20-'21 · <a href="#">view source tweets →</a></div>`
-    },
-    aswathdamodaran: {
-      name: '@AswathDamodaran — operating agent',
-      meta: 'Grounded in 142 audited calls · updated 12h ago',
-      avatar: 'aswathdamodaran', initials: 'AD', bg: '0a0a10',
-      q: "Is NVDA still a buy at these prices?",
-      a: `Running my updated story-to-numbers model on NVDA:
-        <ol>
-          <li>Revenue path requires <b>$520B by FY30</b> — implies AI capex sustaining ~<b>$1T/yr</b></li>
-          <li>Operating margin must hold above <b>55%</b> through compute commoditization</li>
-          <li>Implied fair value: <b>~$110</b>. Current price embeds an optimistic scenario.</li>
-        </ol>
-        I am <b>not</b> short. The narrative is still intact. But the margin of safety has compressed materially — I'd trim, not add.
-        <div class="source">Backed by <b>142 calls</b> · 89 W / 53 L · win rate <b>63%</b> · median holding <b>18 months</b> · <a href="#">view source tweets →</a></div>`
-    },
-    shanghaojin: {
-      name: '@shanghaojin — operating agent',
-      meta: 'Grounded in 126 audited calls · updated 4h ago',
-      avatar: 'shanghaojin', initials: 'HJ', bg: '0a0a10',
-      q: "Best AI infra play right now?",
-      a: `My current rank order (highest conviction first):
-        <ol>
-          <li><b>ORCL</b> — under-modeled cloud transition + RPO backlog</li>
-          <li><b>CRWV</b> — pure-play GPU-as-a-service, gross margins expanding</li>
-          <li><b>AVGO</b> — networking is the real beneficiary, not just compute</li>
-        </ol>
-        NVDA stays in the portfolio but is no longer the marginal best idea. Stop discipline: <b>-8%</b> from entry on every position.
-        <div class="source">Backed by <b>126 calls</b> · 58 W / 68 L · win rate <b>46%</b> · best call: <b>ORCL + CRWV +24.3%</b> · <a href="#">view source tweets →</a></div>`
-    },
-    apompliano: {
-      name: '@APompliano — operating agent',
-      meta: 'Grounded in 408 audited calls · updated 2h ago',
-      avatar: 'apompliano', initials: 'AP', bg: 'ff8a4c',
-      q: "Why do you keep adding BTC?",
-      a: `Three structural reasons the thesis hasn't changed for me:
-        <ol>
-          <li>Supply schedule is fixed and known — <b>21M cap</b>, post-halving issuance under <b>1%/yr</b></li>
-          <li>Sovereign + corporate adoption has crossed an inflection — <b>$130B+</b> in ETF AUM in 14 months</li>
-          <li>Real rates rolling over is the macro tailwind I've been waiting for</li>
-        </ol>
-        Position: BTC <b>>= 60%</b> of liquid net worth. Multi-year horizon. No stops — drawdowns are entries.
-        <div class="source">Backed by <b>408 calls</b> · 271 W / 137 L · win rate <b>66%</b> · best ROI <b>+612%</b> on BTC '20-'21 · <a href="#">view source tweets →</a></div>`
-    },
-    pickeringenergy: {
-      name: '@pickeringenergy — operating agent',
-      meta: 'Grounded in 80 audited calls · updated 8h ago',
-      avatar: 'pickeringenergy', initials: 'PE', bg: '49A3A6',
-      q: "Is energy still cheap here?",
-      a: `Two structural reasons I'm still adding:
-        <ol>
-          <li>Sector trades at the <b>lowest free cash flow yield</b> vs SPX in a decade</li>
-          <li>Capex discipline is real this cycle — supply growth capped at <b>2-3% / yr</b></li>
-          <li>Buybacks + dividends now <b>10%+ shareholder yield</b> across majors</li>
-        </ol>
-        XLE my preferred vehicle. Stop: <b>-10%</b>. Best historical call: XLE +17.4% from Feb 2023 entry.
-        <div class="source">Backed by <b>80 calls</b> · 42 W / 38 L · win rate <b>52%</b> · median ROI <b>+5.6%</b> · <a href="#">view source tweets →</a></div>`
+  (() => {
+    const rowsEl = document.getElementById('lb-rows');
+    if (!rowsEl) return;
+    const DURATION = 600;
+    const EASING   = 'cubic-bezier(.22, 1, .36, 1)';
+
+    function shuffleStep() {
+      // Skip if user is hovering the table (would yank a row out from
+      // under the cursor) or if the page tab isn't visible.
+      if (document.hidden) return;
+      if (rowsEl.matches(':hover')) return;
+      const rows = [...rowsEl.children];
+      if (rows.length < 2) return;
+
+      // Pick a random adjacent pair
+      const i = Math.floor(Math.random() * (rows.length - 1));
+      const upper = rows[i];       // currently at position i
+      const lower = rows[i + 1];   // currently at position i+1
+
+      // FIRST — capture current visual positions
+      const upperTop = upper.getBoundingClientRect().top;
+      const lowerTop = lower.getBoundingClientRect().top;
+
+      // SWAP — put lower BEFORE upper in the DOM
+      rowsEl.insertBefore(lower, upper);
+
+      // Update rank labels to reflect the NEW position order
+      [...rowsEl.children].forEach((r, idx) => {
+        const idxEl = r.querySelector('.idx');
+        if (idxEl) idxEl.textContent = String(idx + 1).padStart(2, '0');
+      });
+
+      // INVERT — apply transforms so each row LOOKS like it hasn't
+      // moved yet (still at its old visual position)
+      const newUpperTop = upper.getBoundingClientRect().top;
+      const newLowerTop = lower.getBoundingClientRect().top;
+      const dUpper = upperTop - newUpperTop;     // upper moved down by |dUpper|
+      const dLower = lowerTop - newLowerTop;     // lower moved up
+      upper.style.transition = 'none';
+      lower.style.transition = 'none';
+      upper.style.transform  = `translateY(${dUpper}px)`;
+      lower.style.transform  = `translateY(${dLower}px)`;
+
+      // PLAY — next frame, transition transforms back to 0
+      requestAnimationFrame(() => {
+        upper.style.transition = `transform ${DURATION}ms ${EASING}`;
+        lower.style.transition = `transform ${DURATION}ms ${EASING}`;
+        upper.style.transform  = '';
+        lower.style.transform  = '';
+        // Cleanup inline styles after the transition settles so the
+        // sort-tab click handler's full re-render starts from a clean slate.
+        setTimeout(() => {
+          upper.style.transition = '';
+          lower.style.transition = '';
+        }, DURATION + 50);
+      });
     }
-  };
 
-  function renderAgent(key) {
-    const m = personaMeta[key];
-    if (!m) return;
-    const img = document.getElementById('agent-avatar');
-    img.onerror = function () {
-      img.onerror = null;
-      img.src = `https://ui-avatars.com/api/?name=${m.initials}&background=${m.bg}&color=fff&bold=true&size=128`;
-    };
-    img.src = `https://unavatar.io/twitter/${m.avatar}`;
-    document.getElementById('agent-name').textContent = m.name;
-    document.getElementById('agent-meta').textContent = m.meta;
-    document.getElementById('chat-thread').innerHTML = `
-      <div class="bubble user">${m.q}</div>
-      <div class="bubble ai">${m.a}</div>`;
-    document.getElementById('chat-input-field').placeholder = `Ask ${m.name.split(' ')[0]} anything...`;
+    setInterval(shuffleStep, 4500);
+  })();
+
+  /* ============================================================
+     LEARN THE PLAYBOOK — handle search + suggested chips
+     - Reworked per zet's feedback: the old 5-persona picker required
+       the viewer to recognize a showcased KOL. Now a free-form handle
+       input + a small chip rail of suggested handles deep-link to the
+       full playbook chat on alva.ai. The static example dialogue in
+       the section needs no JS — it's hard-coded markup.
+     ============================================================ */
+  function normalizeHandle(raw) {
+    // accept "@yardeni", "yardeni", "https://x.com/yardeni", "x.com/yardeni"
+    let s = (raw || '').trim();
+    if (!s) return '';
+    const m = s.match(/(?:x\.com|twitter\.com)\/([A-Za-z0-9_]+)/i);
+    if (m) return m[1];
+    return s.replace(/^@/, '').split(/[\s/?#]/)[0];
   }
-  // initial render
-  renderAgent('yardeni');
-
-  document.querySelectorAll('.persona-feat').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.persona-feat').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderAgent(btn.dataset.persona);
-    });
-  });
-
-  // chat input: send → deep-link to full Alva chat with the persona + question
-  document.getElementById('chat-input-form').addEventListener('submit', e => {
-    e.preventDefault();
-    const field = document.getElementById('chat-input-field');
-    const q = field.value.trim();
-    if (!q) return;
-    const activeBtn = document.querySelector('.persona-feat.active');
-    const persona = activeBtn ? activeBtn.dataset.persona : 'yardeni';
-    const url = `https://alva.ai/chat?kol=${encodeURIComponent(persona)}&q=${encodeURIComponent(q)}`;
+  function openPlaybook(handle) {
+    const h = normalizeHandle(handle);
+    if (!h) return;
+    const url = `https://alva.ai/chat?kol=${encodeURIComponent(h)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
+  }
+  const searchForm = document.getElementById('agents-search-form');
+  if (searchForm) {
+    searchForm.addEventListener('submit', e => {
+      e.preventDefault();
+      openPlaybook(document.getElementById('agents-search-input').value);
+    });
+  }
+  document.querySelectorAll('.agents-chip').forEach(chip => {
+    chip.addEventListener('click', () => openPlaybook(chip.dataset.handle));
   });
 
   /* ============================================================
      MODALS
      ============================================================ */
+  // Stack-counter so nested modals (e.g. card-detail on top of results)
+  // don't restore body.overflow until the LAST modal closes.
+  let _modalOpenCount = 0;
   function openModal(name) {
     const m = document.getElementById('modal-' + name);
     if (!m) return;
+    if (!m.classList.contains('open')) _modalOpenCount++;
     m.classList.add('open');
     m.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+    // Per-modal entry hooks
+    if (name === 'results')     playResultsEntrance();
+    if (name === 'card-detail') playCardDetailEntrance();
+    if (name === 'connect')     playConnectEntrance();
+    if (name === 'for-kols')    playForKolsEntrance();
   }
   function closeModal(m) {
+    if (m.classList.contains('open')) _modalOpenCount = Math.max(0, _modalOpenCount - 1);
     m.classList.remove('open');
     m.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
+    if (_modalOpenCount === 0) document.body.style.overflow = '';
+    // Reset entry state so it replays next time
+    if (m.id === 'modal-results') {
+      m.querySelector('.results-grid')?.classList.remove('is-revealed');
+      m.querySelector('.results-request')?.classList.remove('is-revealed');
+    }
+    // Cancel any pending connect → results handoff timers (so closing
+    // mid-load via ESC or the X button doesn't pop the results modal
+    // a second later). Also reset the dialog back to its auth stage.
+    if (m.id === 'modal-connect') {
+      if (m._connectTimers) m._connectTimers.forEach(t => clearTimeout(t));
+      m._connectTimers = null;
+      const dialog = m.querySelector('.connect-dialog');
+      if (dialog) dialog.dataset.state = 'auth';
+      const fill = m.querySelector('#connect-progress-fill');
+      if (fill) { fill.style.transition = 'none'; fill.style.width = '0%'; }
+    }
+  }
+  /* Stagger the card grid + request reveal each time the results
+     modal opens. Toggling the class triggers the CSS transitions
+     defined per nth-child above. */
+  function playResultsEntrance() {
+    const grid = document.querySelector('#modal-results .results-grid');
+    const req  = document.querySelector('#modal-results .results-request');
+    if (!grid && !req) return;
+    grid?.classList.remove('is-revealed');
+    req?.classList.remove('is-revealed');
+    // Two RAFs to ensure the removed class has painted before we re-add
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      grid?.classList.add('is-revealed');
+      req?.classList.add('is-revealed');
+    }));
+  }
+
+  /* Replay the connect-dialog entrance each time it opens. */
+  function playConnectEntrance() {
+    const dialog = document.querySelector('#modal-connect .connect-dialog');
+    if (!dialog) return;
+    dialog.style.animation = 'none';
+    void dialog.offsetWidth;
+    dialog.style.animation = '';
+  }
+  /* Same trick for the For-KOLs modal. */
+  function playForKolsEntrance() {
+    const dialog = document.querySelector('#modal-for-kols .dialog');
+    if (!dialog) return;
+    dialog.style.animation = 'none';
+    void dialog.offsetWidth;
+    dialog.style.animation = '';
+  }
+
+  /* Replay every entrance animation inside the card-detail lightbox
+     (card-wrap, cd-more, every share-method). Without this reset the
+     CSS animations only fire on the FIRST modal open — subsequent
+     opens would have the elements snap to their final state. */
+  function playCardDetailEntrance() {
+    const els = [
+      document.querySelector('#modal-card-detail .cd-card-wrap'),
+      document.querySelector('#modal-card-detail .cd-more'),
+      ...document.querySelectorAll('#modal-card-detail .share-method'),
+    ].filter(Boolean);
+    // Step 1 — disable animations
+    els.forEach(el => { el.style.animation = 'none'; });
+    // Force reflow once so the removed animations actually clear
+    if (els[0]) void els[0].offsetWidth;
+    // Step 2 — clear the inline override so the CSS animation rules
+    // (which include the per-nth-child stagger) re-trigger from 0%
+    els.forEach(el => { el.style.animation = ''; });
   }
   document.addEventListener('click', e => {
     const opener = e.target.closest('[data-open]');
@@ -3186,20 +4108,237 @@
   });
 
   /* ============================================================
+     INITIALIZE SCAN — connect-dialog state machine.
+     Initialize Scan opens #modal-connect in its "auth" state.
+     Click "Continue with X" → state switches to "loading", a
+     progress bar animates, status text steps through stages.
+     After 2.4s, the connect modal closes and the fullscreen
+     results modal opens.
+     ============================================================ */
+  const connectGoBtn = document.getElementById('connect-go-btn');
+  if (connectGoBtn) {
+    connectGoBtn.addEventListener('click', () => {
+      const dialog = connectGoBtn.closest('.connect-dialog');
+      const modal = document.getElementById('modal-connect');
+      const progressFill = document.getElementById('connect-progress-fill');
+      const statusEl = document.getElementById('connect-status');
+      if (!dialog || !modal) return;
+      // Reset transitionable bits before switching state
+      if (progressFill) {
+        progressFill.style.transition = 'none';
+        progressFill.style.width = '0%';
+        void progressFill.offsetWidth;          // force reflow
+        progressFill.style.transition = 'width 2.4s ease-out';
+      }
+      dialog.dataset.state = 'loading';
+      if (statusEl) statusEl.textContent = 'Reading your follow list…';
+      // Kick the bar after the state swap paints
+      requestAnimationFrame(() => {
+        if (progressFill) progressFill.style.width = '100%';
+      });
+      // Status text marches through the simulated stages
+      const t1 = setTimeout(() => { if (statusEl) statusEl.textContent = 'Matching 86 indexed KOLs against your follows…'; }, 900);
+      const t2 = setTimeout(() => { if (statusEl) statusEl.textContent = 'Compiling your audited Playbooks…'; }, 1700);
+      const t3 = setTimeout(() => {
+        closeModal(modal);
+        // Reset to auth state for the next open
+        dialog.dataset.state = 'auth';
+        if (progressFill) progressFill.style.width = '0%';
+        setTimeout(() => openModal('results'), 120);
+      }, 2500);
+      // Stash the timers so a manual close cancels them
+      modal._connectTimers = [t1, t2, t3];
+    });
+  }
+  // (Pending-timer cleanup + state reset for the connect dialog
+  //  is centralised inside closeModal — no duplicate listener needed here.)
+
+  /* ============================================================
+     RESULTS GRID — wrap each card + bottom-right share affordance.
+     Clicking the wrap captures the card's screen rect, writes it as
+     CSS variables on .cd-anchor, opens the card-detail lightbox, and
+     the CSS animation grows the card in place via FLIP. The share
+     panel + share methods stagger in after the card lands.
+     ============================================================ */
+  (() => {
+    const grid = document.querySelector('#modal-results .results-grid');
+    if (!grid) return;
+    const slot     = document.getElementById('cd-card-slot');
+    const anchor   = document.getElementById('cd-anchor');
+    const cardWrap = document.querySelector('#modal-card-detail .cd-card-wrap');
+    if (!slot || !anchor || !cardWrap) return;
+
+    function openCardLightbox(sourceCardEl) {
+      const srcRect = sourceCardEl.getBoundingClientRect();
+      if (!srcRect.width) return;
+
+      // Layout math — keep the card anchored where it was, but make
+      // sure the composition (card + share panel) fits the viewport.
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const margin = 28;
+      const shareW = 260;
+      const gap    = 24;
+      const isMobile = vw <= 760;
+
+      // Aspect ratio is locked by the card itself (4 / 2.7) — height
+      // follows width once we pick the target.
+      const cardAspect = srcRect.height / srcRect.width;
+      let targetCardW = Math.min(440, vw * 0.4);
+      // Tighten on mobile — share panel drops below the card
+      if (isMobile) targetCardW = Math.min(vw - margin * 2, 360);
+      const targetCardH = targetCardW * cardAspect;
+
+      // Center the target card on the source-card center so the
+      // expansion grows symmetrically outward (paired with
+      // transform-origin: center on .cd-card-wrap).
+      let anchorX = srcRect.left + (srcRect.width  - targetCardW) / 2;
+      let anchorY = srcRect.top  + (srcRect.height - targetCardH) / 2;
+      if (!isMobile) {
+        // The left column has the card AND the "View more" CTA below
+        // (~88px tall + 14px gap). Account for that when keeping the
+        // composition inside the viewport.
+        const moreColExtra = 14 + 88;
+        const totalW = targetCardW + gap + shareW;
+        const totalH = targetCardH + moreColExtra;
+        if (anchorX + totalW > vw - margin) anchorX = vw - margin - totalW;
+        if (anchorY + totalH > vh - margin) anchorY = vh - margin - totalH;
+        if (anchorX < margin) anchorX = margin;
+        if (anchorY < margin) anchorY = margin;
+      }
+      const initScale = Math.max(0.18, srcRect.width / targetCardW);
+
+      anchor.style.setProperty('--cd-x', anchorX + 'px');
+      anchor.style.setProperty('--cd-y', anchorY + 'px');
+      anchor.style.setProperty('--cd-target-w', targetCardW + 'px');
+      anchor.style.setProperty('--cd-init-scale', initScale);
+
+      // Clone the card content so the grid copy stays intact
+      slot.innerHTML = '';
+      slot.appendChild(sourceCardEl.cloneNode(true));
+
+      // Populate the "View more about [name]" card with the clicked
+      // KOL's display name.
+      const nameSlot = document.getElementById('cd-more-name');
+      if (nameSlot) {
+        const name = sourceCardEl.querySelector('.pc-name')?.textContent?.trim();
+        nameSlot.textContent = name || 'this KOL';
+      }
+
+      // Card-wrap, cd-more, and share-method animations are all reset
+      // centrally by playCardDetailEntrance() (called from openModal).
+      openModal('card-detail');
+    }
+
+    const cards = grid.querySelectorAll(':scope > .card');
+    cards.forEach(card => {
+      // Build wrap
+      const wrap = document.createElement('div');
+      wrap.className = 'result-card-wrap';
+      card.parentNode.insertBefore(wrap, card);
+      wrap.appendChild(card);
+      // (The hover-only bottom-right arrow chip was removed — the
+      //  whole wrap is clickable and the hover tilt below provides
+      //  the affordance.)
+      // Click anywhere on the wrap opens the lightbox
+      wrap.addEventListener('click', e => {
+        e.preventDefault();
+        openCardLightbox(card);
+      });
+      // (Cursor-tracking 3D tilt was removed — couldn't be made
+      //  shake-free across input devices. Plain hover affordance
+      //  via .card box-shadow grow + the .result-card-wrap lift
+      //  is enough.)
+    });
+
+    // Backdrop click closes the lightbox — no dedicated close button.
+    // Skip if the click landed on the enlarged card composition
+    // (.cd-left-col covers the card + view-more) or on a share method.
+    const cdStage = document.getElementById('cd-stage');
+    if (cdStage) {
+      cdStage.addEventListener('click', e => {
+        if (e.target.closest('.cd-left-col')) return;
+        if (e.target.closest('.share-method')) return;
+        const modal = document.getElementById('modal-card-detail');
+        if (modal) closeModal(modal);
+      });
+    }
+  })();
+
+  /* ============================================================
+     SHARE METHODS — wire each share-method button to a real intent
+     (or a graceful no-op for the campaign demo).
+     ============================================================ */
+  (() => {
+    const slot = document.getElementById('cd-card-slot');
+    function currentShareContext() {
+      // Pull the cloned card's KOL handle + name for the share message
+      const handle = slot?.querySelector('.pc-handle')?.textContent?.trim().replace(/^@/, '') || '';
+      const name   = slot?.querySelector('.pc-name')?.textContent?.trim() || 'this Playbook';
+      const url    = handle
+        ? `https://alva.xyz/playbook/${encodeURIComponent(handle)}`
+        : 'https://alva.xyz';
+      const text   = handle
+        ? `${name} (@${handle})'s audited Playbook on Alva — every public call backtested.`
+        : `Audited KOL Playbooks on Alva — every public call backtested.`;
+      return { url, text };
+    }
+    document.querySelectorAll('#modal-card-detail .share-method').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.share;
+        const { url, text } = currentShareContext();
+        try {
+          if (action === 'copy') {
+            navigator.clipboard?.writeText(url);
+          } else if (action === 'x') {
+            window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+          } else if (action === 'reddit') {
+            window.open(`https://reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+          } else if (action === 'linkedin') {
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+          } else if (action === 'download') {
+            // Image rendering of the card isn't wired up in the demo —
+            // visual feedback only. A real impl would canvas-render the
+            // .card and download as PNG.
+          }
+        } catch (_) { /* swallow — UI feedback below handles it */ }
+        // Brief visual confirmation
+        const original = btn.innerHTML;
+        btn.classList.add('is-active');
+        if (action === 'copy') btn.innerHTML = '<i class="ph-bold ph-check"></i> Copied';
+        if (action === 'download') btn.innerHTML = '<i class="ph-bold ph-check"></i> Preparing…';
+        setTimeout(() => {
+          btn.classList.remove('is-active');
+          btn.innerHTML = original;
+        }, 1400);
+      });
+    });
+  })();
+
+  // results-request submit — same behaviour as the homepage closer:
+  // accept the handle, swallow the submit (no real backend yet).
+  const resultsRequestForm = document.getElementById('results-request-form');
+  if (resultsRequestForm) {
+    resultsRequestForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const input = resultsRequestForm.querySelector('input');
+      if (input) input.value = '';
+      const trust = resultsRequestForm.parentElement.querySelector('.bcard-trust');
+      if (trust) trust.textContent = 'Thanks — we’ll ping you when the Playbook is ready.';
+    });
+  }
+
+  /* ============================================================
      SCROLLSPY NAV TABS  +  FLOATING CTA VISIBILITY
      - Active tab tracks the section currently centered in viewport
      - Tab pill indicator slides to the active tab
-     - FAB fades in once the hero stage leaves the viewport, fades out
-       when the hero comes back into view
      ============================================================ */
   (() => {
     const tabs = [...document.querySelectorAll('.nav-tab')];
     const indicator = document.getElementById('nav-indicator');
     const tabsContainer = document.getElementById('nav-tabs');
-    const fab = document.getElementById('fab');
     const opening = document.querySelector('.opening');
     const hero = document.querySelector('.stage');
-    if (!tabs.length || !indicator || !tabsContainer || !fab || !opening || !hero) return;
+    if (!tabs.length || !indicator || !tabsContainer || !opening || !hero) return;
 
     const sections = tabs
       .map(t => ({ id: t.dataset.section, el: document.getElementById(t.dataset.section), tab: t }))
@@ -3326,25 +4465,6 @@
       else clearActive();                       // still on the opening screen
     }
     addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(spy); }, { passive: true });
-
-    // FAB visibility — hide while either the Opening or the audit-yours
-    // hero is still mostly in view (those sections already host the CTA
-    // and a floating duplicate would compete). Show once both are past.
-    let openingIn = true;
-    let heroIn = false;
-    function updateFab() {
-      const show = !openingIn && !heroIn;
-      fab.classList.toggle('visible', show);
-      fab.setAttribute('aria-hidden', show ? 'false' : 'true');
-    }
-    new IntersectionObserver(([e]) => {
-      openingIn = e.intersectionRatio > 0.25;
-      updateFab();
-    }, { threshold: [0, 0.25, 0.5, 1] }).observe(opening);
-    new IntersectionObserver(([e]) => {
-      heroIn = e.intersectionRatio > 0.25;
-      updateFab();
-    }, { threshold: [0, 0.25, 0.5, 1] }).observe(hero);
   })();
 
   /* ============================================================
