@@ -11,6 +11,10 @@
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css" />
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+<!-- Three.js — drives the opening section's cat-eye lens shader.
+     Try a sibling local copy first (works offline + when bundled into
+     the static GH-Pages build), fall back to CDN if not present. -->
+<script src="./three.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://unpkg.com/three@0.160.0/build/three.min.js';document.head.appendChild(s);"></script>
 <style>
   /* ============================================================
      TOKENS (carried over from audit.html / leaderboard.html)
@@ -84,8 +88,13 @@
      NAV  (faithful to audit.html)
      ============================================================ */
   .nav {
-    position: sticky; top: 0; z-index: 30;
-    background: rgba(245,245,247,0.85);
+    /* FIXED (not sticky) so the nav doesn't occupy 64px of layout space.
+       Combined with the transparent background + backdrop blur, this lets
+       the opening section start at viewport y=0 and provide its own bg
+       behind the nav — no more pale page-bg strip at the top while the
+       opening below it is teal-tinted. */
+    position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+    background: transparent;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--line);
@@ -110,8 +119,7 @@
   .brand-text .sub {
     font-family: var(--font-mono);
     font-size: 10px; font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    letter-spacing: 0.05em;
     color: var(--muted);
     margin-top: 1px;
   }
@@ -205,13 +213,13 @@
   /* secondary ghost button — link to the For-KOLs card */
   .nav-cta-ghost {
     display: inline-flex; align-items: center; gap: 8px;
-    padding: 9px 14px;
+    padding: 9px 16px;
     border-radius: 999px;
     background: transparent;
     color: var(--text);
     border: 1px solid var(--line);
     font-family: inherit;
-    font-size: 13px; font-weight: 600;
+    font-size: 13px; font-weight: 700;
     cursor: pointer;
     box-shadow: 0 0 0 rgba(0,0,0,0);
     transition: background .15s, border-color .15s, color .15s, transform .18s ease, box-shadow .18s ease;
@@ -232,9 +240,26 @@
      ============================================================ */
   .opening {
     position: relative;
-    min-height: calc(100vh - 64px);
+    /* Full viewport — nav is now fixed/transparent so the opening starts
+       at viewport y=0 and the nav's blurred area shows the opening's bg
+       (teal-tinted) instead of the page bg. padding-top compensates so
+       the centered content still clears the 64px nav. */
+    min-height: 100vh;
     overflow: hidden;
-    background: var(--bg);
+    /* 3.0 round 26 — vignette palette swapped from alva-teal to a
+       restrained neutral grey (user: "灰色要克制"). Center 55% stays
+       solid white so the H1 + arrow keep their clean ground; corners
+       ramp to a faint cool-grey (#ededf0 at the very edge ≈ 6% off
+       white) so the section breathes a subtle "old-TV" tonal shift
+       without introducing any brand color at the edges. The shader's
+       edge tint (below) was also retuned to mix toward the same
+       neutral grey, keeping the CSS+WebGL transition continuous. */
+    background:
+      radial-gradient(ellipse 110% 90% at 50% 50%,
+        #ffffff 0%,
+        #ffffff 55%,
+        #f4f4f6 85%,
+        #ededf0 100%);
     padding: 96px 32px 80px;
     display: grid;
     place-items: center;
@@ -255,13 +280,18 @@
     inset: 0;
     z-index: 2;
     pointer-events: none;
+    /* veil color = pure white so it blends invisibly into the .opening
+       gradient's white center. Its job is just to dim cards drifting
+       behind the heading band so the H1 stays readable. */
     background:
       radial-gradient(ellipse 48% 18% at 50% 50%,
-        rgba(245,245,247,0.78) 0%,
-        rgba(245,245,247,0.5)  45%,
-        rgba(245,245,247,0.18) 75%,
-        rgba(245,245,247,0)    100%);
+        rgba(255,255,255,0.78) 0%,
+        rgba(255,255,255,0.5)  45%,
+        rgba(255,255,255,0.18) 75%,
+        rgba(255,255,255,0)    100%);
   }
+  /* (3.0 round 20 — dark vignette removed; replaced by a CRT-style
+     warm/amber edge COLOR shift in the WebGL post shader.) */
   /* tier-based depth — three strict layers; size, blur, speed, z-index
      and shadow ALL move in lockstep. A card in `tier-near` is always
      larger, sharper, faster, and visually in front of any `tier-mid` or
@@ -273,7 +303,12 @@
     top: var(--y, 50%);
     padding: 0.85em 1em;
     background: #fff;
-    border: 1px solid var(--line);
+    /* 3.0 round 39 — border-color softened from var(--line) (#e5e5ea
+       — about 10% grey on white) to rgba(10,10,16,0.05), roughly
+       half-strength. The cards are decorative atmospheric content
+       sitting BEHIND the headline; a strong outline pulls them
+       forward visually and competes with the foreground text. */
+    border: 1px solid rgba(10,10,16,0.05);
     border-radius: 12px;
     will-change: transform;
     animation: drift var(--dur, 145s) linear infinite;
@@ -303,6 +338,9 @@
     z-index: 3;
     box-shadow: 0 22px 44px -14px rgba(20,20,30,0.18);
   }
+  /* (cat-eye SVG-filter approach reverted — neither Chrome nor Safari
+     rendered the displacement reliably. Will be replaced by a proper
+     Three.js + WebGL fragment-shader pass in a follow-up.) */
   .float-tweet .ft-head {
     display: flex; align-items: center; gap: 0.7em;
     margin-bottom: 0.65em;
@@ -371,15 +409,23 @@
     font-size: clamp(40px, 5.6vw, 76px);
     line-height: 1.04;
     letter-spacing: -0.025em;
-    text-transform: uppercase;
     margin: 0 0 28px;
     color: var(--text);
-    /* page-bg halo around each letter — occludes cards drifting behind */
+    /* halo = pure white, matching the .opening gradient center +
+       canvas uBgColor. Alva-teal vignette lives only at the corners
+       (CSS gradient + shader edge tint); the H1 sits on solid white.
+       3.0 round 40 — halo strengthened: more stacked layers + larger
+       radii (was 10/22/40/70 → now 14/30/55/95/140/200). Composite
+       opacity goes up because shadows accumulate, AND the bleed
+       extends further past the text so the floating tweet cards
+       behind never crowd the H1. */
     text-shadow:
-      0 0 10px var(--bg),
-      0 0 22px var(--bg),
-      0 0 40px var(--bg),
-      0 0 70px var(--bg);
+      0 0  14px #ffffff,
+      0 0  30px #ffffff,
+      0 0  55px #ffffff,
+      0 0  95px #ffffff,
+      0 0 140px #ffffff,
+      0 0 200px #ffffff;
   }
   /* Each clause on its own line — the handle lives in its own
      .line-handle row so a long handle never reflows the other lines.
@@ -416,10 +462,12 @@
     position: relative;
     font-weight: 900;
     text-shadow:
-      0 0 8px var(--bg),
-      0 0 16px var(--bg),
-      0 0 28px var(--bg),
-      0 0 44px var(--bg);
+      0 0  12px #ffffff,
+      0 0  24px #ffffff,
+      0 0  44px #ffffff,
+      0 0  72px #ffffff,
+      0 0 110px #ffffff,
+      0 0 160px #ffffff;
   }
   .handle-roller .handle-slot {
     display: inline-block;
@@ -433,9 +481,11 @@
     /* same halo as the handle text so the caret never disappears
        behind a tweet card when the slot is empty */
     text-shadow:
-      0 0 8px var(--bg),
-      0 0 16px var(--bg),
-      0 0 28px var(--bg);
+      0 0 12px #ffffff,
+      0 0 24px #ffffff,
+      0 0 44px #ffffff,
+      0 0 72px #ffffff,
+      0 0 110px #ffffff;
     animation: caretBlink 1.05s steps(2) infinite;
   }
   @keyframes caretBlink {
@@ -454,9 +504,11 @@
     max-width: 740px;
     margin: 0 auto 36px;
     text-shadow:
-      0 0 8px var(--bg),
-      0 0 18px var(--bg),
-      0 0 30px var(--bg);
+      0 0  12px #ffffff,
+      0 0  26px #ffffff,
+      0 0  50px #ffffff,
+      0 0  85px #ffffff,
+      0 0 130px #ffffff;
   }
   .opening-sub .alva { color: var(--alva); }
   /* inline X.com glyph — single dark mark, no background shape;
@@ -485,18 +537,18 @@
     height: 0.72em;
     vertical-align: -0.06em;
     filter:
-      drop-shadow(0 0 8px var(--bg))
-      drop-shadow(0 0 18px var(--bg))
-      drop-shadow(0 0 32px var(--bg));
+      drop-shadow(0 0 8px #ffffff)
+      drop-shadow(0 0 18px #ffffff)
+      drop-shadow(0 0 32px #ffffff);
   }
   .opening-sub .x-mark {
     /* halo matches the surrounding text-shadow so the X reads as part
        of the line, not a foreign element pasted on top. */
     margin: 0 0.14em;
     filter:
-      drop-shadow(0 0 6px var(--bg))
-      drop-shadow(0 0 12px var(--bg))
-      drop-shadow(0 0 22px var(--bg));
+      drop-shadow(0 0 6px #ffffff)
+      drop-shadow(0 0 12px #ffffff)
+      drop-shadow(0 0 22px #ffffff);
   }
 
   /* scroll cue — circle ring + arrow both shimmer with the same multi-color
@@ -516,11 +568,12 @@
     cursor: pointer;
     isolation: isolate;
     transition: transform .2s;
-    /* halo of page-bg color so cards drifting behind don't bleed into
-       the ring outline */
+    /* halo = pure white, matches the .opening gradient center so the
+       halo disappears into the white center band and cards drifting
+       behind don't bleed into the ring outline. */
     box-shadow:
-      0 0 24px 10px var(--bg),
-      0 0 48px 20px var(--bg);
+      0 0 24px 10px #ffffff,
+      0 0 48px 20px #ffffff;
   }
   .opening-arrow:hover { transform: translateY(-2px) scale(1.02); }
 
@@ -547,13 +600,15 @@
     z-index: 0;
   }
   .opening-arrow::after {
-    /* inner disc the colour of the page bg — masks ::before so only the
-       ring shows; thickness now 2.5px to match the heavier border */
+    /* inner disc — pure white (#fff) instead of page bg (--bg = #f5f5f7)
+       so the button reads as a clean white pill on the grey opening
+       background, not as a grey tinted shape. Still masks ::before so
+       only the gradient ring shows. */
     content: "";
     position: absolute;
     inset: 2.5px;
     border-radius: inherit;
-    background: var(--bg);
+    background: #fff;
     z-index: 1;
   }
   /* sweep happens in the first ~22% of the cycle (~1.4s), then holds for
@@ -609,11 +664,24 @@
      the 2.0 left-text / right-cards hero composition.
      ============================================================ */
   .stage.stage-marquee {
-    /* 3.0 round 10 — tighten top padding so tab-click anchor leaves
-       no awkward gap between the nav and the marquee/headline content.
-       Bottom kept generous for visual rhythm into the next section. */
-    padding: 64px 0 96px;
-    background: var(--bg-soft);
+    /* 3.0 round 23 — section bumped taller per user feedback.
+       padding raised 96 → 120 and min-height raised 360 → 560 so
+       the marquee rows get more vertical breathing room and the
+       headline overlay isn't crammed against the row above/below.
+       (Previous tight padding made this section feel rushed
+       relative to the hero above and the leaderboard below.) */
+    padding: 120px 0 120px;
+    /* 3.0 round 27 — S2 bg reverted from solid var(--alva) back to a
+       semi-transparent brand-green wash (user: "改成有透明度的品牌绿").
+       Solid alva felt heavy against the white S1/S3 neighbours. The
+       wash composition is a light alva base + two diffuse corner
+       blobs for ambient character without competing with the marquee
+       cards on top. The headline plaque + title text were reverted
+       to the light-bg variants in their own rules below. */
+    background:
+      radial-gradient(70% 60% at 18% 28%, rgba(73,163,166,0.16) 0%, transparent 70%),
+      radial-gradient(60% 55% at 86% 78%, rgba(92,185,188,0.14) 0%, transparent 65%),
+      rgba(73,163,166,0.08);
     position: relative;
     /* `clip` on the x-axis only — lets each row's hover lift + shadow
        extend vertically without being chopped off. `overflow-x: clip`
@@ -621,10 +689,16 @@
        this combo only with `clip`, not `hidden`). */
     overflow-x: clip;
     overflow-y: visible;
-    min-height: 360px;
+    min-height: 560px;
     display: flex;
     align-items: center;
   }
+  /* (3.0 round 43 — S2 background animation removed entirely after
+     iterating through dot-grid / mesh / particles / ribbons; user
+     judged all of them either repetitive (vs S3 halo), boring, or
+     stiff. Section bg now relies solely on the static mint wash
+     gradients above + the round-35 plaque mask. No JS canvas, no
+     extra layers.) */
   /* 3.0 round 14 — text-start aligns with the leaderboard section's
      content-left (.section-wrap padding: 0 16px = 16px in from column).
      h1 padding-left dropped from 32 → 16 so its first letter sits flush
@@ -643,15 +717,110 @@
     display: flex;
     align-items: center;
     pointer-events: none;
-    background-image: linear-gradient(to right,
-      rgba(255,255,255,0)   0%,
-      var(--bg-soft)       30%,    /* fade-in ENDS at text-start */
-      var(--bg-soft)       70%,    /* fade-out STARTS at text-end */
-      rgba(255,255,255,0) 100%);
-    background-size: 1250px 100%;
-    background-position-x: calc(max(0px, (100vw - 1320px) / 2) - 359px);
-    background-position-y: center;
-    background-repeat: no-repeat;
+    /* 3.0 round 30 — progressive blur, narrowed back to the original
+       plaque footprint. All three layers share the SAME mask-size
+       (1250px) and mask-position-x (`(100vw-1320px)/2 - 359px`) so
+       the blur band is precisely centered on the headline column
+       (text spans inner-left+16 to inner-left+540, mask solid hold
+       covers that exact range). Only the percent stops differ per
+       layer so each higher-blur layer is narrower than the one
+       below. Strength: 15 → 30 → 60 (was 2 → 8 → 20; way too soft
+       under the text — user wanted text to read CLEARLY over a
+       heavily blurred backdrop).
+       Layer 1 = this element (15px, matches old plaque width 30-70%).
+       Layer 2 = ::before (30px, narrower hold 38-62%).
+       Layer 3 = ::after (60px, narrowest hold 45-55% — under text).
+       Inner content sits at z-index:3 (.stage-headline-inner) above
+       all three blur layers. */
+    /* 3.0 round 31 — blur strengths nearly doubled (was 15/30/60 →
+       25/60/120) and left/right fades tightened from 30%/30% wide
+       fade zones to 8% fade zones (~100px instead of ~375px each
+       side). Mask window stays 1250px at the same position so the
+       solid hold still aligns to the headline column. */
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    /* 3.0 round 35 — LEFT fade-in distance lengthened per user
+       ("前面的遮罩左侧再加点渐变距离"). Outer transparent stop moved
+       22% → 10% so the fade-in zone is now 10% → 30% (20% wide,
+       previously 22% → 30% = 8% wide). Inner opaque stop stays at
+       30% so the text bg coverage is unchanged. Right side stops
+       are untouched — asymmetric on purpose; user only asked about
+       the left side. */
+    -webkit-mask-image: linear-gradient(to right,
+      transparent 0%,
+      transparent 10%,
+      #000        30%,
+      #000        70%,
+      transparent 78%,
+      transparent 100%);
+            mask-image: linear-gradient(to right,
+      transparent 0%,
+      transparent 10%,
+      #000        30%,
+      #000        70%,
+      transparent 78%,
+      transparent 100%);
+    -webkit-mask-size: 1250px 100%;
+            mask-size: 1250px 100%;
+    -webkit-mask-position: calc(max(0px, (100vw - 1320px) / 2) - 359px) center;
+            mask-position: calc(max(0px, (100vw - 1320px) / 2) - 359px) center;
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+  }
+  .stage-marquee .stage-headline-overlay::before,
+  .stage-marquee .stage-headline-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    -webkit-mask-size: 1250px 100%;
+            mask-size: 1250px 100%;
+    -webkit-mask-position: calc(max(0px, (100vw - 1320px) / 2) - 359px) center;
+            mask-position: calc(max(0px, (100vw - 1320px) / 2) - 359px) center;
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+  }
+  /* Layer 2 — 60px blur, hold 32-68% with extended LEFT fade. */
+  .stage-marquee .stage-headline-overlay::before {
+    backdrop-filter: blur(60px);
+    -webkit-backdrop-filter: blur(60px);
+    /* 3.0 round 35 — same LEFT-fade extension as Layer 1.
+       Outer transparent stop 24% → 12% (fade 12% → 32%, 20% wide). */
+    -webkit-mask-image: linear-gradient(to right,
+      transparent 0%,
+      transparent 12%,
+      #000        32%,
+      #000        68%,
+      transparent 76%,
+      transparent 100%);
+            mask-image: linear-gradient(to right,
+      transparent 0%,
+      transparent 12%,
+      #000        32%,
+      #000        68%,
+      transparent 76%,
+      transparent 100%);
+  }
+  /* Layer 3 — 120px blur, hold 36-64% with extended LEFT fade. */
+  .stage-marquee .stage-headline-overlay::after {
+    backdrop-filter: blur(120px);
+    -webkit-backdrop-filter: blur(120px);
+    /* 3.0 round 35 — same LEFT-fade extension. Outer transparent
+       stop 30% → 18% (fade 18% → 36%, 18% wide). */
+    -webkit-mask-image: linear-gradient(to right,
+      transparent 0%,
+      transparent 18%,
+      #000        36%,
+      #000        64%,
+      transparent 70%,
+      transparent 100%);
+            mask-image: linear-gradient(to right,
+      transparent 0%,
+      transparent 18%,
+      #000        36%,
+      #000        64%,
+      transparent 70%,
+      transparent 100%);
   }
   .stage-marquee .stage-headline-inner {
     width: 100%;
@@ -659,6 +828,10 @@
     margin: 0 auto;
     padding: 0;
     position: relative;
+    /* Sit above the 3 progressive-blur layers (.stage-headline-overlay
+       + its ::before + ::after), all of which are at z-index:auto
+       under the inset:0 absolutely-positioned overlay. */
+    z-index: 3;
   }
   .stage-marquee .stage-headline-inner h1 {
     display: inline-block;
@@ -669,6 +842,71 @@
     padding-left: 16px;
     padding-right: 24px;
     pointer-events: auto;
+  }
+  /* CTA row under the stage headline — sits left-aligned, flush with the
+     headline's first letter (same 16px left padding). pointer-events:auto
+     because the overlay parent is pointer-events:none so the marquee
+     behind stays hoverable. */
+  .stage-marquee .stage-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 28px 16px 0;
+    pointer-events: auto;
+    position: relative;
+    z-index: 6;
+  }
+  /* Stage's primary + ghost buttons share the SAME padding / font / radius
+     so the pair reads as a paired control, not two random pills with
+     different proportions. Both pick up the global pill (999) radius. */
+  .stage-actions .btn-primary,
+  .stage-actions .btn-ghost {
+    padding: 14px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 999px;
+  }
+  /* 3.0 round 36 — S2 first button switched to a solid BLACK pill per
+     user. The default .btn-primary uses an animated multi-color
+     shimmer (::before + ::after) that didn't read as serious enough
+     against the mint wash. Override to solid var(--text) bg + white
+     text, and disable both decorative pseudo-elements so no shimmer
+     remains. */
+  .stage-marquee .stage-actions .btn-primary {
+    background: var(--text);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(10,10,16,0.18);
+  }
+  .stage-marquee .stage-actions .btn-primary::before,
+  .stage-marquee .stage-actions .btn-primary::after {
+    display: none;
+  }
+  .stage-marquee .stage-actions .btn-primary:hover {
+    background: var(--text);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(10,10,16,0.26);
+  }
+  /* Section 2 sits on a mint wash; .btn-ghost defaults to transparent
+     which makes it look grey-tinted by the wash. Force a white fill so
+     the pill reads as a solid white control next to the teal primary.
+     Hover keeps the white pill (so it stays consistent visually) but
+     darkens the border and lifts; color stays dark — the base
+     .btn-ghost:hover rule would set color:#fff and erase the text on
+     a white pill, that's the regression the user hit. */
+  .stage-actions .btn-ghost {
+    background: #fff;
+    /* 3.0 round 36 — border darkened from rgba(10,10,16,0.10) →
+       rgba(10,10,16,0.55) so the outline is clearly visible against
+       the mint section wash (user: "第二个黑边明显一点"). */
+    border-color: rgba(10,10,16,0.55);
+    color: var(--text);
+  }
+  .stage-actions .btn-ghost:hover {
+    background: #fff;
+    /* Hover bumps the same darker border closer to full ink. */
+    border-color: rgba(10,10,16,0.80);
+    color: var(--text);
   }
   /* The headline lives on top of the marquee now — kept this older
      wrapper rule as a no-op fallback in case markup is reverted. */
@@ -686,8 +924,9 @@
     font-size: clamp(22px, 2.7vw, 38px);
     line-height: 1.16;
     letter-spacing: -0.02em;
-    text-transform: uppercase;
     margin: 0;
+    /* 3.0 round 27 — text reverted to dark since the plaque is back
+       to white and the section bg is back to a light mint wash. */
     color: var(--text);
   }
   /* Each clause is its own nowrap block — guarantees a clean 2-line
@@ -696,6 +935,8 @@
     display: block;
     white-space: nowrap;
   }
+  /* 3.0 round 27 — accent spans reverted to --alva now that the
+     plaque is white again and dark body text returns. */
   .stage-marquee .stage-title .alva { color: var(--alva); }
 
   .card-marquee {
@@ -747,14 +988,24 @@
     gap: 14px;
     padding: 26px 22px 22px;
     background: var(--bg-soft);
-    border: 1px solid var(--line);
-    border-radius: 22px;
+    /* 3.0 round 36 — border recolored from neutral --line(#e5e5ea) to a
+       mint-tinted alva (rgba(73,163,166,0.28)) so it stops reading as
+       a dirty grey strip on the green section bg. Same darkness, just
+       hue-shifted into the brand color family. Pairs with the
+       round-35 mint shadow tweak. */
+    border: 1px solid rgba(73,163,166,0.28);
+    border-radius: 8px;
     width: 260px;
     height: 220px;
     /* margin-right replaces flex gap so the duplicate set starts on
        an exact card boundary and -50% loops seamlessly. */
     margin-right: 20px;
-    box-shadow: 0 6px 18px rgba(10,10,16,0.06);
+    /* 3.0 round 35 — shadow recolored from neutral grey to alva
+       mint. The previous (10,10,16) cast a dirty grey halo on the
+       mint section bg ("在绿色背景上很脏"). Same darkness ramp, just
+       hue-shifted to the brand teal so the shadow reads as a
+       coherent extension of the section color. */
+    box-shadow: 0 6px 18px rgba(73,163,166,0.18);
     cursor: pointer;
     transition: transform .2s cubic-bezier(.22,1,.36,1),
                 box-shadow .2s ease,
@@ -770,7 +1021,9 @@
   }
   .mq-card:hover {
     transform: translate3d(0, -4px, 0);
-    box-shadow: 0 14px 32px rgba(10,10,16,0.14);
+    /* 3.0 round 35 — hover shadow matches the default shadow's mint
+       hue, just deeper. */
+    box-shadow: 0 14px 32px rgba(73,163,166,0.32);
     border-color: rgba(73,163,166,0.4);
   }
   .mq-avatar {
@@ -827,8 +1080,7 @@
     font-family: var(--font-mono);
     font-size: 10px;
     color: var(--muted);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: 0.04em;
     margin-top: 6px;
   }
   @media (prefers-reduced-motion: reduce) {
@@ -957,7 +1209,6 @@
     font-weight: 600;
     color: rgba(255,255,255,0.55);
     letter-spacing: 0.06em;
-    text-transform: uppercase;
     margin-left: 2px;
   }
 
@@ -1039,7 +1290,6 @@
     font-size: clamp(26px, 3.2vw, 38px);
     line-height: 1.18;
     letter-spacing: -0.02em;
-    text-transform: uppercase;
     margin: 0 0 24px;
     color: var(--text);
   }
@@ -1166,7 +1416,7 @@
        lighter section palette. */
     width: 100%; aspect-ratio: 4 / 2.7;
     container-type: inline-size;
-    border-radius: 10px;
+    border-radius: 8px;
     background: #fff;
     border: 1px solid var(--line);
     position: relative;
@@ -1249,8 +1499,7 @@
     font-family: var(--font-mono);
     font-size: 0.71em; font-weight: 600;
     color: var(--muted);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+    letter-spacing: 0.06em;
     margin-bottom: 0.29em;
   }
   .pc-score .val {
@@ -1266,8 +1515,7 @@
     font-family: var(--font-mono);
     font-size: 0.79em; font-weight: 700;
     color: var(--alva);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.04em;
     margin-top: 0.57em;
     display: inline-flex; align-items: center; gap: 0.57em;
   }
@@ -1301,7 +1549,7 @@
   }
   .pc-rank .ring-text .l {
     font-size: 0.64em; color: var(--muted);
-    letter-spacing: 0.2em; text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
   .pc-rank .ring-text .v {
     font-family: var(--font-display);
@@ -1332,8 +1580,7 @@
   .stats-strip .stat .l {
     font-size: 12px; font-weight: 700;
     color: var(--muted);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
 
   /* ============================================================
@@ -1341,14 +1588,16 @@
      ============================================================ */
   .section {
     position: relative;
-    /* 3.0 round 10 — top padding tightened from 120→64 so tab-click
-       anchored sections land their content close to the nav rather than
-       behind a tall whitespace cushion. Bottom kept at 96 for breathing
-       room between sections. */
-    padding: 64px 32px 96px;
-    background: var(--bg-soft);   /* swapped — was grey */
+    /* 3.0 round 22 — symmetric 96/96 padding so every non-hero section
+       has the same top/bottom rhythm. Tab-click anchoring still lands
+       cleanly because smoothScrollTo offsets by the 65px nav clearance. */
+    padding: 96px 32px 96px;
+    /* 3.0 round 19 — default .section stays WHITE; .alt sections (the
+       ones that used to be grey) are tinted 8 % alva teal. Adjacent
+       sections still alternate white / teal-tint. */
+    background: var(--bg-soft);
   }
-  .section.alt { background: var(--bg); }   /* swapped — was white */
+  .section.alt { background: rgba(73, 163, 166, 0.04); }
   .section-wrap { max-width: 1320px; margin: 0 auto; padding: 0 16px; }
   .section-head { margin-bottom: 48px; max-width: 760px; }
   /* section-head variant with a right-aligned action button */
@@ -1361,38 +1610,37 @@
     flex-wrap: wrap;
   }
   .section-head.with-action > div { max-width: 760px; }
+  /* Solid-dark pill — matches the playbook section's "Open playbook"
+     CTAs so the two CTA families pair across sections. Was a faint
+     outline-on-light pill that read as decorative; now it carries weight. */
   .section-action {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 22px;
+    padding: 14px 26px;
     border-radius: 999px;
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--line);
-    font-size: 13px;
+    background: var(--text);
+    color: #fff;
+    border: 0;
+    font-size: 14px;
     font-weight: 700;
-    box-shadow: 0 0 0 rgba(0,0,0,0);
-    transition: background .15s, border-color .15s, color .15s, transform .18s ease, box-shadow .18s ease;
+    transition: background .15s, transform .15s, box-shadow .15s;
     text-decoration: none;
     flex-shrink: 0;
   }
-  .section-action i { color: var(--alva); font-size: 14px; }
+  .section-action i { color: #fff; font-size: 14px; transition: transform .2s ease; }
   .section-action:hover {
-    background: var(--text);
-    color: #fff;
-    border-color: var(--text);
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 14px 28px rgba(10,10,16,0.20);
+    background: var(--alva);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(73,163,166,0.32);
   }
-  .section-action:hover i { color: var(--alva-hi); }
+  .section-action:hover i { transform: translate(2px, -2px); }
   .section-head .eyebrow {
     display: block;
     font-family: var(--font-mono);
     font-size: 11px; font-weight: 600;
     color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.06em;
     margin-bottom: 12px;
   }
   .section-head h2 {
@@ -1401,7 +1649,6 @@
     font-size: clamp(36px, 4.6vw, 60px);
     line-height: 1.05;
     letter-spacing: -0.025em;
-    text-transform: uppercase;
     margin: 0 0 18px;
     color: var(--text);
   }
@@ -1415,193 +1662,224 @@
   }
 
   /* ============================================================
-     PLAYBOOK LAYOUT  (3.0 round 5)
-     Left column = vertical marquee of three big visuals (Bull/Bear,
-     Critique, Build Your Own). Right column = static text (H2 + body).
+     PLAYBOOK SECTION  (3.0 round 11)
+     Three-row layout:
+       Row 1 — centered H2
+       Row 2 — 6 horizontal tabs (scrollable on narrow screens)
+       Row 3 — 6 cards in a horizontal scroll/snap rail
+     Cards carry no background and no border — they rely on the
+     gradient cover as the visual anchor + sentence-case title + body
+     + one trailing CTA pill.
      ============================================================ */
-  /* 3.0 round 6 — Apple-style 3-card row. Section uses .section
-     defaults (white bg, 120/96 padding); centered head; below it
-     three cards with a large visual + title + one-line sub. */
-  .section.section-playbook {
-    overflow: hidden;
-  }
+  .section.section-playbook { overflow: hidden; }
   .section-playbook .section-head {
-    margin: 0 auto 64px;
+    margin: 0 auto 28px;
     max-width: 760px;
     text-align: center;
   }
   .section-playbook .section-head h2 {
     font-size: clamp(28px, 3.4vw, 46px);
   }
-  .pb-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-  /* Apple-reference card — tighter radius (12px), image fills the
-     top, tighter padding around the text block, and a hairline border
-     so the card reads as a discrete object on the white section bg. */
-  .pb-card {
+
+  /* Row 2 — tabs */
+  .play-tabs {
     display: flex;
-    flex-direction: column;
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--bg-soft);
-    border: 1px solid var(--line);
-    box-shadow: 0 1px 3px rgba(10,10,16,0.04);
-    text-decoration: none;
-    color: inherit;
-    transition: transform .22s cubic-bezier(.22,1,.36,1),
-                box-shadow .22s ease,
-                border-color .22s ease;
-    cursor: pointer;
+    justify-content: center;
+    gap: 2px;
+    margin: 0 auto 44px;
+    padding: 0 16px;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* 3.0 round 40 — divider recolored from --line (#e5e5ea light grey,
+       invisible on the mint section bg) to a saturated alva at 50%
+       alpha so it actually reads as a horizontal axis under the tabs. */
+    border-bottom: 1px solid rgba(73,163,166,0.55);
   }
-  .pb-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 14px 30px rgba(10,10,16,0.10);
-    border-color: rgba(73,163,166,0.45);
-  }
-  /* Cover wraps the actual playbook artwork — sits on top of the card
-     with a slight bottom inset so the image edges are crisp against
-     the white text panel. */
-  .pb-cover {
-    aspect-ratio: 4 / 3;
-    overflow: hidden;
-    background: var(--bg);
+  .play-tabs::-webkit-scrollbar { display: none; }
+  .play-tab {
+    flex-shrink: 0;
     position: relative;
+    padding: 10px 14px;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color .15s ease;
   }
-  .pb-cover-img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform .35s cubic-bezier(.22,1,.36,1);
-  }
-  .pb-card:hover .pb-cover-img {
-    transform: scale(1.03);
+  .play-tab i { margin-right: 6px; opacity: 0.7; }
+  .play-tab:hover { color: var(--text); }
+  .play-tab.active { color: var(--text); font-weight: 700; }
+  /* Teal underline indicator — mirrors the nav-tab indicator. Tight to the
+     tab text so it reads as a quiet active marker, not a second pill. */
+  .play-tab.active::after {
+    content: '';
+    position: absolute;
+    left: 14px; right: 14px;
+    bottom: -1px;
+    height: 2px;
+    background: var(--alva);
   }
 
-  /* ----- Mini mockups inside each .pb-visual ----- */
-  .pbm {
+  /* Row 3 — horizontal rail. The carousel deliberately bleeds past the
+     1320px section-wrap and runs to the viewport edge; the rightmost
+     cards get hard-cut by .section overflow:hidden (NOT by trailing
+     padding) so the trail reads as "there's more, scroll to see it"
+     instead of as a contained card row with breathing room.
+       padding-left uses calc so the FIRST card always lines up with the
+       H2 column above:
+         narrow viewport ≤ 1320 → 48px (32 section + 16 wrap)
+         wide   viewport > 1320 → wrap left-edge + 16
+       padding-right is 0 so the last card runs off the screen edge. */
+  .play-carousel {
+    margin-left:  calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    width: 100vw;
+  }
+  .play-track {
+    display: flex;
+    gap: 32px;
+    overflow-x: auto;
+    overflow-y: visible;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding-top: 8px;
+    padding-bottom: 24px;
+    /* Symmetric horizontal padding — the LEFT calc lines the first card
+       up with the leaderboard column above (76px in 1440); the RIGHT
+       calc gives the last card the same 76px breathing room on the right
+       edge so the carousel's bookends match the leaderboard's bookends. */
+    padding-left:  max(48px, calc((100vw - 1320px) / 2 + 16px));
+    padding-right: max(48px, calc((100vw - 1320px) / 2 + 16px));
+    /* scroll-snap-align: start aligns to scrollport-start (= padding-left
+       edge). Without scroll-padding-left, the snap edge defaults to 0 and
+       erases padding-left, pulling the first card flush to x=0. Mirror
+       both scroll-padding values so snap respects the visual gutters. */
+    scroll-padding-left:  max(48px, calc((100vw - 1320px) / 2 + 16px));
+    scroll-padding-right: max(48px, calc((100vw - 1320px) / 2 + 16px));
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .play-track::-webkit-scrollbar { display: none; }
+  /* Last card uses snap-align: end so it locks to the scrollport's RIGHT
+     edge (= viewport - 76) instead of trying to start-align off the page.
+     Without this rule a mandatory-snap container would refuse to settle
+     past the last card's start-snap point and leave Watchlist permanently
+     half-clipped. */
+  .play-card:last-child { scroll-snap-align: end; }
+  .play-card {
+    /* Wide landscape card: 750px (≈ +1/3 from 560) lets a single card
+       dominate the fold at common viewports while the next card gets
+       hard-clipped by the section. Cover is landscape 3:2 (750×500) —
+       big banner, not a thumbnail. */
+    flex: 0 0 750px;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    /* 3.0 round 41 — spacing reworked again. Earlier brief was "标题靠
+       近副标题, 标题离卡片远一点" → cover→h3 24, h3→p 4. New brief
+       reverses that: BOTH gaps want to read FAR ("卡片下面的标题应该
+       离卡片远一点，跟下面的副标题也远一点"). Now cover→h3 48 and
+       h3→p 16 — both pushed up; the card body now reads as 3 distinct
+       blocks (cover / title / body+cta) instead of one tight stack. */
+    gap: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+  /* Explicit spacing — generous cover→title AND title→body gaps. */
+  .play-card h3   { margin-top: 48px; margin-bottom: 16px; }
+  .play-card p    { margin-top: 0; }
+  .play-card .play-cta { margin-top: 24px; }
+  .play-cover {
+    /* Landscape 3:2 — wide banner cover, NOT a portrait tile. Card reads
+       left-to-right as a horizontal product card. NO transition because
+       the card body itself has no hover affordance — only .play-cta
+       (the button) reacts to hover. */
+    aspect-ratio: 3 / 2;
+    border-radius: 8px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    position: relative;
+    color: #fff;
+  }
+  .play-cover::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.18) 1px, transparent 1.5px);
+    background-size: 18px 18px;
+    opacity: 0.45;
+  }
+  .play-cover i {
     position: relative;
     z-index: 1;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 14px;
-    padding: 14px 16px;
-    color: #fff;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    /* Cover icon — sized to read as the cover's hero element but small
+       enough that the cover doesn't feel like an icon poster. The title
+       below carries the meaning; the icon is a flavour cue. */
+    font-size: 96px;
+    filter: drop-shadow(0 10px 28px rgba(0,0,0,0.22));
   }
-  /* Card 1 — chart */
-  .pbm-chart .pbm-head {
-    display: flex; justify-content: space-between; align-items: center;
-    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em;
-  }
-  .pbm-ticker { font-size: 14px; font-weight: 800; letter-spacing: 0.02em; }
-  .pbm-tag { color: rgba(255,255,255,0.7); font-size: 10px; }
-  .pbm-svg { width: 100%; height: auto; flex: 1; max-height: 120px; }
-  .pbm-foot { display: flex; gap: 8px; }
-  .pbm-pill {
-    padding: 4px 10px; border-radius: 999px;
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase;
-  }
-  .pbm-pill.bull { background: rgba(74,222,128,0.22); color: #4ade80; }
-  .pbm-pill.bear { background: rgba(239,68,68,0.22); color: #fca5a5; }
-
-  /* Card 2 — chat */
-  .pbm-chat { gap: 10px; }
-  .pbm-msg {
-    padding: 10px 12px; border-radius: 10px;
-    font-size: 12px; line-height: 1.4;
-  }
-  .pbm-msg-user {
-    background: rgba(255,255,255,0.16);
-    align-self: flex-end;
-    max-width: 80%;
-  }
-  .pbm-msg-ai {
-    background: rgba(0,0,0,0.32);
-    align-self: flex-start;
-    max-width: 92%;
-    display: flex; flex-direction: column; gap: 4px;
-  }
-  .pbm-msg-head {
-    display: flex; align-items: center; gap: 6px;
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.1em;
-    color: rgba(255,255,255,0.75);
-  }
-  .pbm-msg-head i { color: #fbbf24; font-size: 13px; }
-  .pbm-msg-ai b { font-weight: 700; }
-
-  /* Card 3 — mix */
-  .pbm-mix { gap: 12px; }
-  .pbm-row { display: flex; align-items: center; gap: 10px; }
-  .pbm-row-head { justify-content: space-between; }
-  .pbm-row-head span:first-child {
-    font-family: var(--font-mono); font-size: 11px;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: rgba(255,255,255,0.7);
-  }
-  .pbm-tag-gain {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 800;
-    color: #4ade80;
-  }
-  .pbm-row-avatars { gap: 0; padding: 4px 0; }
-  .pbm-av {
-    width: 32px; height: 32px; border-radius: 50%;
-    display: grid; place-items: center;
-    color: #fff; font-weight: 800; font-size: 11px;
-    border: 2px solid rgba(255,255,255,0.16);
-    margin-left: -6px;
-  }
-  .pbm-av:first-child { margin-left: 0; }
-  .pbm-av-add {
-    background: rgba(255,255,255,0.18);
-    color: rgba(255,255,255,0.75);
-    font-size: 16px;
-  }
-  .pbm-row-signal {
-    background: rgba(255,255,255,0.10);
-    padding: 8px 12px; border-radius: 10px;
-    font-size: 12px;
-  }
-  .pbm-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #4ade80;
-    box-shadow: 0 0 0 3px rgba(74,222,128,0.22);
-    flex-shrink: 0;
-  }
-  .pbm-sig { color: rgba(255,255,255,0.85); }
-  .pb-text {
-    padding: 22px 22px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .pb-text h3 {
-    margin: 0;
+  .play-cover[data-variant="teal"]   { background: linear-gradient(135deg, #49A3A6 0%, #5cb9bc 60%, #2f7a7d 100%); }
+  .play-cover[data-variant="dark"]   { background: linear-gradient(135deg, #1a1a1e 0%, #0a0a10 65%, #000 100%); }
+  .play-cover[data-variant="warm"]   { background: linear-gradient(135deg, #ff8a4c 0%, #ff6f3a 55%, #c84c1f 100%); }
+  .play-cover[data-variant="purple"] { background: linear-gradient(135deg, #b388ff 0%, #8a5cf2 60%, #5b2bb8 100%); }
+  .play-card h3 {
+    /* margin: 0 deliberately omitted — see earlier `.play-card h3` rule
+       above which sets margin-top:48 / margin-bottom:16 to push the
+       title FAR from both the cover and the body. */
     font-family: var(--font-display);
-    font-size: 19px;
+    /* Card title — L3 in the page type scale (22px). The old 32px was
+       its own tier with no sibling on the page; pulling it down to 22
+       lets it share a tier with the rest of the card-title family. */
+    font-size: 22px;
     font-weight: 700;
-    letter-spacing: -0.012em;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
     color: var(--text);
-    line-height: 1.22;
-    text-transform: none;
   }
-  .pb-text p {
-    margin: 0;
+  .play-card p {
+    /* margin-top kept at 0 (see earlier rule); margin-bottom 0 here so
+       the gap to .play-cta is governed by cta's margin-top: 24. */
+    margin-bottom: 0;
     color: var(--muted);
-    font-size: 14px;
+    /* Body — L4 (15px), shared with all body copy on the page. */
+    font-size: 15px;
     line-height: 1.55;
+    max-width: 560px;
   }
+  .play-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    /* Tight follow-on — cta sits close under the body copy, not pushed
+       away by an extra margin (the parent's gap already gives 14px). */
+    margin-top: 0;
+    padding: 14px 26px;
+    border-radius: 999px;
+    background: var(--text);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .15s, transform .15s, box-shadow .15s;
+  }
+  .play-cta i { font-size: 13px; transition: transform .2s ease; }
+  .play-cta:hover {
+    background: var(--alva);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(73,163,166,0.32);
+  }
+  .play-cta:hover i { transform: translate(2px, -2px); }
   @media (max-width: 960px) {
-    .pb-grid { grid-template-columns: 1fr; gap: 18px; }
+    .play-card { flex: 0 0 78vw; }
+    .play-tabs { justify-content: flex-start; }
   }
   .playbook-text h2 {
     font-family: var(--font-display);
@@ -1609,7 +1887,6 @@
     font-size: clamp(30px, 4.0vw, 56px);
     line-height: 1.06;
     letter-spacing: -0.025em;
-    text-transform: uppercase;
     margin: 0 0 22px;
     color: var(--text);
   }
@@ -1653,7 +1930,7 @@
     flex-shrink: 0;
     height: 260px;
     margin-bottom: 24px;
-    border-radius: 22px;
+    border-radius: 8px;
     overflow: hidden;
     display: flex;
     align-items: stretch;
@@ -1701,8 +1978,7 @@
     display: block;
     font-family: var(--font-mono);
     font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: rgba(255,255,255,0.78);
     margin-bottom: 6px;
   }
@@ -1712,7 +1988,6 @@
     font-size: 22px;
     font-weight: 800;
     letter-spacing: -0.01em;
-    text-transform: uppercase;
     line-height: 1.18;
   }
   @media (max-width: 960px) {
@@ -1732,7 +2007,7 @@
     flex-direction: column;
     background: var(--bg-soft);
     border: 1px solid var(--line);
-    border-radius: 22px;
+    border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
     transition: transform .22s cubic-bezier(.22,1,.36,1),
@@ -1789,7 +2064,6 @@
     font-size: 22px;
     font-weight: 800;
     letter-spacing: -0.015em;
-    text-transform: uppercase;
     color: var(--text);
     line-height: 1.18;
   }
@@ -1893,7 +2167,7 @@
     margin: 0 auto;
     background: var(--bg-soft);
     border: 1px solid var(--line);
-    border-radius: 20px;
+    border-radius: 8px;
     padding: 48px 56px;
     box-shadow: 0 20px 60px rgba(10,10,16,0.06);
   }
@@ -1906,8 +2180,7 @@
     font-family: var(--font-mono);
     font-size: 11px; font-weight: 600;
     color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.06em;
     margin-bottom: 12px;
   }
   .scan-head h2 {
@@ -1916,7 +2189,6 @@
     font-size: clamp(26px, 3.0vw, 36px);
     line-height: 1.12;
     letter-spacing: -0.02em;
-    text-transform: uppercase;
     margin: 0 0 16px;
     color: var(--text);
   }
@@ -1940,7 +2212,7 @@
     gap: 14px;
     align-items: flex-start;
     padding: 20px 18px;
-    border-radius: 14px;
+    border-radius: 8px;
     background: var(--bg);
     border: 1px solid var(--line);
   }
@@ -2022,7 +2294,6 @@
     font-size: clamp(36px, 4.6vw, 60px);
     line-height: 1.02;
     letter-spacing: -0.025em;
-    text-transform: uppercase;
     margin: 0 0 14px;
     color: var(--text);
   }
@@ -2046,7 +2317,7 @@
   }
   .feat {
     padding: 32px;
-    border-radius: 10px;
+    border-radius: 6px;
     background: #fff;
     border: 1px solid var(--line);
     transition: box-shadow .25s ease;
@@ -2080,7 +2351,6 @@
     background: rgba(73,163,166,0.10);
     color: var(--alva);
     letter-spacing: 0.06em;
-    text-transform: uppercase;
   }
 
   /* ============================================================
@@ -2109,7 +2379,7 @@
     margin: 56px auto 0;
     max-width: 920px;
     border: 1px dashed var(--line);
-    border-radius: 18px;
+    border-radius: 8px;
     padding: 18px;
     background: rgba(255,255,255,0.6);
     display: grid;
@@ -2127,8 +2397,7 @@
     font-family: var(--font-mono);
     font-size: 11px;
     color: var(--alva);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
   .audit-preview .meta span {
     display: block;
@@ -2164,7 +2433,7 @@
   .lb-card {
     background: #fff;
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: 8px;
     overflow: hidden;
   }
   .lb-toolbar {
@@ -2218,35 +2487,174 @@
     font-size: 10px;
     font-weight: 700;
     color: var(--muted);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
-  /* lb-rows render more rows than fit — the bottom mask fades them out
-     so the table reads as "cut by the section, more on the full board" */
+  /* lb-rows render more rows than fit — overflow:hidden + section.bottom
+     hard-cut at the lb-card's flat bottom creates the "table got cut,
+     more on the full board" feel. The previous alpha mask gradient that
+     also faded the bottom rows was removed per user request: they want
+     the cut to be sharp at the section edge, not a soft fade. */
   .lb-rows {
     padding: 4px 0 0;
     max-height: 320px;
     overflow: hidden;
-    mask-image: linear-gradient(to bottom,
-      black 0%, black 65%, rgba(0,0,0,0.55) 88%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom,
-      black 0%, black 65%, rgba(0,0,0,0.55) 88%, transparent 100%);
   }
-  .lb-card { border-bottom: 0; border-radius: 14px 14px 0 0; }
+  /* 3.0 round 24 — lb-card runs to the section's bottom edge again so
+     the table reads as "scroll down to see the full board". Bottom
+     border + corners drop; section's padding-bottom is overridden to 0
+     below. The .lb-rows mask handles the visual fade-out. */
+  .lb-card { border-bottom: 0; border-radius: 8px 8px 0 0; }
   #leaderboard { padding-bottom: 0; }
 
   /* ============================================================
-     LEADERBOARD — STACKED, CENTERED HEAD  (3.0 round 6)
-     Heading + sub + action centered above a full-width table.
+     LEADERBOARD — MESH GRADIENT BACKDROP  (3.0 round 23)
+     Replaces the flat 4% teal wash with a Paper-Design/WhatAMesh-style
+     drifting mesh. Three soft teal blobs at different positions slowly
+     translate + scale on a 24-second loop, giving the section a quiet
+     ambient motion that demarcates its boundary without competing with
+     the leaderboard table on top.
+     Implementation notes:
+       - ::before lives behind .section-wrap (z-index:0 vs wrap's 1) and
+         is pointer-events:none so it never intercepts clicks.
+       - Mesh uses 3 layered radial-gradients composited inside the
+         single ::before. transform is the only animated property — the
+         compositor handles it on the GPU so it's basically free.
+       - prefers-reduced-motion: the animation is paused (kept static
+         frame, no jitter, no flash).
      ============================================================ */
+  #leaderboard {
+    position: relative;
+    isolation: isolate;
+    /* Base remains var(--bg-soft); a faint 5-hue aurora halo sits
+       on ::before behind the lb-card, only visible around the
+       card's perimeter (card itself is opaque white, covering the
+       middle). See ::before rule below. */
+    background: var(--bg-soft);
+    /* 3.0 round 31 — padding-top bumped 96 → 120 to match the stage
+       section above (.stage.stage-marquee has padding 120 0 120).
+       Visual symmetry: stage top-padding = leaderboard top-padding
+       = 120, so the gap from stage buttons down to the leaderboard
+       title reads as the section's own breathing room. */
+    padding-top: 120px;
+    /* 3.0 round 38 — overflow flipped back to hidden. User's earlier
+       "halo overflows more going down" was about the SHAPE (cone
+       wider at the bottom), not literal CSS overflow into the next
+       section. The cone-shaped halo now reads inside the section and
+       hard-cuts at section.bottom; the next section stays clean. */
+    overflow: hidden;
+  }
+  /* 3.0 round 31 — aurora retuned (again) after user feedback. Two
+     real problems with round 30:
+       1) Bounding box was top:240/left:0/right:0/bottom:0 — a
+          700×1440 rectangle that effectively COVERED the entire
+          card area, contradicting the brief "不需要充斥整个section,
+          边缘展示出来一点外溢就行".
+       2) The animation was translate3d + scale on a static conic,
+          so the visible colors never changed (just shifted position
+          by a few percent). User noticed: "颜色都不变的".
+     Fix:
+       1) Position the pseudo to match the lb-card's bounding box
+          EXACTLY (viewport-aware horizontal inset). The card sits
+          at z-index:1 opaque-white over the pseudo; a heavy blur
+          (40px) on the pseudo bleeds its colors ~40px PAST the
+          card's outline. So instead of filling the whole section,
+          the visible halo is a tight ring hugging the card edges.
+       2) Animate filter via hue-rotate — colors continuously cycle
+          0→360deg over 14s, making the ring visibly shift through
+          the rainbow. */
+  #leaderboard::before {
+    content: '';
+    position: absolute;
+    /* Inset matches the lb-card. lb-card content-width = min(
+       viewport - 32, 1288). On 1440 viewport the side inset is
+       (1440 - 1288) / 2 = 76px each side; on narrower viewports
+       it floors at 16. The top inset (280) is just at the
+       lb-card's top edge (= padding-top 96 + section-head ~160
+       + margin-bottom 24). The card extends to section bottom so
+       bottom inset is 0. */
+    /* 3.0 round 37 — halo redone as CONE (上窄下宽). Round 36 used
+       9 radial blobs but laid them out roughly symmetric horizontally
+       at each height — so the top of the halo was as wide as the
+       bottom, just fainter. User flagged: needs a true cone shape.
+       Now 11 blobs in 5 rows, each row positioned farther from
+       horizontal center and at larger size+alpha than the row above:
+         Row 1 (top, 14%): blobs at 38%/62% — barely past center
+         Row 2 (upper-mid, 36%): blobs at 22%/78%
+         Row 3 (mid, 58%): blobs at 8%/92% — at card edge
+         Row 4 (lower-mid, 80%): blobs at -2%/102% — past card edge
+         Row 5 (bottom, 105-112%): blobs at -8%/108%/50% — well past
+       Combined with the pseudo extending below section bottom (-240)
+       and overflow:visible on the section, the halo reads as a cone
+       that narrows toward the title and flares wide past the card
+       bottom, continuing to bleed downward into the page below. */
+    top: 320px;
+    bottom: -240px;
+    left:  max(-60px, calc((100vw - 1640px) / 2));
+    right: max(-60px, calc((100vw - 1640px) / 2));
+    z-index: 0;
+    pointer-events: none;
+    background:
+      /* Cone-shaped halo: 上窄下宽. Each row of blobs is positioned
+         progressively farther from horizontal center as you descend,
+         and gets larger + more saturated. Top row hugs the center
+         (35%/65% — only a couple px past the card edge); bottom row
+         is at -5%/105% (significantly past the card width + extending
+         past the section boundary downward). */
+      /* Row 1 — TOP, narrowest, faintest. Blobs sit near center so
+         they barely peek out past the card. */
+      radial-gradient(280px 200px at 38% 14%, rgba(255,158,200,0.22) 0%, transparent 70%),
+      radial-gradient(280px 200px at 62% 14%, rgba(212,178,255,0.22) 0%, transparent 70%),
+      /* Row 2 — upper-mid, slightly wider */
+      radial-gradient(360px 260px at 22% 36%, rgba(255,196,158,0.32) 0%, transparent 70%),
+      radial-gradient(360px 260px at 78% 36%, rgba(160,200,255,0.32) 0%, transparent 70%),
+      /* Row 3 — middle, hugging card edge */
+      radial-gradient(440px 320px at  8% 58%, rgba(170,240,220,0.45) 0%, transparent 70%),
+      radial-gradient(440px 320px at 92% 58%, rgba(255,158,200,0.45) 0%, transparent 70%),
+      /* Row 4 — lower-mid, breaking past card edge */
+      radial-gradient(540px 380px at -2% 80%, rgba(212,178,255,0.55) 0%, transparent 70%),
+      radial-gradient(540px 380px at 102% 80%, rgba(255,226,170,0.55) 0%, transparent 70%),
+      /* Row 5 — BOTTOM, widest, strongest. Blobs extend WELL past
+         the card on the sides AND past the section bottom. */
+      radial-gradient(680px 460px at -8% 105%, rgba(255,196,158,0.60) 0%, transparent 72%),
+      radial-gradient(680px 460px at 108% 105%, rgba(170,240,220,0.60) 0%, transparent 72%),
+      radial-gradient(600px 420px at 50% 112%, rgba(160,200,255,0.55) 0%, transparent 72%);
+    filter: blur(30px) hue-rotate(0deg);
+    animation: lbHueRotate 18s linear infinite;
+    will-change: filter;
+  }
+  /* Rotates the conic's hue continuously — every 14s the entire
+     rainbow shifts one full cycle, so the visible peek colors are
+     constantly changing (this is what makes it READ as colors
+     changing, not the previous transform translate). */
+  @keyframes lbHueRotate {
+    0%   { filter: blur(30px) hue-rotate(0deg);   }
+    100% { filter: blur(30px) hue-rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #leaderboard::before { animation: none; }
+  }
   #leaderboard .section-wrap {
+    position: relative;          /* stacks above the mesh ::before */
+    z-index: 1;
     display: block;
     max-width: 1320px;
   }
   #leaderboard .section-head {
-    margin: 0 auto 56px;
+    /* 3.0 round 35 — margin-bottom raised to 120 so the gap from the
+       "View full leaderboard" button down to the lb-card matches the
+       section's padding-top (120). User wanted these two distances
+       equal so the title block has the same breathing room above and
+       below within the section. */
+    margin: 0 auto 120px;
     max-width: 760px;
     text-align: center;
+  }
+  /* 3.0 round 27 — match S4 (#agents) title scale exactly so the two
+     sections read as a paired typographic tier instead of "S3 big /
+     S4 small". S4 inherits clamp(28, 3.4vw, 46) via
+     .section-playbook .section-head h2; mirror it here on S3. */
+  #leaderboard .section-head h2 {
+    font-size: clamp(28px, 3.4vw, 46px);
   }
   /* Stack the action centered under the title block instead of
      pushing it to the right edge. */
@@ -2285,7 +2693,10 @@
   #leaderboard .lb-row .who b { font-size: 14.5px; }
   #leaderboard .lb-row .who span { font-size: 12px; }
   #leaderboard .lb-row .cell .v { font-size: 14px; }
-  #leaderboard .lb-rows { max-height: 460px; }
+  /* 3.0 round 24 — table window 760 → 540. The fade-mask at the bottom
+     still implies more rows below; a shorter window keeps the section
+     compact without breaking the "scroll for full board" visual. */
+  #leaderboard .lb-rows { max-height: 540px; }
   .lb-row {
     display: grid;
     /* 3.0: Score column removed — matches .lb-header (7 cols). */
@@ -2293,11 +2704,18 @@
     align-items: center;
     gap: 16px;
     padding: 10px 24px;       /* tighter rows */
-    border-bottom: 1px solid var(--line);
+    /* 3.0 round 39 — dividers moved from border-bottom to border-top.
+       lb-rows clips at max-height 540 with overflow:hidden; if a row's
+       border-bottom happened to land at the clip line, the border
+       would show at the bottom of the section and read as a "closed
+       box" instead of "table got cut". Top-borders avoid this: every
+       row's BOTTOM is now borderless, so the clip line is always
+       clean. The visible dividers are the top-borders of rows 2..N. */
+    border-top: 1px solid var(--line);
     transition: background .15s;
     text-decoration: none; color: inherit;
   }
-  .lb-row:last-child { border-bottom: 0; }
+  .lb-row:first-child { border-top: 0; }
   .lb-row:hover { background: rgba(73,163,166,0.04); }
   .lb-row .idx {
     font-family: var(--font-mono);
@@ -2324,7 +2742,7 @@
     border-radius: 999px;
     font-family: var(--font-mono);
     font-size: 10px; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
   .risk-pill.low    { background: rgba(34,197,94,0.10);  color: #15803d; }
   .risk-pill.medium { background: rgba(255,138,76,0.14); color: #c2410c; }
@@ -2414,8 +2832,7 @@
     font-size: 11px;
     font-weight: 600;
     color: var(--muted);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    letter-spacing: 0.05em;
     margin-right: 4px;
   }
   .agents-chip {
@@ -2463,7 +2880,24 @@
      ============================================================ */
   /* 3.0 round 5 — min-height: 760px removed; new playbook section
      determines its own height via .playbook-layout min-height. */
-  #agents { position: relative; overflow: hidden; }
+  /* 3.0 round 28 — S4 (#agents) bg REVERTED to the light mint wash
+     (matches S2's recipe) per user: "最后一个section还是改回之前的
+     淡绿色". The round-26 solid-alva treatment + all the white-on-teal
+     content overrides have been removed; section content reverts to
+     its dark-on-light defaults inherited from .section / .play-* base
+     rules. The wash composition mirrors S2's exactly so the two
+     green sections read as a paired pair within the cadence. */
+  #agents {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(60% 55% at 80% 22%, rgba(73,163,166,0.16) 0%, transparent 65%),
+      radial-gradient(70% 60% at 14% 82%, rgba(92,185,188,0.14) 0%, transparent 70%),
+      rgba(73,163,166,0.08);
+  }
+  /* (3.0 round 43 — S4 background animation removed entirely, see
+     companion comment on the S2 stage section. Section bg now relies
+     solely on the static mint wash gradients above.) */
   .agents-bubbles {
     position: absolute;
     inset: 0;
@@ -2532,7 +2966,7 @@
     background: #fff;
     color: var(--text);
     padding: 12px 16px;
-    border-radius: 18px;
+    border-radius: 8px;
     /* Avatars top-align with the name above the bubble, so the bubble's
        tail-corner (the corner whose radius is squared off to "point" at
        the avatar) belongs on the TOP-LEFT, not the bottom-left. */
@@ -2575,8 +3009,7 @@
     font-family: var(--font-mono);
     font-size: 11px; font-weight: 600;
     color: var(--alva-hi);
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.06em;
     margin-bottom: 16px;
     display: block;
   }
@@ -2588,8 +3021,7 @@
     letter-spacing: -0.025em;
     margin: 0 0 20px;
     color: #fff;
-    text-transform: uppercase;
-  }
+    }
   .closing h2 .alva { color: var(--alva); }
   .closing-head p {
     color: rgba(255,255,255,0.55);
@@ -2604,7 +3036,7 @@
     gap: 24px;
   }
   .closing-path {
-    border-radius: 10px;
+    border-radius: 6px;
     border: 1px solid rgba(255,255,255,0.08);
     background: rgba(255,255,255,0.03);
     padding: 36px;
@@ -2614,7 +3046,7 @@
     font-family: var(--font-mono);
     font-size: 10px; font-weight: 700;
     color: var(--alva-hi);
-    letter-spacing: 0.2em; text-transform: uppercase;
+    letter-spacing: 0.06em;
     padding: 5px 10px;
     border-radius: 4px;
     background: rgba(73,163,166,0.14);
@@ -2673,7 +3105,7 @@
     font-family: var(--font-mono);
     font-size: 11px;
     color: rgba(255,255,255,0.4);
-    letter-spacing: 0.16em;
+    letter-spacing: 0.05em;
   }
 
   /* ============================================================
@@ -2761,10 +3193,9 @@
     font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.06em;
     color: var(--muted);
-    text-transform: uppercase;
-  }
+    }
   .do-card h3 {
     font-family: var(--font-display);
     font-size: 24px;
@@ -2828,10 +3259,9 @@
     gap: 8px;
     font-family: var(--font-mono);
     font-size: 11px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.03em;
     color: var(--muted);
-    text-transform: uppercase;
-  }
+    }
   .do-foot i { color: var(--alva); font-size: 13px; }
 
   /* Submit-success state — replaces the form once the user submits. */
@@ -2860,7 +3290,7 @@
   .bottom-cards-inner {
     max-width: 920px;
     margin: 0 auto;
-    border-radius: 24px;
+    border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 24px 60px rgba(10,10,16,0.14);
   }
@@ -2884,8 +3314,7 @@
   .bcard-eyebrow {
     font-family: var(--font-mono);
     font-size: 11px; font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    letter-spacing: 0.05em;
     margin-bottom: 16px;
   }
   .bcard h3 {
@@ -2914,8 +3343,7 @@
   .bcard-trust {
     font-family: var(--font-mono);
     font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   /* Submit form on the dark Request card — restrained small pill input +
@@ -2967,15 +3395,50 @@
     box-shadow: 0 16px 32px rgba(0,0,0,0.30);
   }
 
+  /* .bcard-form was designed for a dark Section-8 "Request a creator"
+     card (white input text on dark, white pill submit on dark). The
+     same form markup is also reused inside #modal-for-kols which is a
+     WHITE dialog — on white, every original rule inverts to invisible
+     (white text on white input, white button on white modal). Re-skin
+     the form ONLY when nested in a .dialog so the dark-card variant
+     stays untouched. */
+  .dialog .bcard-form input {
+    background: rgba(10,10,16,0.04);
+    border-color: rgba(10,10,16,0.10);
+    color: var(--text);
+  }
+  .dialog .bcard-form input::placeholder { color: rgba(10,10,16,0.40); }
+  .dialog .bcard-form input:focus {
+    border-color: var(--alva);
+    background: rgba(73,163,166,0.06);
+  }
+  .dialog .bcard-form button {
+    background: var(--alva);
+    color: #fff;
+    box-shadow: 0 12px 28px rgba(73,163,166,0.28);
+  }
+  .dialog .bcard-form button:hover {
+    background: var(--alva-hi);
+    color: #fff;
+    box-shadow: 0 18px 40px rgba(73,163,166,0.40);
+  }
+  .dialog .bcard-form textarea {
+    background: rgba(10,10,16,0.04) !important;
+    border-color: rgba(10,10,16,0.10) !important;
+    color: var(--text) !important;
+  }
+
   /* ============================================================
      FOOTER
      ============================================================ */
   footer.f {
     padding: 28px 32px;
-    /* footer bg follows the LAST section. After 3.0 round 8 removed the
-       bottom Request card, the last section is .section-do (grey), so
-       footer is grey — no seam at the page-end. */
-    background: var(--bg);
+    /* 3.0 round 28 — footer follows S4 which is back to the light
+       mint wash. We use just the SOLID base (no radial blobs) so the
+       footer reads as a quiet outro rather than its own ambient slab.
+       Text color reverts to var(--muted) for the dark-on-light
+       palette. */
+    background: rgba(73,163,166,0.08);
     color: var(--muted);
   }
   .f-inner {
@@ -3000,7 +3463,7 @@
     background: var(--alva);
     border: 0;
     padding: 14px 28px;
-    border-radius: 8px;
+    border-radius: 999px;
     cursor: pointer;
     overflow: hidden;
     transition: transform .15s, box-shadow .15s, background .15s;
@@ -3037,6 +3500,68 @@
   }
 
   /* ============================================================
+     SEARCH MODAL  (Section 2 Search CTA → backtest single handle)
+     Reuses .modal/.dialog chrome; adds .search-form pill input + pill
+     submit row. Submit flips data-state="sent" which hides the form
+     and shows the confirmation block.
+     ============================================================ */
+  .search-form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .search-form input {
+    flex: 1 1 240px;
+    min-width: 0;
+    height: 48px;
+    padding: 0 20px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .search-form input::placeholder { color: var(--muted-2); }
+  .search-form input:focus {
+    outline: none;
+    border-color: var(--alva);
+    background: var(--bg-soft);
+  }
+  .search-form .btn-primary {
+    height: 48px;
+    padding: 0 24px;
+  }
+  .search-foot {
+    margin-top: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .search-foot i { color: var(--alva); font-size: 13px; }
+  .search-success {
+    display: none;
+    margin-top: 18px;
+    padding: 16px 18px;
+    border-radius: 8px;
+    background: rgba(73,163,166,0.08);
+    border: 1px solid rgba(73,163,166,0.30);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .search-success strong { color: var(--alva); font-weight: 700; }
+  #modal-search[data-state="sent"] .search-form,
+  #modal-search[data-state="sent"] .search-foot { display: none; }
+  #modal-search[data-state="sent"] .search-success { display: block; }
+
+  /* ============================================================
      ALVA ATTRIBUTION BADGE  (persistent bottom-right, light card)
      Cross-site nudge: "this is powered by Alva — see more playbooks"
      ============================================================ */
@@ -3053,7 +3578,7 @@
     width: 168px;          /* squarer card — fixed width */
     background: rgba(255,255,255,0.92);
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: 8px;
     box-shadow: 0 10px 28px rgba(10,10,16,0.08);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -3109,21 +3634,20 @@
     width: min(620px, 100%);
     max-height: 86vh;
     overflow: auto;
-    border-radius: 14px;
+    border-radius: 10px;
     background: #fff;
     padding: 32px;
     box-shadow: 0 30px 80px rgba(0,0,0,0.3);
   }
   .dialog-head { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
-  .dialog h3 { margin: 10px 0 0; font-family: var(--font-display); font-size: 28px; line-height: 1.1; text-transform: uppercase; letter-spacing: -0.015em; }
+  .dialog h3 { margin: 10px 0 0; font-family: var(--font-display); font-size: 28px; line-height: 1.1; letter-spacing: -0.015em; }
   .dialog p { color: var(--muted); line-height: 1.6; }
   .dialog .eyebrow {
     display: block;
     font-family: var(--font-mono);
     font-size: 11px; font-weight: 600;
     color: var(--alva);
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.06em;
   }
   .close {
     width: 36px; height: 36px;
@@ -3151,8 +3675,7 @@
     font-family: var(--font-mono);
     font-size: 11px; font-weight: 700;
     color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: 0.03em;
   }
   .step .desc { font-size: 14px; color: var(--text); line-height: 1.5; }
   .step .desc b { color: var(--text); font-weight: 700; }
@@ -3211,7 +3734,7 @@
   }
   .notice b { color: var(--text); font-weight: 700; }
   .dialog-actions { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
-  .dialog-actions .btn-primary { padding: 12px 22px; font-size: 14px; border-radius: 8px; }
+  .dialog-actions .btn-primary { padding: 12px 22px; font-size: 14px; border-radius: 999px; }
   .dialog-ghost {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 12px 22px;
@@ -3242,7 +3765,7 @@
     width: min(440px, 100%);
     max-height: 86vh;
     overflow: auto;
-    border-radius: 14px;
+    border-radius: 10px;
     background: #fff;
     padding: 44px 36px 36px;
     box-shadow: 0 30px 80px rgba(0,0,0,0.3);
@@ -3277,39 +3800,43 @@
     display: grid; place-items: center;
     background: var(--text);
     color: #fff;
-    border-radius: 18px;
-    margin-bottom: 22px;
+    border-radius: 8px;
+    margin-bottom: 28px;
   }
   .connect-x-mark i { font-size: 36px; }
-  .connect-title {
-    margin: 0 0 12px;
+  /* Specificity bump: .dialog h3 and .dialog p (specificity 0,1,1)
+     were overriding .connect-title / .connect-sub (0,1,0). Prefixing
+     with .connect-dialog raises ours to (0,2,0). */
+  .connect-dialog .connect-title {
+    margin: 0 0 24px;
     font-family: var(--font-display);
     font-size: 22px; font-weight: 800;
     text-transform: none;
     letter-spacing: -0.005em;
-    line-height: 1.2;
+    line-height: 1.3;
     color: var(--text);
   }
-  .connect-sub {
-    margin: 0 0 22px;
+  .connect-dialog .connect-sub {
+    margin: 0 0 32px;
     color: var(--muted);
     font-size: 14px;
-    line-height: 1.55;
+    line-height: 1.65;
     max-width: 340px;
   }
   .connect-perms {
     display: flex; flex-direction: column;
-    gap: 8px;
-    margin: 0 0 26px;
+    gap: 12px;
+    margin: 0 0 32px;
     align-items: flex-start;
     width: 100%;
     max-width: 320px;
     font-family: var(--font-mono);
     font-size: 11px;
+    line-height: 1.4;
     color: var(--muted);
     letter-spacing: 0.02em;
   }
-  .connect-perms span { display: inline-flex; align-items: center; gap: 8px; }
+  .connect-perms span { display: inline-flex; align-items: center; gap: 10px; }
   .connect-perms i { color: var(--alva); font-size: 14px; }
   .connect-go {
     width: 100%;
@@ -3446,7 +3973,7 @@
   .results-request {
     max-width: 760px;          /* narrower than the grid */
     margin: 180px auto 0;      /* clearly below the cards fold */
-    border-radius: 18px;
+    border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 18px 44px rgba(10,10,16,0.14);
   }
@@ -3677,7 +4204,7 @@
     height: auto;
     aspect-ratio: 260 / 220;
     padding: 38px 30px 30px;
-    border-radius: 28px;
+    border-radius: 10px;
     gap: 18px;
     box-shadow: 0 30px 80px rgba(10,10,16,0.40);
   }
@@ -3823,8 +4350,7 @@
     font-size: 10px;
     font-weight: 700;
     color: var(--muted);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    letter-spacing: 0.06em;
     transition: color .15s;
   }
   .cd-more-name {
@@ -3932,7 +4458,7 @@
     .nav-cta-ghost { display: none; }           /* secondary CTA hides on phone */
 
     /* opening section — shrink everything on phones */
-    .opening { padding: 56px 18px; min-height: calc(100vh - 64px); }
+    .opening { padding: 80px 18px 56px; min-height: 100vh; }
     .opening h1 { font-size: clamp(32px, 9vw, 44px); }
     .opening-sub { font-size: clamp(17px, 5vw, 22px); }
     .opening-arrow { width: 52px; height: 52px; }
@@ -3960,7 +4486,7 @@
     .closing { padding: 80px 18px; }
     .closing-path { padding: 24px; }
     /* Learn the Playbook — input + chips collapse to phone-friendly sizes */
-    .agents-search { flex-wrap: wrap; padding: 8px; border-radius: 18px; }
+    .agents-search { flex-wrap: wrap; padding: 8px; border-radius: 8px; }
     .agents-search > i { margin-left: 10px; }
     .agents-search input { width: 100%; height: 44px; padding: 0 8px; }
     .agents-search .btn-primary { width: 100%; height: 44px; justify-content: center; }
@@ -4024,7 +4550,7 @@
       </span>
       <div class="brand-text">
         <div class="name">ALVA &middot; Campaign</div>
-        <div class="sub">LIVE FINTWIT PLAYBOOK ENGINE</div>
+        <div class="sub">Live FinTwit playbook engine</div>
       </div>
     </a>
     <nav class="nav-tabs" id="nav-tabs" aria-label="Section tabs">
@@ -4032,7 +4558,6 @@
       <a class="nav-tab" href="#audit-yours" data-section="audit-yours"><i class="ph ph-database"></i><span>Coverage</span></a>
       <a class="nav-tab" href="#leaderboard" data-section="leaderboard"><i class="ph ph-trophy"></i><span>Alpha League</span></a>
       <a class="nav-tab" href="#agents" data-section="agents"><i class="ph ph-book-open"></i><span>Playbooks</span></a>
-      <a class="nav-tab" href="#get-started" data-section="get-started"><i class="ph ph-flask"></i><span>Backtest</span></a>
     </nav>
     <div class="nav-actions">
       <button class="nav-cta-ghost" type="button" data-open="for-kols"><i class="ph-bold ph-megaphone"></i> For FinTwit creators</button>
@@ -4182,6 +4707,14 @@
           <span class="stage-title-line">FinTwit's <span class="alva">3,000+</span></span>
           <span class="stage-title-line">most-followed accounts.</span>
         </h1>
+        <div class="stage-actions">
+          <button class="btn-primary" type="button" data-open="connect">
+            <i class="ph-bold ph-x-logo"></i> Check your following
+          </button>
+          <button class="btn-ghost" type="button" data-open="search">
+            <i class="ph-bold ph-magnifying-glass"></i> Search
+          </button>
+        </div>
       </div>
     </div>
 
@@ -4250,7 +4783,7 @@
     <div class="section-wrap">
       <div class="section-head with-action">
         <div>
-          <h2 class="lb-title">THE FINTWIT ALPHA LEAGUE</h2>
+          <h2 class="lb-title">The FinTwit Alpha League</h2>
           <p class="lb-sub"><span class="alva">See FinTwit accounts whose calls beat the market.</span> Updated every hour.</p>
         </div>
         <a class="section-action" href="#" target="_blank" rel="noreferrer">
@@ -4294,98 +4827,61 @@
         <h2>Each creator's playbook,<br><span class="alva">distilled into an AI agent.</span></h2>
       </div>
 
-      <div class="pb-grid">
-        <a class="pb-card" href="https://alva.ai/explore" target="_blank" rel="noreferrer">
-          <div class="pb-cover">
-            <img class="pb-cover-img" alt="Bull vs Bear by ticker" loading="lazy"
-                 src="https://alva-ai-static.b-cdn.net/thumbnails/screenshot-dcf0fe01-30e7-48a2-9773-9b5823e23292.webp" />
-          </div>
-          <div class="pb-text">
-            <h3>Bull vs Bear by ticker</h3>
-            <p>Stack every covered creator's stance on the same ticker — conviction, hold time, and price entries shown side by side. No more cherry-picked screenshots, just the full audited record.</p>
-          </div>
-        </a>
+      <!-- Row 2 — 6 tabs, each anchors to the matching card below -->
+      <div class="play-tabs" role="tablist" aria-label="Playbook types">
+        <button class="play-tab active" type="button" role="tab" data-target="play-bull-bear">Bull vs bear</button>
+        <button class="play-tab" type="button" role="tab" data-target="play-critique">Critique a pick</button>
+        <button class="play-tab" type="button" role="tab" data-target="play-mix">Build a mix</button>
+        <button class="play-tab" type="button" role="tab" data-target="play-replay">Replay past calls</button>
+        <button class="play-tab" type="button" role="tab" data-target="play-screen">Screen creators</button>
+        <button class="play-tab" type="button" role="tab" data-target="play-watchlist">Watchlist alerts</button>
+      </div>
 
-        <a class="pb-card" href="https://alva.ai/explore" target="_blank" rel="noreferrer">
-          <div class="pb-cover">
-            <img class="pb-cover-img" alt="Critique my pick" loading="lazy"
-                 src="https://alva-ai-static.b-cdn.net/thumbnails/screenshot-7f1750db-641c-49e1-9eb2-a36fe5fbcf98.webp" />
-          </div>
-          <div class="pb-text">
+      <!-- Row 3 — 6 cards, horizontal scroll/snap, no card chrome -->
+      <div class="play-carousel">
+        <div class="play-track" id="play-track">
+          <article class="play-card" id="play-bull-bear">
+            <div class="play-cover" data-variant="teal"><i class="ph ph-scales"></i></div>
+            <h3>Bull vs bear by ticker</h3>
+            <p>Stack every covered creator's stance on the same ticker — conviction, hold time, and entries side by side.</p>
+            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+          </article>
+          <article class="play-card" id="play-critique">
+            <div class="play-cover" data-variant="dark"><i class="ph ph-shield-warning"></i></div>
             <h3>Critique my pick</h3>
-            <p>Drop a trade idea. A critique agent pulls precedent from every audited call across the Alpha League and flags risks, missing thesis pieces, and unfavourable base rates before you size in.</p>
-          </div>
-        </a>
-
-        <a class="pb-card" href="https://alva.ai/explore" target="_blank" rel="noreferrer">
-          <div class="pb-cover">
-            <img class="pb-cover-img" alt="Build your own mix" loading="lazy"
-                 src="https://alva-ai-static.b-cdn.net/thumbnails/screenshot-0b882526-d3be-43ab-b7a9-9c8e173b8fe0_Browserless.webp" />
-          </div>
-          <div class="pb-text">
+            <p>Drop a trade idea. A critique agent pulls precedent from every audited call and flags weak base rates before you size in.</p>
+            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+          </article>
+          <article class="play-card" id="play-mix">
+            <div class="play-cover" data-variant="warm"><i class="ph ph-sliders-horizontal"></i></div>
             <h3>Build your own mix</h3>
-            <p>Pick the creators you trust. Get an aggregate signal — consensus, dissent, and ranked conviction — refreshed every hour against live market data. Your shortlist, your alpha.</p>
-          </div>
-        </a>
+            <p>Pick the creators you trust. Get an aggregate signal — consensus, dissent, and ranked conviction — refreshed every hour.</p>
+            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+          </article>
+          <article class="play-card" id="play-replay">
+            <div class="play-cover" data-variant="purple"><i class="ph ph-clock-counter-clockwise"></i></div>
+            <h3>Replay any past call</h3>
+            <p>Take a single creator's call and see what your portfolio would look like today if you'd taken it the day it was posted.</p>
+            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+          </article>
+          <article class="play-card" id="play-screen">
+            <div class="play-cover" data-variant="teal"><i class="ph ph-funnel"></i></div>
+            <h3>Screen creators</h3>
+            <p>Filter the Alpha League by ROI band, hold time, sector, or risk. Find the niche operators the league average hides.</p>
+            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+          </article>
+          <article class="play-card" id="play-watchlist">
+            <div class="play-cover" data-variant="dark"><i class="ph ph-bell-simple-ringing"></i></div>
+            <h3>Watchlist alerts</h3>
+            <p>Get notified the moment a creator on your watchlist posts a new call — with a one-line audited context.</p>
+            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+          </article>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ============================================================ SECTION · BACKTEST & SCAN  (3.0 round 7)
-       Two parallel entry points to the FinTwit Alpha League — pick a
-       single creator handle or hand us your whole follow list. Grey
-       band so the white cards pop; sits just before the dark closer.
-         Left card  → backtest one creator (inline handle form)
-         Right card → scan X follows (OAuth, opens #modal-connect)
-       ============================================================ -->
-  <section class="section alt section-do" id="get-started">
-    <div class="section-wrap">
-      <div class="section-head">
-        <h2>Backtest one creator,<br><span class="alva">or scan every creator you follow.</span></h2>
-      </div>
 
-      <div class="do-grid">
-        <article class="do-card" id="do-card-test">
-          <div class="do-card-head">
-            <span class="do-icon"><i class="ph-bold ph-magnifying-glass"></i></span>
-            <span class="do-tag">ONE HANDLE</span>
-          </div>
-          <h3>Backtest any FinTwit creator.</h3>
-          <p>Drop an X handle. We'll run their public call history end-to-end and surface the audited Playbook — best ROI, win rate, median return, the full record.</p>
-          <form class="do-form" id="do-test-form" autocomplete="off">
-            <input type="text" name="handle" placeholder="@creator-handle" aria-label="Creator X handle" required />
-            <button type="submit" class="btn-primary">
-              <i class="ph-bold ph-magnifying-glass"></i> Backtest
-            </button>
-          </form>
-          <div class="do-success" role="status" aria-live="polite">
-            On it — backtesting <strong id="do-test-handle">@creator</strong>. The audited Playbook usually takes a few minutes. We'll DM you on X the moment it's live.
-          </div>
-          <span class="do-foot"><i class="ph-fill ph-check-circle"></i> Public posts only · Private preview</span>
-        </article>
-
-        <article class="do-card" id="do-card-scan">
-          <div class="do-card-head">
-            <span class="do-icon do-icon-x"><i class="ph-bold ph-x-logo"></i></span>
-            <span class="do-tag">YOUR FOLLOWS</span>
-          </div>
-          <h3>Scan your X follow list.</h3>
-          <p>Connect X (read-only). We match every account you follow against the FinTwit Alpha League — and surface only the ones whose audited calls beat the market.</p>
-          <button class="btn-primary do-cta-wide" data-open="connect" type="button">
-            <i class="ph-bold ph-x-logo"></i> Connect X and scan my follows
-          </button>
-          <span class="do-foot"><i class="ph-fill ph-check-circle"></i> Read-only · Match result only · Disconnect anytime</span>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- 3.0 round 8 — landing-page Request closer removed. The "Don't see
-       the FinTwit creator you follow?" prompt now lives only inside the
-       fullscreen results modal (#modal-results .results-request), where
-       it appears after the user has scanned their follow list and seen
-       the matched accounts. .bcard*/.bottom-cards CSS classes are kept
-       because the modal still uses .bcard styling. -->
 
 </main>
 
@@ -4420,6 +4916,33 @@
 </a>
 
 <!-- ============================================================ MODALS ============================================================ -->
+
+<!-- ============================================================ SEARCH MODAL (single-creator backtest)
+     Triggered by Section 2's Search CTA. Replaces the inline handle
+     form that used to live in the deleted #get-started section.
+     ============================================================ -->
+<div class="modal" id="modal-search" aria-hidden="true">
+  <div class="dialog search-dialog">
+    <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
+    <div class="dialog-head">
+      <div>
+        <span class="eyebrow"><i class="ph-bold ph-magnifying-glass" style="margin-right:6px; color: var(--alva);"></i> Backtest one handle</span>
+        <h3>Backtest any FinTwit creator.</h3>
+      </div>
+    </div>
+    <p>Drop an X handle. We'll run their public call history end-to-end and surface the audited Playbook — best ROI, win rate, median return.</p>
+    <form class="search-form" id="search-form" autocomplete="off">
+      <input type="text" name="handle" placeholder="@creator-handle" aria-label="Creator X handle" required />
+      <button type="submit" class="btn-primary">
+        <i class="ph-bold ph-magnifying-glass"></i> Backtest
+      </button>
+    </form>
+    <div class="search-foot"><i class="ph-fill ph-check-circle"></i> Public posts only · Private preview</div>
+    <div class="search-success" role="status" aria-live="polite">
+      On it — backtesting <strong id="search-handle">@creator</strong>. The audited Playbook usually takes a few minutes. We'll DM you on X the moment it's live.
+    </div>
+  </div>
+</div>
 
 <!-- ============================================================ CONNECT MODAL (Initialize Scan step 1+2)
      Two-state dialog used as the gate between the Initialize Scan CTA
@@ -4505,7 +5028,7 @@
     </div>
     <p>One handle per line, or comma-separated. We'll show which ones are in the FinTwit Alpha League, with their full ROI history and Playbooks.</p>
     <form class="bcard-form for-kols-form" id="paste-handles-form" style="margin-top:18px; flex-direction:column; align-items:stretch; gap:12px;">
-      <textarea name="handles" rows="5" placeholder="@yardeni&#10;@CathieDWood&#10;@SemiAnalysis_" aria-label="@handles to test" style="width:100%; padding:14px 16px; border-radius:12px; border:1px solid var(--line); background:var(--bg); font-family:var(--font-mono); font-size:13px; resize:vertical; color:var(--text);" required></textarea>
+      <textarea name="handles" rows="5" placeholder="@yardeni&#10;@CathieDWood&#10;@SemiAnalysis_" aria-label="@handles to test" style="width:100%; padding:14px 16px; border-radius:14px; border:1px solid var(--line); background:var(--bg); font-family:var(--font-mono); font-size:13px; resize:vertical; color:var(--text);" required></textarea>
       <button type="submit" class="btn-primary" style="align-self:flex-start;">
         <i class="ph-bold ph-magnifying-glass"></i> Check these creators
       </button>
@@ -4974,7 +5497,16 @@
     { name:'K A L E O',        handle:'@CryptoKaleo',     theme:'Crypto momentum',   score:67.4, bestRoi:340,  medianRoi:-1.8, winRate:19, quality:78, risk:'High',   riskScore:48, img:'https://unavatar.io/twitter/CryptoKaleo' },
     { name:'Sly Dawg',         handle:'@sly_dawg33',      theme:'Semis / momentum',  score:66.3, bestRoi:84.0, medianRoi:3.4,  winRate:47, quality:71, risk:'Medium', riskScore:66, img:'https://unavatar.io/twitter/sly_dawg33' },
     { name:'Dan Pickering',    handle:'@pickeringenergy', theme:'Energy / oil',      score:61.2, bestRoi:17.4, medianRoi:5.6,  winRate:52, quality:62, risk:'Low',    riskScore:83, img:'https://unavatar.io/twitter/pickeringenergy' },
-    { name:'Herman Jin',       handle:'@shanghaojin',     theme:'AI infra / semis',  score:51.3, bestRoi:24.3, medianRoi:3.2,  winRate:46, quality:59, risk:'Medium', riskScore:64, img:'https://unavatar.io/twitter/shanghaojin' }
+    { name:'Herman Jin',       handle:'@shanghaojin',     theme:'AI infra / semis',  score:51.3, bestRoi:24.3, medianRoi:3.2,  winRate:46, quality:59, risk:'Medium', riskScore:64, img:'https://unavatar.io/twitter/shanghaojin' },
+    /* 3.0 round 24 — extra rows so the leaderboard fills more vertical
+       space and the mask fade reads as "and there's more below". */
+    { name:'Cathie Wood',      handle:'@CathieDWood',     theme:'Disruptive growth', score:64.5, bestRoi:44.0, medianRoi:2.1,  winRate:43, quality:72, risk:'High',   riskScore:52, img:'https://unavatar.io/twitter/CathieDWood' },
+    { name:'Dylan Patel',      handle:'@SemiAnalysis_',   theme:'AI infra',          score:71.8, bestRoi:28.1, medianRoi:5.8,  winRate:58, quality:81, risk:'Medium', riskScore:70, img:'https://unavatar.io/twitter/SemiAnalysis_' },
+    { name:'Aswath Damodaran', handle:'@AswathDamodaran', theme:'Valuation',         score:55.6, bestRoi:-4.2, medianRoi:1.4,  winRate:49, quality:90, risk:'Low',    riskScore:88, img:'https://unavatar.io/twitter/AswathDamodaran' },
+    { name:'Chamath',          handle:'@chamath',         theme:'Growth / spacs',    score:48.2, bestRoi:33.0, medianRoi:0.7,  winRate:38, quality:55, risk:'High',   riskScore:46, img:'https://unavatar.io/twitter/chamath' },
+    { name:'Liz Ann Sonders',  handle:'@LizAnnSonders',   theme:'Macro',             score:69.7, bestRoi:21.3, medianRoi:4.6,  winRate:57, quality:85, risk:'Low',    riskScore:86, img:'https://unavatar.io/twitter/LizAnnSonders' },
+    { name:'Lance Roberts',    handle:'@LanceRoberts',    theme:'Hedged macro',      score:58.4, bestRoi:9.2,  medianRoi:2.9,  winRate:55, quality:74, risk:'Low',    riskScore:81, img:'https://unavatar.io/twitter/LanceRoberts' },
+    { name:'Raoul Pal',        handle:'@RaoulGMI',        theme:'Liquidity / crypto',score:62.0, bestRoi:55.0, medianRoi:1.8,  winRate:42, quality:70, risk:'High',   riskScore:54, img:'https://unavatar.io/twitter/RaoulGMI' }
   ];
   /* 3.0: KOL Score column dropped — users found it confusing and it read
      as subjective. Default sort is Best ROI (the new headline metric). */
@@ -5723,6 +6255,64 @@
     if (card) card.dataset.state = 'sent';
   });
 
+  /* 3.0 round 11: Playbook tabs + horizontal card rail. */
+  (function(){
+    const tabs  = document.querySelectorAll('.play-tab');
+    const track = document.getElementById('play-track');
+    if (!tabs.length || !track) return;
+    function setActive(id){ tabs.forEach(t => t.classList.toggle('active', t.dataset.target === id)); }
+    function scrollCardIntoRail(card){
+      const cs = getComputedStyle(track);
+      const padLeft  = parseFloat(cs.paddingLeft)  || 0;
+      const padRight = parseFloat(cs.scrollPaddingRight || cs.paddingRight) || 0;
+      // Last card uses snap-align:end → target = scrollWidth - clientWidth
+      // (clamp end). Other cards use snap-align:start → target = offsetLeft
+      // minus the scrollport's start-edge offset (padLeft). This way the
+      // last card's right side lines up with leaderboard's right edge
+      // (both = viewport - padRight) instead of clamping mid-snap.
+      const isLast = card === track.lastElementChild;
+      const target = isLast
+        ? (track.scrollWidth - track.clientWidth)
+        : (card.offsetLeft - padLeft);
+      track.scrollTo({ left: target, behavior: 'smooth' });
+    }
+    tabs.forEach(t => t.addEventListener('click', () => {
+      const card = document.getElementById(t.dataset.target);
+      if (!card) return;
+      setActive(t.dataset.target);
+      scrollCardIntoRail(card);
+    }));
+    let raf = 0;
+    function spy(){
+      raf = 0;
+      const padLeft = parseFloat(getComputedStyle(track).paddingLeft) || 0;
+      const trackLeft = track.scrollLeft + padLeft;
+      let bestId = null, bestDist = Infinity;
+      tabs.forEach(t => {
+        const card = document.getElementById(t.dataset.target);
+        if (!card) return;
+        const d = Math.abs(card.offsetLeft - trackLeft);
+        if (d < bestDist) { bestDist = d; bestId = t.dataset.target; }
+      });
+      if (bestId) setActive(bestId);
+    }
+    track.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(spy); }, { passive: true });
+  })();
+
+  /* Search modal submit — flips the form to a confirmation state. */
+  document.getElementById('search-form')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const raw = (e.target.querySelector('input').value || '').trim();
+    if (!raw) return;
+    const handle = '@' + raw.replace(/^@+/, '').replace(/\s+/g, '');
+    const modal = document.getElementById('modal-search');
+    const out = document.getElementById('search-handle');
+    if (out) out.textContent = handle;
+    if (modal) modal.dataset.state = 'sent';
+  });
+
+  /* (Cat-eye lens JS reverted — see CSS comment above.) */
+
   /* 3.0: Paste-handles form — secondary scan entry. Lists matches in a
      simple confirmation; the real version would open the results modal. */
   document.getElementById('paste-handles-form')?.addEventListener('submit', e => {
@@ -5912,6 +6502,503 @@
       }, wait);
     }
     scheduleTick();
+  })();
+
+  /* ============================================================
+     3.0 round 18 — CAT-EYE LENS via Three.js WebGL fragment shader.
+     Real lens math, not faked. Architecture mirrors 4wide.jp:
+
+       (a) Each floating tweet is rasterized to a canvas2D bitmap once
+           (avatar circle + initials + name + handle + wrapped body).
+       (b) The DOM .float-tweet nodes are hidden — they exist only as
+           data sources for the bitmaps.
+       (c) A WebGL canvas inside .opening-bg renders one PlaneGeometry
+           per tweet, textured with the bitmap, drifting left→right at
+           the tweet's tier speed.
+       (d) The scene is rendered to an off-screen RenderTarget.
+       (e) A second pass runs a fragment shader over a fullscreen quad
+           that samples that RenderTarget three times — once per RGB
+           channel — at three different barrel-distortion radii. That
+           gives real geometric fisheye AND real chromatic aberration,
+           cross-browser, in one composited pass.
+
+     If Three.js fails to load (offline / blocked), the DOM tweets stay
+     visible and the page degrades gracefully to the un-lensed look.
+     ============================================================ */
+  (() => {
+    if (typeof THREE === 'undefined') return;            // graceful no-op
+    const opening = document.querySelector('.opening');
+    const bg      = document.querySelector('.opening-bg');
+    if (!opening || !bg) return;
+
+    const DPR = Math.min(2, window.devicePixelRatio || 1);
+
+    // Tier specs — match the existing CSS .tier-* rules.
+    const TIER = {
+      near: { w: 340, durS: 80,  fs: 14 },
+      mid:  { w: 275, durS: 145, fs: 12 },
+      far:  { w: 210, durS: 240, fs: 11 },
+    };
+
+    // -------- 1. read tweet data from the DOM --------
+    const tweetEls = [...document.querySelectorAll('.opening .float-tweet')]
+      .filter(el => getComputedStyle(el).display !== 'none');
+    if (!tweetEls.length) return;
+
+    const tweets = tweetEls.map(el => {
+      const tier = el.classList.contains('tier-near') ? 'near'
+                 : el.classList.contains('tier-mid')  ? 'mid'
+                 : 'far';
+      const name   = el.querySelector('.ft-name')?.textContent.trim() || '';
+      const handle = el.querySelector('.ft-handle')?.textContent.trim() || '';
+      const body   = el.querySelector('p')?.textContent.trim() || '';
+      const onerr  = el.querySelector('img')?.getAttribute('onerror') || '';
+      const initials = decodeURIComponent(
+        onerr.match(/name=([^&'"]+)/)?.[1] || '?').slice(0, 2);
+      const bgHex   = '#' + (onerr.match(/background=([0-9a-fA-F]+)/)?.[1] || '888888');
+      const y = parseFloat(el.style.getPropertyValue('--y')) || 50;       // %
+      const d = parseFloat(el.style.getPropertyValue('--d')) || 0;        // seconds (negative)
+      return { tier, name, handle, body, initials, bg: bgHex, y, d };
+    });
+
+    // -------- 2. render each tweet to a canvas2D bitmap --------
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    // Per-tier soft blur applied to the rasterized card so far-tier
+    // tweets stay clearly "out of focus" relative to near-tier ones.
+    // Bumped vs the original CSS values so the parallax depth reads
+    // strongly even with the lens distortion on top.
+    const TIER_BLUR = { near: 0, mid: 1.5, far: 3.5 };
+
+    function renderTweet(t) {
+      const spec = TIER[t.tier];
+      const w    = spec.w;
+      const fs   = spec.fs;
+      const padX = 14, padY = 14, headH = 36, gapHB = 10;
+      const maxTextW = w - padX * 2;
+
+      // measure wrapped body lines
+      const measureCanvas = document.createElement('canvas');
+      const mctx = measureCanvas.getContext('2d');
+      mctx.font = `400 ${fs}px Inter, system-ui, sans-serif`;
+      const words = t.body.split(/\s+/);
+      const lines = [];
+      let cur = '';
+      for (const word of words) {
+        const test = cur ? cur + ' ' + word : word;
+        if (mctx.measureText(test).width > maxTextW && cur) {
+          lines.push(cur);
+          cur = word;
+        } else {
+          cur = test;
+        }
+      }
+      if (cur) lines.push(cur);
+
+      const lineH = Math.round(fs * 1.5);
+      const h = padY + headH + gapHB + lines.length * lineH + padY;
+
+      // Small padding only so the per-tier blur halo doesn't get
+      // clipped at the bitmap edge. Drop-shadow + 1px hairline border
+      // removed for a cleaner floating-card look.
+      const shadowPad = 12;
+      const cardCanvas = document.createElement('canvas');
+      cardCanvas.width  = (w + shadowPad * 2) * DPR;
+      cardCanvas.height = (h + shadowPad * 2) * DPR;
+      const ctx = cardCanvas.getContext('2d');
+      ctx.scale(DPR, DPR);
+      ctx.translate(shadowPad, shadowPad);
+      ctx.textBaseline = 'top';
+
+      // 3.0 round 35 — pure white card body + 1px light grey border
+      // (user: "所有飘浮卡片加一个浅灰色边框"). Border drawn after the
+      // fill so it sits on top; uses #d6d8df ≈ slightly darker than
+      // --line so it survives the lens distortion/blur pass.
+      ctx.fillStyle = '#ffffff';
+      roundRect(ctx, 0, 0, w, h, 12);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(190, 194, 205, 0.85)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // avatar circle + initials
+      const avR = 17;
+      ctx.fillStyle = t.bg;
+      ctx.beginPath();
+      ctx.arc(padX + avR, padY + avR, avR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `700 13px Inter, system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(t.initials, padX + avR, padY + avR);
+
+      // name + handle
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = '#2a2a30';
+      ctx.font = `700 ${fs}px Inter, system-ui, sans-serif`;
+      ctx.fillText(t.name, padX + avR * 2 + 10, padY + 1);
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = `500 ${Math.round(fs * 0.82)}px "JetBrains Mono", ui-monospace, monospace`;
+      ctx.fillText(t.handle, padX + avR * 2 + 10, padY + 1 + Math.round(fs * 1.45));
+
+      // body text
+      ctx.fillStyle = '#6b7280';
+      ctx.font = `400 ${fs}px Inter, system-ui, sans-serif`;
+      let yy = padY + headH + gapHB;
+      for (const line of lines) {
+        ctx.fillText(line, padX, yy);
+        yy += lineH;
+      }
+
+      // The card bitmap is `w + 2*shadowPad` × `h + 2*shadowPad` total.
+      // Apply per-tier depth-of-field blur to the WHOLE bitmap so the
+      // already-rendered shadow + card body both blur together.
+      const blur = TIER_BLUR[t.tier] || 0;
+      let finalCanvas = cardCanvas;
+      if (blur > 0) {
+        const blurred = document.createElement('canvas');
+        blurred.width  = cardCanvas.width;
+        blurred.height = cardCanvas.height;
+        const bctx = blurred.getContext('2d');
+        bctx.filter = `blur(${blur * DPR}px)`;
+        bctx.drawImage(cardCanvas, 0, 0);
+        finalCanvas = blurred;
+      }
+
+      return { canvas: finalCanvas, w: w + shadowPad * 2, h: h + shadowPad * 2 };
+    }
+
+    // Wait for fonts before rasterizing so the bitmaps don't end up in
+    // a fallback font; degrade quietly if document.fonts is unavailable.
+    const ready = (document.fonts && document.fonts.ready) || Promise.resolve();
+
+    ready.then(() => {
+      let initialized = false;
+      try {
+        // -------- 3a. real-tweet layer: original 18 from DOM --------
+        const items = tweets.map(t => {
+          const r = renderTweet(t);
+          return { ...t, kind: 'tweet', durS: TIER[t.tier].durS,
+                   canvas: r.canvas, w: r.w, h: r.h };
+        });
+
+        // -------- 3b. hide the DOM tweets --------
+        tweetEls.forEach(el => { el.style.visibility = 'hidden'; });
+        initialized = true;
+
+      // -------- 4. WebGL canvas inside .opening-bg --------
+      const lensCanvas = document.createElement('canvas');
+      lensCanvas.className = 'lens-canvas';
+      Object.assign(lensCanvas.style, {
+        position: 'absolute',
+        inset: '0',
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: '1',
+      });
+      bg.appendChild(lensCanvas);
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas: lensCanvas, alpha: true, antialias: true,
+      });
+      renderer.setPixelRatio(DPR);
+      renderer.setClearColor(0x000000, 0);
+
+      // Scene + ortho camera in screen pixel units (y-up).
+      const scene  = new THREE.Scene();
+      const camera = new THREE.OrthographicCamera(0, 1, 1, 0, -10, 10);
+
+      // Build one mesh per tweet. Parallax stacks far → mid → near.
+      const meshes = items.map(t => {
+        const tex = new THREE.CanvasTexture(t.canvas);
+        tex.minFilter = THREE.LinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        tex.generateMipmaps = false;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const geom = new THREE.PlaneGeometry(t.w, t.h);
+        const mat  = new THREE.MeshBasicMaterial({
+          map: tex,
+          transparent: true,
+          depthTest: false,
+          depthWrite: false,
+        });
+        const mesh = new THREE.Mesh(geom, mat);
+        mesh.renderOrder = t.tier === 'near' ? 3 : t.tier === 'mid' ? 2 : 1;
+        scene.add(mesh);
+        return { mesh, t };
+      });
+
+      // Off-screen render target the scene draws into; the post pass
+      // then reads it via the shader. Size matches the visible viewport.
+      let rt = null;
+      function ensureRT(pxW, pxH) {
+        if (rt && rt.width === pxW && rt.height === pxH) return;
+        if (rt) rt.dispose();
+        rt = new THREE.WebGLRenderTarget(pxW, pxH, {
+          minFilter: THREE.LinearFilter,
+          magFilter: THREE.LinearFilter,
+          format: THREE.RGBAFormat,
+          type: THREE.UnsignedByteType,
+          colorSpace: THREE.SRGBColorSpace,
+        });
+      }
+
+      // Post-process scene: fullscreen quad with the lens shader.
+      const postScene = new THREE.Scene();
+      const postCam   = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+      const postMat   = new THREE.ShaderMaterial({
+        uniforms: {
+          tDiffuse:    { value: null },
+          /* 3.0 round 37 — values softened per user ("形变范围再
+             宽泛一点, 弱一点. 现在能明显感觉一到边上马上折过来").
+             Strengths roughly halved; the distortGate smoothstep
+             below was widened (0.65→1.05 ⇒ 0.40→1.40) so the
+             ramp is much more gradual — no longer "off in the
+             middle, suddenly on at the edge". */
+          uStrength:   { value: -0.045 },
+          uCA:         { value: 0.005 },
+          uAspect:     { value: 16 / 9 },
+          uTexel:      { value: new THREE.Vector2(1 / 1920, 1 / 900) },
+          uEdgeBlur:   { value: 2.0 },
+          // Animated film grain — gives the whole opening section the
+          // old-TV / VHS shimmer feel. uTime advances per frame, the
+          // noise function rehashes each pixel against it so the grain
+          // animates. Section bg color is composited inside the shader
+          // so grain covers both tweets and the empty grey area.
+          uTime:       { value: 0 },
+          uGrain:      { value: 0.140 },
+          // Pure white center — matches the .opening radial-gradient's
+          // white core and all the halo references. The alva-teal
+          // vignette is applied separately in the fragment shader as
+          // an edge color shift (see `mintShift` below), so the bg
+          // only needs to be #ffffff at canvas pixel level; the corners
+          // get the mint tint at render time.
+          uBgColor:    { value: new THREE.Color(0xffffff) },
+        },
+        vertexShader: /* glsl */ `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform sampler2D tDiffuse;
+          uniform float uStrength;
+          uniform float uCA;
+          uniform float uAspect;
+          uniform vec2  uTexel;
+          uniform float uEdgeBlur;
+          uniform float uTime;
+          uniform float uGrain;
+          uniform vec3  uBgColor;
+          varying vec2 vUv;
+
+          float rand(vec2 co) {
+            return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+          }
+
+          // Brown's k1 barrel in aspect-corrected [-1,1] device coords.
+          vec2 barrel(vec2 uv, float k) {
+            vec2 c = uv - 0.5;
+            c.x *= uAspect;
+            c *= 1.0 + k * dot(c, c);
+            c.x /= uAspect;
+            return c + 0.5;
+          }
+
+          // 4-tap box sample for the radial blur (cheap, GPU-friendly).
+          vec4 boxSample(vec2 uv, vec2 ofs) {
+            return 0.25 * (
+              texture2D(tDiffuse, uv + vec2( ofs.x,  ofs.y)) +
+              texture2D(tDiffuse, uv + vec2(-ofs.x,  ofs.y)) +
+              texture2D(tDiffuse, uv + vec2( ofs.x, -ofs.y)) +
+              texture2D(tDiffuse, uv + vec2(-ofs.x, -ofs.y))
+            );
+          }
+
+          void main() {
+            // -- aspect-corrected radial weight --
+            vec2 cc = vUv - 0.5;
+            cc.x *= uAspect;
+            float r2 = dot(cc, cc);
+
+            /* 3.0 round 35 — shader rewritten per user feedback:
+                 a) "形变的范围控制在section边缘, 不要在中间的时候过早形变":
+                    Brown's barrel is now gated by distortGate so the
+                    center pixels go straight through (k=0, no shift).
+                    Distortion only opens up as r² climbs into the outer
+                    ring (smoothstep 0.65 → 1.05). Previously the barrel
+                    was applied uniformly across the whole image and
+                    mid-screen cards picked up subtle warping.
+                 b) "色散效果不是很好, 需要你再去网上找找类似的效果":
+                    Replaced the hand-rolled "boundary pure-color"
+                    override (forcing rgb(0.95,0.20,0.25) /
+                    rgb(0.20,0.25,0.95) on alpha cliffs — exactly the
+                    "手搓" hack the user called out) with a clean
+                    industry-standard radial CA: 3 barrel samples at
+                    slightly different k values for wavelength
+                    dispersion, each COMPOSITED ONTO BG before picking
+                    R/G/B. Pre-compositing is the key detail — without
+                    it, sampling outside a card returns alpha=0 and
+                    the channel contribution is 0, producing dark/muddy
+                    fringe. With it, each sample is a full opaque color
+                    over bg, and the RGB mix produces clean wavelength-
+                    shifted bands. This is the canonical pattern in
+                    Codrops / Shadertoy / Three.js postprocess docs
+                    (search: "radial chromatic aberration shader",
+                    "barrel chromatic aberration GLSL"). */
+            // 3.0 round 37 — distortGate widened from 0.65→1.05
+            // (sharp ramp) to 0.40→1.40 (very gradual) so the
+            // distortion doesn't "snap on" at the edge. Cards
+            // gradually pick up barrel curvature as they drift
+            // toward the corners instead of getting hit by a sharp
+            // gate. edge (for CA + blur) stays tight to the outer
+            // ring because those artifacts read worse if they leak
+            // into mid-screen.
+            float distortGate = smoothstep(0.40, 1.40, r2);
+            float edge        = smoothstep(0.85, 1.15, r2);
+
+            float k          = uStrength * distortGate;
+            float caStrength = uCA       * edge;
+
+            // Three barrel samples — G reference, R/B fan by ±ca.
+            vec2 uvG = barrel(vUv, k);
+            vec2 uvR = barrel(vUv, k - caStrength);
+            vec2 uvB = barrel(vUv, k + caStrength);
+
+            // Out-of-frame discard on G
+            float inG = step(0.0, uvG.x) * step(uvG.x, 1.0)
+                      * step(0.0, uvG.y) * step(uvG.y, 1.0);
+            if (inG < 0.5) discard;
+
+            vec4 sG = texture2D(tDiffuse, uvG);
+            vec4 sR = texture2D(tDiffuse, uvR);
+            vec4 sB = texture2D(tDiffuse, uvB);
+
+            // Composite each sample onto bg BEFORE picking R/G/B —
+            // this is the textbook fix for "muddy CA on transparent
+            // sprites". cR / cG / cB are full-opacity colors over
+            // uBgColor; the final mix is then a clean wavelength shift.
+            vec3 cR = mix(uBgColor, sR.rgb, sR.a);
+            vec3 cG = mix(uBgColor, sG.rgb, sG.a);
+            vec3 cB = mix(uBgColor, sB.rgb, sB.a);
+            vec3 rgb = vec3(cR.r, cG.g, cB.b);
+
+            // -- radial edge blur — DoF falloff at corners. Same
+            // pre-composite so the blur sees clean bg-over-card
+            // pixels instead of fading-to-transparent. --
+            if (edge > 0.01) {
+              vec2 ofs = uTexel * uEdgeBlur * edge;
+              vec4 blurred = boxSample(uvG, ofs);
+              vec3 blurComp = mix(uBgColor, blurred.rgb, blurred.a);
+              rgb = mix(rgb, blurComp, edge * 0.7);
+            }
+
+            // -- CRT edge color shift (old-TV phosphor vignette) --
+            // Mix toward alva teal #49A3A6 at the corners — the
+            // "周围偏绿" effect the user asked for. Center stays at
+            // pure uBgColor, corners blend up to 35% toward alva teal.
+            // Using mix-toward-color (instead of multiplicative shift)
+            // because mixing white * coolShift just darkens white into
+            // grey, whereas mix(white, teal) actually produces a
+            // saturated mint hue. Combined with the .opening CSS
+            // radial-gradient (white center → mint edges), the visible
+            // vignette is continuous between CSS bg and WebGL pixels.
+            // 3.0 round 26 — edge tint swapped from alva-teal to a
+            // restrained neutral grey (user: "灰色要克制"). Mix toward
+            // #ededf0 ≈ vec3(0.929) so the corners only desaturate
+            // slightly instead of taking on a brand hue.
+            float tintEdge = smoothstep(0.35, 1.15, r2);
+            vec3 neutralGrey = vec3(0.929, 0.929, 0.941); // #ededf0
+            rgb = mix(rgb, neutralGrey, tintEdge * 0.50);
+
+            // -- film grain --
+            float grain = rand(gl_FragCoord.xy * 0.5 + vec2(uTime * 13.0, uTime * 17.0)) - 0.5;
+            rgb += vec3(grain) * uGrain;
+
+            gl_FragColor = vec4(rgb, 1.0);
+          }
+        `,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+      });
+      const postMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat);
+      postScene.add(postMesh);
+
+      // ----- per-frame size update + render -----
+      const startT = performance.now() / 1000;
+      let lastW = 0, lastH = 0;
+
+      function frame() {
+        requestAnimationFrame(frame);
+        const w = opening.clientWidth;
+        const h = opening.clientHeight;
+        if (w === 0 || h === 0) return;
+
+        if (w !== lastW || h !== lastH) {
+          renderer.setSize(w, h, false);
+          camera.right = w;
+          camera.top   = h;
+          camera.updateProjectionMatrix();
+          ensureRT(Math.round(w * DPR), Math.round(h * DPR));
+          postMat.uniforms.uAspect.value = w / h;
+          postMat.uniforms.uTexel.value.set(
+            1 / Math.round(w * DPR),
+            1 / Math.round(h * DPR)
+          );
+          lastW = w; lastH = h;
+        }
+
+        // Drive each plane's drift. Ghosts and real tweets share the
+        // same -100vw → +100vw motion, just at different durations.
+        const t = performance.now() / 1000 - startT;
+        for (const m of meshes) {
+          const dur   = m.t.durS;
+          const phase = (((t - m.t.d) % dur) + dur) % dur / dur;
+          const xLeft = -w + phase * 2 * w;
+          const yTop  = (m.t.y / 100) * h;
+          m.mesh.position.x = xLeft + m.t.w / 2;
+          m.mesh.position.y = h - yTop - m.t.h / 2;
+        }
+
+        // (a) render scene → render target
+        renderer.setRenderTarget(rt);
+        renderer.setClearColor(0x000000, 0);
+        renderer.clear(true, true, true);
+        renderer.render(scene, camera);
+
+        // (b) render fullscreen post-pass → screen
+        postMat.uniforms.tDiffuse.value = rt.texture;
+        // Advance grain seed each frame so noise rehashes (TV shimmer).
+        postMat.uniforms.uTime.value = t;
+        renderer.setRenderTarget(null);
+        renderer.setClearColor(0x000000, 0);
+        renderer.clear(true, true, true);
+        renderer.render(postScene, postCam);
+      }
+      frame();
+      } catch (err) {
+        console.error('[lens] WebGL init failed — falling back to DOM tweets', err);
+        if (initialized) {
+          // restore visibility so the page isn't blank if the WebGL init
+          // partially completed and then crashed
+          tweetEls.forEach(el => { el.style.visibility = ''; });
+        }
+      }
+    });
   })();
 </script>
 
