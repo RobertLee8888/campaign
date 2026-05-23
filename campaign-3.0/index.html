@@ -54,9 +54,10 @@
      ============================================================ */
   html.snap-active {
     scroll-snap-type: y mandatory;
-    /* matches the 80px nav-clearance used by smoothScrollTo so snap and
-       programmatic scrolls land at the same Y — no post-scroll jitter */
-    scroll-padding-top: 80px;
+    /* matches the 65px nav-clearance used by smoothScrollTo so snap and
+       programmatic scrolls land at the same Y — no post-scroll jitter.
+       65 = 64px nav-inner height + 1px nav border-bottom. */
+    scroll-padding-top: 65px;
   }
   .opening, .stage {
     scroll-snap-align: start;
@@ -114,22 +115,33 @@
     color: var(--muted);
     margin-top: 1px;
   }
-  /* nav scrollspy tab bar — tabs sit in a pill container that
-     hosts an animated underline indicator anchored to the active tab */
+  /* nav scrollspy tab bar — 3.0 round 9
+     Flat text tabs (no pill container, no filled active state) so the
+     center nav reads as PAGE NAVIGATION and stays visually distinct
+     from the right-side CTAs (filled dark pill + outline ghost pill).
+     Active tab = teal underline that slides between tabs. */
   .nav-tabs {
     position: relative;
-    display: flex; align-items: center; gap: 4px;
-    background: rgba(255,255,255,0.6);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 4px;
+    display: flex; align-items: center;
+    gap: 4px;
+    /* No pill bg / border — sits flat against the nav band. */
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    /* Stretch to the full 64px nav-inner height so the indicator
+       (bottom: -1px) lands flush with the nav's bottom border. Tabs
+       themselves stay vertically centered via align-items: center. */
+    align-self: stretch;
   }
   .nav-tab {
     position: relative;
     z-index: 1;
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 14px;
-    border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 7px;
+    /* Tabs are now standalone — give them comfortable padding so the
+       underline reads as an underline, not a tight strikethrough. */
+    padding: 0 12px;
+    height: 100%;
     color: var(--muted);
     font-size: 13px; font-weight: 600;
     background: transparent;
@@ -139,28 +151,34 @@
     font-family: inherit;
     text-decoration: none;
     white-space: nowrap;
+    letter-spacing: 0.005em;
   }
-  .nav-tab i { font-size: 13px; opacity: 0.7; transition: opacity .2s, color .2s; }
+  .nav-tab i { font-size: 14px; opacity: 0.7; transition: opacity .2s, color .2s; }
   .nav-tab span { line-height: 1; }
   .nav-tab:hover { color: var(--text); }
   .nav-tab:hover i { opacity: 1; color: var(--alva); }
-  .nav-tab.active { color: #fff; }
-  .nav-tab.active i { color: var(--alva-hi); opacity: 1; }
-  /* the moving pill indicator */
+  .nav-tab.active { color: var(--text); font-weight: 700; }
+  .nav-tab.active i { color: var(--alva); opacity: 1; }
+  /* The moving indicator — now a thin teal underline that slides along
+     the bottom of the tabs row. Width = active tab width, X = active tab
+     offset; both already set by the existing scrollspy JS so no JS change
+     needed. */
   .nav-tab-indicator {
     position: absolute;
-    z-index: 0;
-    top: 4px;
+    z-index: 1;
     left: 0;
-    height: calc(100% - 8px);
-    background: var(--text);
-    border-radius: 999px;
+    /* -1px so the 2px alva bar visually replaces the nav's 1px bottom
+       border under the active tab — underline is flush with the nav's
+       bottom edge, no gap above it. */
+    bottom: -1px;
+    height: 2px;
+    background: var(--alva);
+    border-radius: 0;
     transition: transform .35s cubic-bezier(.2,.8,.2,1), width .35s cubic-bezier(.2,.8,.2,1), opacity .2s ease;
     width: 0;
     opacity: 0;       /* hidden until a section is active */
     transform: translateX(0);
     pointer-events: none;
-    box-shadow: 0 4px 14px rgba(10,10,16,0.22);
   }
   /* navbar right-side action cluster (secondary ghost + primary CTA) */
   .nav-actions {
@@ -591,7 +609,10 @@
      the 2.0 left-text / right-cards hero composition.
      ============================================================ */
   .stage.stage-marquee {
-    padding: 120px 0;
+    /* 3.0 round 10 — tighten top padding so tab-click anchor leaves
+       no awkward gap between the nav and the marquee/headline content.
+       Bottom kept generous for visual rhythm into the next section. */
+    padding: 64px 0 96px;
     background: var(--bg-soft);
     position: relative;
     /* `clip` on the x-axis only — lets each row's hover lift + shadow
@@ -604,11 +625,17 @@
     display: flex;
     align-items: center;
   }
-  /* 3.0 round 9 — gradient sits on the overlay itself, so it spans
-     the full stage height top-to-bottom. Only horizontal direction
-     fades — no top/bottom hard edge. Solid white band covers the
-     headline text column; both sides fade to transparent so cards
-     stay visible across the full row. */
+  /* 3.0 round 14 — text-start aligns with the leaderboard section's
+     content-left (.section-wrap padding: 0 16px = 16px in from column).
+     h1 padding-left dropped from 32 → 16 so its first letter sits flush
+     with the column directly below. Band's bg-position-x calc updated
+     to follow the new text center.
+       text-start = inner-left + 16
+       text-width = 500 (h1 max-width 540 with border-box, minus 16
+                        padding-left, minus 24 padding-right)
+       text-center = inner-left + 266
+       bg-image-width 1250, stops 30/70 → solid covers 500
+       bg-image-left = text-center − 625 = inner-left − 359 */
   .stage-marquee .stage-headline-overlay {
     position: absolute;
     inset: 0;
@@ -616,34 +643,31 @@
     display: flex;
     align-items: center;
     pointer-events: none;
-    background: linear-gradient(to right,
-      rgba(255,255,255,0)  0%,
-      rgba(255,255,255,0)  3%,
-      var(--bg-soft)      12%,
-      var(--bg-soft)      45%,
-      rgba(255,255,255,0) 56%);
+    background-image: linear-gradient(to right,
+      rgba(255,255,255,0)   0%,
+      var(--bg-soft)       30%,    /* fade-in ENDS at text-start */
+      var(--bg-soft)       70%,    /* fade-out STARTS at text-end */
+      rgba(255,255,255,0) 100%);
+    background-size: 1250px 100%;
+    background-position-x: calc(max(0px, (100vw - 1320px) / 2) - 359px);
+    background-position-y: center;
+    background-repeat: no-repeat;
   }
   .stage-marquee .stage-headline-inner {
     width: 100%;
     max-width: 1320px;
     margin: 0 auto;
-    padding: 0 16px;
-  }
-  /* 3.0 round 9 — Headline sits inside a horizontal gradient block
-     anchored to the .stage-headline-inner column. The gradient is
-     opaque white in the middle (behind text) and fades to
-     transparent on BOTH left and right sides so cards bleed in on
-     each edge. No pill, no halo — clean gradient cut. */
-  .stage-marquee .stage-headline-inner {
-    width: 100%;
-    max-width: 1320px;
-    margin: 0 auto;
-    padding: 0 16px;
+    padding: 0;
     position: relative;
   }
   .stage-marquee .stage-headline-inner h1 {
     display: inline-block;
     max-width: 540px;
+    /* 16px left padding mirrors .section-wrap's `padding: 0 16px`, so the
+       first letter of the headline lines up with the leaderboard
+       heading directly below. */
+    padding-left: 16px;
+    padding-right: 24px;
     pointer-events: auto;
   }
   /* The headline lives on top of the marquee now — kept this older
@@ -704,25 +728,10 @@
        has known glitches that produced the "occasional horizontal jump"
        observed on rows 1-3). */
   }
-  /* Edge fade — overlays the marquee left/right so cards drift in/out
-     cleanly without using mask-image (which would clip child shadows). */
-  .stage.stage-marquee::before,
-  .stage.stage-marquee::after {
-    content: '';
-    position: absolute;
-    top: 0; bottom: 0;
-    width: 100px;
-    z-index: 3;
-    pointer-events: none;
-  }
-  .stage.stage-marquee::before {
-    left: 0;
-    background: linear-gradient(to right, var(--bg-soft) 0%, var(--bg-soft) 12%, transparent 100%);
-  }
-  .stage.stage-marquee::after {
-    right: 0;
-    background: linear-gradient(to left, var(--bg-soft) 0%, var(--bg-soft) 12%, transparent 100%);
-  }
+  /* 3.0 round 14 — section edge fades removed. Cards now get clipped
+     hard at the viewport edges (overflow-x: clip on .stage.stage-marquee
+     handles the cut). The ::before/::after pseudos are kept null so any
+     other code referencing them still resolves. */
 
   /* Share-friendly scorecard — near-square (5:4 portrait) so each
      card reads as a self-contained social-share unit. Vertical
@@ -1332,7 +1341,11 @@
      ============================================================ */
   .section {
     position: relative;
-    padding: 120px 32px 96px;
+    /* 3.0 round 10 — top padding tightened from 120→64 so tab-click
+       anchored sections land their content close to the nav rather than
+       behind a tall whitespace cushion. Bottom kept at 96 for breathing
+       room between sections. */
+    padding: 64px 32px 96px;
     background: var(--bg-soft);   /* swapped — was grey */
   }
   .section.alt { background: var(--bg); }   /* swapped — was white */
@@ -2671,10 +2684,177 @@
      - Submit uses a 44px small pill (NOT the hero CTA size) so the
        closer reads as secondary, not a second hero.
      ============================================================ */
-  /* Full-width grey band wrapping the card — alternates with the white
-     LEARN THE PLAYBOOK section above (3.0 round 3 colour cadence). */
-  .bottom-cards {
+  /* ============================================================
+     SECTION · BACKTEST & SCAN  (3.0 round 7)
+     Two parallel entry points — one creator vs. whole follow list.
+     Sits on grey between the white PLAYBOOK section and the dark
+     closer card, so cards (white) pop against the grey band.
+     ============================================================ */
+  .section-do {
+    /* grey band — matches .section.alt token. Top padding 64 follows the
+       3.0 round 10 anchor-tightening pass shared with .section / .stage. */
+    padding: 64px 32px 96px;
+  }
+  .section-do .section-head {
+    margin: 0 auto 56px;
+    max-width: 760px;
+    text-align: center;
+  }
+  .section-do .section-head h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(28px, 3.4vw, 46px);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    margin: 0;
+    color: var(--text);
+  }
+  .section-do .section-head h2 .alva { color: var(--alva); }
+
+  .do-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+  .do-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 36px 36px 32px;
+    box-shadow: 0 1px 3px rgba(10,10,16,0.04);
+    transition: transform .22s cubic-bezier(.22,1,.36,1),
+                box-shadow .22s ease,
+                border-color .22s ease;
+  }
+  .do-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px rgba(10,10,16,0.08);
+    border-color: rgba(73,163,166,0.35);
+  }
+  .do-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .do-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: var(--alva);
+    color: #fff;
+    font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: 0 8px 20px rgba(73,163,166,0.30);
+  }
+  .do-icon-x {
+    background: #0a0a10;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(10,10,16,0.20);
+  }
+  .do-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .do-card h3 {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.18;
+    letter-spacing: -0.015em;
+    margin: 0 0 10px;
+    color: var(--text);
+  }
+  .do-card > p {
+    margin: 0 0 24px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  /* Form + CTA row anchors to the bottom of the card so the two cards'
+     actions line up horizontally even when copy lengths differ. */
+  .do-form, .do-cta-wide {
+    margin: auto 0 14px;
+  }
+  .do-form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .do-form input {
+    flex: 1 1 200px;
+    min-width: 0;
+    height: 48px;
+    padding: 0 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
     background: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .do-form input::placeholder { color: var(--muted-2); }
+  .do-form input:focus {
+    outline: none;
+    border-color: var(--alva);
+    background: var(--bg-soft);
+  }
+  .do-form .btn-primary {
+    height: 48px;
+    padding: 0 22px;
+    border-radius: 10px;
+    flex: 0 0 auto;
+  }
+  .do-cta-wide {
+    width: 100%;
+    justify-content: center;
+    height: 48px;
+    padding: 0 22px;
+    border-radius: 10px;
+  }
+  .do-foot {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .do-foot i { color: var(--alva); font-size: 13px; }
+
+  /* Submit-success state — replaces the form once the user submits. */
+  .do-card[data-state="sent"] .do-form { display: none; }
+  .do-success {
+    display: none;
+    margin: auto 0 14px;
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: rgba(73,163,166,0.08);
+    border: 1px solid rgba(73,163,166,0.30);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .do-success strong { color: var(--alva); font-weight: 700; }
+  .do-card[data-state="sent"] .do-success { display: block; }
+
+  /* Full-width WHITE band wrapping the card — alternates with the grey
+     BACKTEST & SCAN section above (3.0 round 7 colour cadence:
+     ...white → grey → WHITE → footer white). */
+  .bottom-cards {
+    background: var(--bg-soft);
     padding: 96px 32px 80px;
   }
   .bottom-cards-inner {
@@ -2792,9 +2972,11 @@
      ============================================================ */
   footer.f {
     padding: 28px 32px;
+    /* footer bg follows the LAST section. After 3.0 round 8 removed the
+       bottom Request card, the last section is .section-do (grey), so
+       footer is grey — no seam at the page-end. */
     background: var(--bg);
     color: var(--muted);
-    border-top: 1px solid var(--line);
   }
   .f-inner {
     max-width: 1440px; margin: 0 auto;
@@ -3738,12 +3920,13 @@
 
     .nav-inner { padding: 0 12px; gap: 8px; }
     .brand-text { display: none; }              /* free up width for tabs */
-    /* Tabs stay visible on phones — collapsed to icon-only */
-    .nav-tabs { display: flex; padding: 3px; gap: 0; }
-    .nav-tab { padding: 7px 9px; gap: 0; }
-    .nav-tab i { font-size: 16px; opacity: 1; }
+    /* Tabs stay visible on phones — collapsed to icon-only, underline
+       still pinned to nav's bottom edge (align-self:stretch inherited). */
+    .nav-tabs { display: flex; padding: 0; gap: 4px; }
+    .nav-tab { padding: 0 9px; gap: 0; }
+    .nav-tab i { font-size: 16px; opacity: 0.7; }
     .nav-tab span { display: none; }            /* hide labels, keep icons */
-    .nav-tab.active i { color: #fff; }
+    .nav-tab.active i { color: var(--alva); opacity: 1; }
     .nav-cta { padding: 7px 11px; font-size: 11px; }
     .nav-cta i { font-size: 12px; }
     .nav-cta-ghost { display: none; }           /* secondary CTA hides on phone */
@@ -3787,6 +3970,15 @@
        claim the whole column and there's no room around them. */
     .agents-bubbles { display: none; }
     #agents { min-height: 0; }
+    /* Backtest & Scan — single column on phones. */
+    .section-do { padding: 72px 18px; }
+    .section-do .section-head { margin-bottom: 36px; }
+    .do-grid { grid-template-columns: 1fr; gap: 16px; }
+    .do-card { padding: 28px 22px; }
+    .do-card h3 { font-size: 22px; }
+    .do-form { flex-direction: column; gap: 10px; }
+    .do-form .btn-primary { width: 100%; justify-content: center; }
+
     /* Mobile bottom card — keep the rounded, separately-shadowed
        Request card so it doesn't feel like a stretched bar. */
     .bottom-cards { padding: 56px 18px; }
@@ -3837,8 +4029,10 @@
     </a>
     <nav class="nav-tabs" id="nav-tabs" aria-label="Section tabs">
       <span class="nav-tab-indicator" id="nav-indicator"></span>
-      <a class="nav-tab" href="#leaderboard" data-section="leaderboard"><i class="ph ph-chart-line"></i><span>Leaderboard</span></a>
-      <a class="nav-tab" href="#agents" data-section="agents"><i class="ph ph-chats-circle"></i><span>Chat with Fintwit</span></a>
+      <a class="nav-tab" href="#audit-yours" data-section="audit-yours"><i class="ph ph-database"></i><span>Coverage</span></a>
+      <a class="nav-tab" href="#leaderboard" data-section="leaderboard"><i class="ph ph-trophy"></i><span>Alpha League</span></a>
+      <a class="nav-tab" href="#agents" data-section="agents"><i class="ph ph-book-open"></i><span>Playbooks</span></a>
+      <a class="nav-tab" href="#get-started" data-section="get-started"><i class="ph ph-flask"></i><span>Backtest</span></a>
     </nav>
     <div class="nav-actions">
       <button class="nav-cta-ghost" type="button" data-open="for-kols"><i class="ph-bold ph-megaphone"></i> For FinTwit creators</button>
@@ -4137,26 +4331,61 @@
     </div>
   </section>
 
-  <!-- ============================================================ BOTTOM CARD  (3.0 round 4)
-       Single dark closer above the footer. Inline form removed — the
-       button now navigates to a dedicated /request explainer page that
-       walks the user through the backtest request flow.
+  <!-- ============================================================ SECTION · BACKTEST & SCAN  (3.0 round 7)
+       Two parallel entry points to the FinTwit Alpha League — pick a
+       single creator handle or hand us your whole follow list. Grey
+       band so the white cards pop; sits just before the dark closer.
+         Left card  → backtest one creator (inline handle form)
+         Right card → scan X follows (OAuth, opens #modal-connect)
        ============================================================ -->
-  <section class="bottom-cards">
-    <div class="bottom-cards-inner">
-      <article class="bcard bcard-dark" id="request-card">
-        <div class="bcard-body">
-          <h3>Don't see the FinTwit creator you follow?</h3>
-          <p>Drop a handle. We'll backtest them and ping you when the Playbook is ready.</p>
-        </div>
-        <div class="bcard-foot">
-          <a class="btn-primary bcard-cta" href="/request">
-            <i class="ph-bold ph-paper-plane-tilt"></i> Submit a request <i class="ph-bold ph-arrow-right"></i>
-          </a>
-        </div>
-      </article>
+  <section class="section alt section-do" id="get-started">
+    <div class="section-wrap">
+      <div class="section-head">
+        <h2>Backtest one creator,<br><span class="alva">or scan every creator you follow.</span></h2>
+      </div>
+
+      <div class="do-grid">
+        <article class="do-card" id="do-card-test">
+          <div class="do-card-head">
+            <span class="do-icon"><i class="ph-bold ph-magnifying-glass"></i></span>
+            <span class="do-tag">ONE HANDLE</span>
+          </div>
+          <h3>Backtest any FinTwit creator.</h3>
+          <p>Drop an X handle. We'll run their public call history end-to-end and surface the audited Playbook — best ROI, win rate, median return, the full record.</p>
+          <form class="do-form" id="do-test-form" autocomplete="off">
+            <input type="text" name="handle" placeholder="@creator-handle" aria-label="Creator X handle" required />
+            <button type="submit" class="btn-primary">
+              <i class="ph-bold ph-magnifying-glass"></i> Backtest
+            </button>
+          </form>
+          <div class="do-success" role="status" aria-live="polite">
+            On it — backtesting <strong id="do-test-handle">@creator</strong>. The audited Playbook usually takes a few minutes. We'll DM you on X the moment it's live.
+          </div>
+          <span class="do-foot"><i class="ph-fill ph-check-circle"></i> Public posts only · Private preview</span>
+        </article>
+
+        <article class="do-card" id="do-card-scan">
+          <div class="do-card-head">
+            <span class="do-icon do-icon-x"><i class="ph-bold ph-x-logo"></i></span>
+            <span class="do-tag">YOUR FOLLOWS</span>
+          </div>
+          <h3>Scan your X follow list.</h3>
+          <p>Connect X (read-only). We match every account you follow against the FinTwit Alpha League — and surface only the ones whose audited calls beat the market.</p>
+          <button class="btn-primary do-cta-wide" data-open="connect" type="button">
+            <i class="ph-bold ph-x-logo"></i> Connect X and scan my follows
+          </button>
+          <span class="do-foot"><i class="ph-fill ph-check-circle"></i> Read-only · Match result only · Disconnect anytime</span>
+        </article>
+      </div>
     </div>
   </section>
+
+  <!-- 3.0 round 8 — landing-page Request closer removed. The "Don't see
+       the FinTwit creator you follow?" prompt now lives only inside the
+       fullscreen results modal (#modal-results .results-request), where
+       it appears after the user has scanned their follow list and seen
+       the matched accounts. .bcard*/.bottom-cards CSS classes are kept
+       because the modal still uses .bcard styling. -->
 
 </main>
 
@@ -5381,7 +5610,10 @@
     function smoothScrollTo(id) {
       const target = document.getElementById(id);
       if (!target) return;
-      const offset = 80; // sticky nav clearance
+      // Land the target's top flush against the nav's bottom edge (64px
+      // nav-inner + 1px border = 65). No extra cushion, so the active
+      // tab's underline visually meets the section's first pixel.
+      const offset = 65;
       const y = target.getBoundingClientRect().top + scrollY - offset;
       lockScrollSpy();      // freeze indicator on the clicked tab
       setActive(id);
@@ -5474,6 +5706,21 @@
       </div>
       <p>We'll backtest <b>${handle.replace(/</g,'&lt;')}</b>'s full call history end-to-end and email you a private preview within 7 days. Nothing publishes without your approval.</p>
     `;
+  });
+
+  /* 3.0 round 7: Backtest-one-creator card (Section · Get started).
+     On submit, normalize the handle and flip the card to a confirmation
+     state without leaving the page. The real flow would kick off a
+     server-side backtest job and DM the user when ready. */
+  document.getElementById('do-test-form')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const raw = (e.target.querySelector('input').value || '').trim();
+    if (!raw) return;
+    const handle = '@' + raw.replace(/^@+/, '').replace(/\s+/g, '');
+    const card = document.getElementById('do-card-test');
+    const out  = document.getElementById('do-test-handle');
+    if (out)  out.textContent = handle;
+    if (card) card.dataset.state = 'sent';
   });
 
   /* 3.0: Paste-handles form — secondary scan entry. Lists matches in a
