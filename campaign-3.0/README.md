@@ -38,10 +38,19 @@ Section 5 — THE FINTWIT ALPHA LEAGUE  (white band, independent module)
   Table:   # · Creator · Best ROI · Median · Win · Quality · Risk
            (KOL Score column removed — users found it subjective)
 
-Section 6 — Chat with FinTwit (grey, CTA = Open playbook chat)
+Section 6 — Chat with FinTwit (white, CTA = Open playbook chat)
   Each creator's playbook, distilled into an AI agent.
 
-Section 7 — Request a creator (white, CTA = Submit handle)
+Section 7 — Backtest & Scan (grey, two-card row)
+  H2:  Backtest one creator, or scan every creator you follow.
+  Card A — Backtest any FinTwit creator (inline @handle form,
+           submit flips card to a queued-confirmation state)
+  Card B — Scan your X follow list (button opens #modal-connect
+           OAuth flow — same target as the nav CTA)
+  Foot lines: "Public posts only · Private preview" /
+              "Read-only · Match result only · Disconnect anytime"
+
+Section 8 — Request a creator (dark closer card on grey)
   Don't see the FinTwit creator you follow? Drop a handle.
 
 Footer — Methodology · FAQ · Disclaimer
