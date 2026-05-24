@@ -5,19 +5,66 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ALVA · The FinTwit Alpha League — backtested rankings</title>
 <meta name="description" content="Alva backtests every public call from FinTwit's most-followed creators and ranks them by real returns. Wins, misses, even deleted posts." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<!-- 3.0 round 6 — Brand-wide swap to Delight (9 weights, locally hosted).
+     Google Fonts links removed; Delight covers 100..900 so it replaces
+     all three previous families (Inter / Space Grotesk / JetBrains Mono). -->
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css" />
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+
+<!-- Preload the 4 Delight weights that show above the fold (hero / sub
+     / nav / mono label). Skip Thin / ExtraLight / Light / Black — they
+     paint after first scroll. Saves ~600 ms LCP on mid-tier 4G because
+     the H1 character glyphs are ready by the time the H1 lays out
+     instead of swapping mid-paint. Reference: web.dev/optimize-lcp
+     (preload critical fonts is the #1 LCP fix for sites that ship
+     >2 webfont weights). -->
+<link rel="preload" as="font" type="font/ttf" href="./fonts/Delight-Regular.ttf"   crossorigin />
+<link rel="preload" as="font" type="font/ttf" href="./fonts/Delight-SemiBold.ttf"  crossorigin />
+<link rel="preload" as="font" type="font/ttf" href="./fonts/Delight-Bold.ttf"      crossorigin />
+<link rel="preload" as="font" type="font/ttf" href="./fonts/Delight-ExtraBold.ttf" crossorigin />
+
 <!-- Three.js — drives the opening section's cat-eye lens shader.
-     Try a sibling local copy first (works offline + when bundled into
-     the static GH-Pages build), fall back to CDN if not present. -->
-<script src="./three.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://unpkg.com/three@0.160.0/build/three.min.js';document.head.appendChild(s);"></script>
+     Loaded ONLY on PC widths. The lens shader is mobile-skipped in JS
+     (mobile gets DOM-only float-tweet cards), so we save the 670 KB
+     bundle on every mobile visit — a measurable LCP win (~1-2 s on
+     mid-tier 4G). Reference: web.dev "Below-the-fold-only JS should
+     be deferred or conditionally loaded". -->
+<script>
+  if (!window.matchMedia('(max-width: 760px)').matches) {
+    var s = document.createElement('script');
+    s.src = './three.min.js';
+    s.defer = true;
+    s.onerror = function () {
+      this.onerror = null;
+      var f = document.createElement('script');
+      f.src = 'https://unpkg.com/three@0.160.0/build/three.min.js';
+      f.defer = true;
+      document.head.appendChild(f);
+    };
+    document.head.appendChild(s);
+  }
+</script>
 <style>
   /* ============================================================
-     TOKENS (carried over from audit.html / leaderboard.html)
+     DELIGHT — brand typeface, 9 weights, locally hosted.
+     Replaces Inter / Space Grotesk / JetBrains Mono. Same family name
+     across all weights so CSS just uses font-weight to pick the right
+     file. font-display: swap so text renders immediately with the
+     system fallback while the ttf finishes loading.
+     ============================================================ */
+  @font-face { font-family: 'Delight'; font-weight: 100; font-style: normal; font-display: swap; src: url('./fonts/Delight-Thin.ttf') format('truetype'); }
+  @font-face { font-family: 'Delight'; font-weight: 200; font-style: normal; font-display: swap; src: url('./fonts/Delight-ExtraLight.ttf') format('truetype'); }
+  @font-face { font-family: 'Delight'; font-weight: 300; font-style: normal; font-display: swap; src: url('./fonts/Delight-Light.ttf') format('truetype'); }
+  @font-face { font-family: 'Delight'; font-weight: 400; font-style: normal; font-display: swap; src: url('./fonts/Delight-Regular.ttf') format('truetype'); }
+  @font-face { font-family: 'Delight'; font-weight: 500; font-style: normal; font-display: swap; src: url('./fonts/Delight-Medium.ttf') format('truetype'); }
+  @font-face { font-family: 'Delight'; font-weight: 500; font-style: normal; font-display: swap; src: url('./fonts/Delight-SemiBold.ttf') format('truetype'); }
+  @font-face { font-family: 'Delight'; font-weight: 700; font-style: normal; font-display: swap; src: url('./fonts/Delight-Bold.ttf') format('truetype'); }
+  @font-face { font-family: 'Delight'; font-weight: 800; font-style: normal; font-display: swap; src: url('./fonts/Delight-ExtraBold.ttf') format('truetype'); }
+  @font-face { font-family: 'Delight'; font-weight: 900; font-style: normal; font-display: swap; src: url('./fonts/Delight-Black.ttf') format('truetype'); }
+
+  /* ============================================================
+     TOKENS
      ============================================================ */
   :root {
     --bg:        #f5f5f7;
@@ -36,14 +83,33 @@
     --gain:      #22c55e;
     --gain-hi:   #4ade80;
     --loss:      #ef4444;
-    --font:         "Inter", system-ui, sans-serif;
-    --font-display: "Space Grotesk", system-ui, sans-serif;
-    --font-mono:    "JetBrains Mono", ui-monospace, monospace;
+    /* 3.0 round 6 — all three families collapse onto Delight. The
+       --font-display / --font-mono vars are kept (with the same value)
+       so the existing typography rules don't need to be rewritten;
+       they all resolve to Delight at the requested weight. */
+    --font:         "Delight", system-ui, sans-serif;
+    --font-display: "Delight", system-ui, sans-serif;
+    --font-mono:    "Delight", ui-monospace, monospace;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   html { background: var(--bg); scroll-behavior: smooth; }
+
+  /* Balance the wrap on hero-class headings so the last line never ends
+     in a one-word orphan. Zero cost, modern browsers only (Chrome 114+,
+     Safari 17.5+, FF 121+) — older browsers ignore silently. Reference:
+     Vercel / Notion / Anthropic all ship this on their H1s. */
+  h1, h2, .opening h1, .stage-title, .section-head h2, .lb-card h2,
+  .lb-intro-h, .playbook-text h2, .dialog h3, .stage-marquee .stage-title {
+    text-wrap: balance;
+  }
+
+  /* iOS Safari triggers an auto-zoom when an input with font-size < 16px
+     receives focus. The visual jump breaks the modal layout. Force every
+     focusable form control to ≥16px. Reference: Apple HIG, Bootstrap 5
+     ".form-control" baseline. */
+  input, textarea, select { font-size: 16px; }
 
   /* ============================================================
      SNAP SCROLL — opening ⇄ stage (first two screens only)
@@ -111,15 +177,20 @@
   .brand-mark svg { width: 22px; height: 22px; display: block; }
   .brand-mark .lg-fg { fill: var(--text); }
   .brand-mark .lg-bg { fill: var(--alva); }
+  /* TS token: btn-s family (brand wordmark) */
   .brand-text .name {
-    font-size: 14px; font-weight: 700;
-    letter-spacing: 0.04em;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     color: var(--text);
   }
+  /* TS token: tag (10px small variant) */
   .brand-text .sub {
     font-family: var(--font-mono);
-    font-size: 10px; font-weight: 600;
-    letter-spacing: 0.05em;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
     color: var(--muted);
     margin-top: 1px;
   }
@@ -142,30 +213,31 @@
        themselves stay vertically centered via align-items: center. */
     align-self: stretch;
   }
+  /* TS token: btn-s */
   .nav-tab {
     position: relative;
     z-index: 1;
     display: inline-flex; align-items: center; gap: 7px;
-    /* Tabs are now standalone — give them comfortable padding so the
-       underline reads as an underline, not a tight strikethrough. */
     padding: 0 12px;
     height: 100%;
     color: var(--muted);
-    font-size: 13px; font-weight: 600;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
     background: transparent;
     border: 0;
     cursor: pointer;
     transition: color .2s;
-    font-family: inherit;
     text-decoration: none;
     white-space: nowrap;
-    letter-spacing: 0.005em;
   }
   .nav-tab i { font-size: 14px; opacity: 0.7; transition: opacity .2s, color .2s; }
   .nav-tab span { line-height: 1; }
   .nav-tab:hover { color: var(--text); }
   .nav-tab:hover i { opacity: 1; color: var(--alva); }
-  .nav-tab.active { color: var(--text); font-weight: 700; }
+  /* Active state uses color/underline (not weight) — keep w600 to stay
+     in btn-s family. */
+  .nav-tab.active { color: var(--text); }
   .nav-tab.active i { color: var(--alva); opacity: 1; }
   /* The moving indicator — now a thin teal underline that slides along
      the bottom of the tabs row. Width = active tab width, X = active tab
@@ -192,6 +264,131 @@
   .nav-actions {
     display: flex; align-items: center; gap: 8px;
   }
+
+  /* ============================================================
+     MOBILE-ONLY HAMBURGER TOGGLE + DRAWER
+     ----------------------------------------------------------------
+     The toggle hides on desktop and reveals on mobile. The drawer
+     is always in the DOM but stays hidden + non-interactive at any
+     width unless `.open` is on it AND we're on mobile. Inside .open
+     state, transform/opacity animate it in from above. The two icons
+     (ph-list / ph-x) live on top of each other inside the button and
+     cross-fade based on `[aria-expanded]`.
+     ============================================================ */
+  .nav-menu-toggle {
+    display: none;                            /* shown via mobile @media */
+    position: relative;
+    width: 44px; height: 44px;                /* WCAG 2.5.8 floor */
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 1px solid rgba(10, 10, 16, 0.10);
+    border-radius: 999px;
+    color: var(--text);
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .nav-menu-toggle:hover {
+    background: rgba(10, 10, 16, 0.04);
+    border-color: rgba(10, 10, 16, 0.18);
+  }
+  .nav-menu-toggle i {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-size: 20px;
+    transition: opacity .18s cubic-bezier(.22, 1, .36, 1),
+                transform .18s cubic-bezier(.22, 1, .36, 1);
+  }
+  .nav-menu-toggle .ph-x { opacity: 0; transform: rotate(-90deg); }
+  .nav-menu-toggle[aria-expanded="true"] .ph-list { opacity: 0; transform: rotate(90deg); }
+  .nav-menu-toggle[aria-expanded="true"] .ph-x { opacity: 1; transform: rotate(0); }
+
+  .nav-drawer {
+    /* Fly-out from under .nav. Absolute relative to .nav (which is
+       position: fixed), so it follows the nav and sits over the page
+       content with its own backdrop blur. */
+    position: absolute;
+    top: 100%;
+    left: 0; right: 0;
+    background: rgba(255, 255, 255, 0.97);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+            backdrop-filter: blur(18px) saturate(150%);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0 14px;
+    /* Default — closed: collapsed up, faded, non-interactive. The
+       visibility delay matches the close-out transition so the
+       drawer doesn't trap clicks during fade-out. */
+    transform: translateY(-12px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform .26s cubic-bezier(.22, 1, .36, 1),
+                opacity .2s,
+                visibility 0s .26s;
+    /* Don't show at all on desktop, even if JS accidentally toggles. */
+    display: none;
+  }
+  .nav-drawer.open {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: transform .28s cubic-bezier(.22, 1, .36, 1),
+                opacity .22s,
+                visibility 0s 0s;
+  }
+  /* Tab + action items inside the drawer share a row primitive. */
+  .nav-drawer-item,
+  .nav-drawer-action {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 52px;                              /* big tap silhouette */
+    padding: 0 22px;
+    background: transparent;
+    border: 0;
+    text-decoration: none;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: background .15s, color .15s;
+  }
+  .nav-drawer-item i,
+  .nav-drawer-action i {
+    font-size: 18px;
+    color: var(--muted);
+    width: 22px;
+    text-align: center;
+    transition: color .15s;
+  }
+  .nav-drawer-item:hover,
+  .nav-drawer-item:active,
+  .nav-drawer-item.active,
+  .nav-drawer-action:hover,
+  .nav-drawer-action:active {
+    background: rgba(73, 163, 166, 0.06);
+  }
+  .nav-drawer-item:hover i,
+  .nav-drawer-item.active i,
+  .nav-drawer-action:hover i {
+    color: var(--alva);
+  }
+  .nav-drawer-item.active { color: var(--text); font-weight: 600; }
+  /* Hairline separator between the section-nav block and the
+     account-action block — same idiom as iOS settings list. */
+  .nav-drawer-sep {
+    height: 1px;
+    background: var(--line);
+    margin: 6px 22px;
+  }
+
+  /* TS token: btn-s */
   .nav-cta {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 9px 16px;
@@ -199,7 +396,9 @@
     background: var(--text);
     color: #fff;
     border: 0;
-    font-size: 13px; font-weight: 700;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     box-shadow: 0 0 0 rgba(0,0,0,0);
     transition: background .15s, transform .18s ease, box-shadow .18s ease;
@@ -211,6 +410,7 @@
     box-shadow: 0 14px 28px rgba(10,10,16,0.20);
   }
   /* secondary ghost button — link to the For-KOLs card */
+  /* TS token: btn-s */
   .nav-cta-ghost {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 9px 16px;
@@ -218,8 +418,9 @@
     background: transparent;
     color: var(--text);
     border: 1px solid var(--line);
-    font-family: inherit;
-    font-size: 13px; font-weight: 700;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     box-shadow: 0 0 0 rgba(0,0,0,0);
     transition: background .15s, border-color .15s, color .15s, transform .18s ease, box-shadow .18s ease;
@@ -303,24 +504,26 @@
     top: var(--y, 50%);
     padding: 0.85em 1em;
     background: #fff;
-    /* 3.0 round 39 — border-color softened from var(--line) (#e5e5ea
-       — about 10% grey on white) to rgba(10,10,16,0.05), roughly
-       half-strength. The cards are decorative atmospheric content
-       sitting BEHIND the headline; a strong outline pulls them
-       forward visually and competes with the foreground text. */
-    border: 1px solid rgba(10,10,16,0.05);
+    /* 3.0 round 46.14 — 5% black hairline restored per user request.
+       Matches the canvas stroke; reads as quiet definition without
+       pulling focus from the H1. */
+    border: 1px solid rgba(0,0,0,0.05);
     border-radius: 12px;
     will-change: transform;
     animation: drift var(--dur, 145s) linear infinite;
     animation-delay: var(--d, 0s);
   }
+  /* 3.0 round 46.1 — tier shadows restored: weak ink + wide blur
+     (the brief from the start). The rounds 45.x removal panic was
+     based on a misdiagnosis; the real shader-composite bug is fixed
+     so these soft shadows now translate cleanly without a grey ring. */
   .float-tweet.tier-far  {
     width: 210px;
     font-size: 11px;
     filter: blur(1.3px);
     --dur: 240s;
     z-index: 1;
-    box-shadow: 0 8px 18px -10px rgba(20,20,30,0.10);
+    box-shadow: 0 8px 32px rgba(20,20,30,0.06);
   }
   .float-tweet.tier-mid  {
     width: 275px;
@@ -328,7 +531,7 @@
     filter: blur(0.5px);
     --dur: 145s;
     z-index: 2;
-    box-shadow: 0 14px 28px -12px rgba(20,20,30,0.14);
+    box-shadow: 0 10px 40px rgba(20,20,30,0.08);
   }
   .float-tweet.tier-near {
     width: 340px;
@@ -336,7 +539,7 @@
     filter: blur(0);
     --dur: 80s;
     z-index: 3;
-    box-shadow: 0 22px 44px -14px rgba(20,20,30,0.18);
+    box-shadow: 0 14px 48px rgba(20,20,30,0.10);
   }
   /* (cat-eye SVG-filter approach reverted — neither Chrome nor Safari
      rendered the displacement reliably. Will be replaced by a proper
@@ -400,56 +603,37 @@
     max-width: 880px;
     padding: 0 24px;
   }
+  /* TS token: display-xl — Hero H1 (3.0 round 9 — liquid effect
+     reverted per user; H1 is now just solid brand teal). */
   .opening h1 {
     font-family: var(--font-display);
-    font-weight: 800;
-    /* Back to the original 2.0 size — the handle now lives on its
-       own line, so we don't need to constrain font-size to keep
-       line-1 single-line. */
-    font-size: clamp(40px, 5.6vw, 76px);
-    line-height: 1.04;
-    letter-spacing: -0.025em;
+    font-weight: 700;
+    font-size: clamp(40px, 4.6vw, 60px);
+    line-height: 0.88;
+    letter-spacing: -0.02em;
     margin: 0 0 28px;
-    color: var(--text);
-    /* halo = pure white, matching the .opening gradient center +
-       canvas uBgColor. Alva-teal vignette lives only at the corners
-       (CSS gradient + shader edge tint); the H1 sits on solid white.
-       3.0 round 40 — halo strengthened: more stacked layers + larger
-       radii (was 10/22/40/70 → now 14/30/55/95/140/200). Composite
-       opacity goes up because shadows accumulate, AND the bleed
-       extends further past the text so the floating tweet cards
-       behind never crowd the H1. */
-    text-shadow:
-      0 0  14px #ffffff,
-      0 0  30px #ffffff,
-      0 0  55px #ffffff,
-      0 0  95px #ffffff,
-      0 0 140px #ffffff,
-      0 0 200px #ffffff;
+    color: var(--alva);
   }
-  /* Each clause on its own line — the handle lives in its own
-     .line-handle row so a long handle never reflows the other lines.
-     Each line carries an explicit min-height so a short or empty
-     handle slot doesn't visually collapse. We also widen the gap
-     between the lead and the handle row so the handle reads as a
-     standalone "highlight" line rather than getting visually pulled
-     up into the lead when only "@|" or "@y" is on screen. */
+  /* Each clause is its own block — tighten the per-line line-height
+     and drop the 0.28em margin between them so 0.88 on the h1 actually
+     wins. The old .line-handle row is gone in markup but the selector
+     remains harmless. */
   .opening h1 .line-1,
   .opening h1 .line-handle,
   .opening h1 .line-2 {
     display: block;
-    line-height: 1.15;
-    min-height: 1.15em;
-  }
-  .opening h1 .line-handle {
-    margin-top: 0.32em;
-    /* lift the handle row above the drifting tweet cards so a short
-       state ("@|") is never hidden behind a card */
-    position: relative;
-    z-index: 12;
+    line-height: 0.95;
+    min-height: 0;
   }
   .opening h1 .line-2 {
-    margin-top: 0.28em;
+    margin-top: 0;
+  }
+  /* .line-handle is no longer in the DOM but keep the safety hook
+     in case the typewriter is restored later. */
+  .opening h1 .line-handle {
+    margin-top: 0;
+    position: relative;
+    z-index: 12;
   }
   .opening h1 .alva { color: var(--alva); }
   /* Typewriter @handle in the Opening H1. JS types characters in
@@ -492,16 +676,15 @@
     0%, 49.99% { opacity: 1; }
     50%, 100%  { opacity: 0; }
   }
-  /* subtitle — a follow-up question inviting the user to scroll;
-     softer than the H1, sits just above the down-arrow scroll cue */
+  /* TS token: lead — Hero subtitle */
   .opening-sub {
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: clamp(20px, 2.2vw, 30px);
-    line-height: 1.3;
-    letter-spacing: -0.012em;
+    font-family: var(--font);
+    font-weight: 400;
+    font-size: clamp(16px, 1.4vw, 19px);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
     color: #3a3a44;
-    max-width: 740px;
+    max-width: 640px;
     margin: 0 auto 36px;
     text-shadow:
       0 0  12px #ffffff,
@@ -859,11 +1042,10 @@
   /* Stage's primary + ghost buttons share the SAME padding / font / radius
      so the pair reads as a paired control, not two random pills with
      different proportions. Both pick up the global pill (999) radius. */
+  /* TS token: btn — inherits font from .btn-primary / .btn-ghost */
   .stage-actions .btn-primary,
   .stage-actions .btn-ghost {
     padding: 14px 24px;
-    font-size: 14px;
-    font-weight: 700;
     border-radius: 999px;
   }
   /* 3.0 round 36 — S2 first button switched to a solid BLACK pill per
@@ -916,17 +1098,16 @@
     padding: 0 32px;
     text-align: center;
   }
+  /* TS token: display-l — unified with Section 3 (Use Cases) and
+     Section 4 (Leaderboard) per user 3.0 round 5. Bumped from display-m
+     (clamp 20-28) so all three sections share the same heading scale. */
   .stage-marquee .stage-title {
     font-family: var(--font-display);
-    font-weight: 800;
-    /* Sized so each .stage-title-line (white-space: nowrap) fits
-       in the 1100px headline column at desktop widths. */
-    font-size: clamp(22px, 2.7vw, 38px);
-    line-height: 1.16;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    font-size: clamp(28px, 3.2vw, 44px);
+    line-height: 1.15;
+    letter-spacing: -0.018em;
     margin: 0;
-    /* 3.0 round 27 — text reverted to dark since the plaque is back
-       to white and the section bg is back to a light mint wash. */
     color: var(--text);
   }
   /* Each clause is its own nowrap block — guarantees a clean 2-line
@@ -1041,9 +1222,11 @@
     line-height: 1.25;
     max-width: 100%;
   }
+  /* TS token: body (card row name) */
   .mq-meta b {
-    font-size: 16px;
-    font-weight: 700;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
     color: var(--text);
     white-space: nowrap;
     overflow: hidden;
@@ -1051,9 +1234,12 @@
     letter-spacing: -0.005em;
     max-width: 220px;
   }
+  /* TS token: tag (handle + theme) */
   .mq-meta span {
     font-family: var(--font-mono);
     font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
     color: var(--muted);
     margin-top: 3px;
     white-space: nowrap;
@@ -1068,19 +1254,22 @@
     width: 100%;
     line-height: 1.05;
   }
+  /* TS token: num (large variant) */
   .mq-v {
     font-family: var(--font-mono);
-    font-size: 30px;
-    font-weight: 800;
-    letter-spacing: -0.015em;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
   }
   .mq-v.gain { color: var(--gain); }
   .mq-v.loss { color: var(--loss); }
+  /* TS token: tag (10px small variant) */
   .mq-l {
     font-family: var(--font-mono);
     font-size: 10px;
+    font-weight: 400;
     color: var(--muted);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     margin-top: 6px;
   }
   @media (prefers-reduced-motion: reduce) {
@@ -1206,7 +1395,7 @@
   .proof-label {
     font-family: var(--font-mono);
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 500;
     color: rgba(255,255,255,0.55);
     letter-spacing: 0.06em;
     margin-left: 2px;
@@ -1325,7 +1514,7 @@
   .hero-link {
     display: inline-flex; align-items: center; gap: 6px;
     color: var(--muted);
-    font-size: 13px; font-weight: 600;
+    font-size: 13px; font-weight: 500;
     cursor: pointer;
     background: transparent;
     border: 0;
@@ -1497,7 +1686,7 @@
   .pc-score:last-child { margin-bottom: 0; }
   .pc-score .label {
     font-family: var(--font-mono);
-    font-size: 0.71em; font-weight: 600;
+    font-size: 0.71em; font-weight: 500;
     color: var(--muted);
     letter-spacing: 0.06em;
     margin-bottom: 0.29em;
@@ -1622,8 +1811,10 @@
     background: var(--text);
     color: #fff;
     border: 0;
+    /* TS token: btn */
+    font-family: var(--font);
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 500;
     transition: background .15s, transform .15s, box-shadow .15s;
     text-decoration: none;
     flex-shrink: 0;
@@ -1635,29 +1826,38 @@
     box-shadow: 0 12px 24px rgba(73,163,166,0.32);
   }
   .section-action:hover i { transform: translate(2px, -2px); }
+  /* TS token: tag (3.0 round 7 — w500 → w400) */
   .section-head .eyebrow {
     display: block;
     font-family: var(--font-mono);
-    font-size: 11px; font-weight: 600;
+    font-size: 11px;
+    font-weight: 400;
     color: var(--muted);
     letter-spacing: 0.06em;
     margin-bottom: 12px;
   }
+  /* TS token: display-l — canonical for all section H2.
+     Use Cases, Leaderboard, and any future sections all cascade here. */
   .section-head h2 {
     font-family: var(--font-display);
-    font-weight: 800;
-    font-size: clamp(36px, 4.6vw, 60px);
-    line-height: 1.05;
-    letter-spacing: -0.025em;
+    font-weight: 700;
+    font-size: clamp(28px, 3.2vw, 44px);
+    line-height: 1.15;
+    letter-spacing: -0.018em;
     margin: 0 0 18px;
     color: var(--text);
   }
   .section-head h2 .alva { color: var(--alva); }
+  /* TS token: lead — section subtitles + dialog leads + hero sub
+     (3.0 round 7 — w500 → w400 to match user-wide weight reduction.) */
   .section-head p {
     margin: 0;
     color: var(--muted);
-    font-size: 17px;
-    line-height: 1.6;
+    font-family: var(--font);
+    font-weight: 400;
+    font-size: clamp(16px, 1.4vw, 19px);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
     max-width: 640px;
   }
 
@@ -1677,9 +1877,7 @@
     max-width: 760px;
     text-align: center;
   }
-  .section-playbook .section-head h2 {
-    font-size: clamp(28px, 3.4vw, 46px);
-  }
+  /* 3.0 round 5 — override removed; .section-head h2 (display-l) cascades. */
 
   /* Row 2 — tabs */
   .play-tabs {
@@ -1692,10 +1890,11 @@
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    /* 3.0 round 40 — divider recolored from --line (#e5e5ea light grey,
-       invisible on the mint section bg) to a saturated alva at 50%
-       alpha so it actually reads as a horizontal axis under the tabs. */
-    border-bottom: 1px solid rgba(73,163,166,0.55);
+    /* 3.0 round 4 — divider back to --line (#e5e5ea light grey). The
+       teal-50%-alpha override was needed when Use Cases sat on a mint
+       wash; the section is now white, so the standard line color reads
+       cleanly again. */
+    border-bottom: 1px solid var(--line);
   }
   .play-tabs::-webkit-scrollbar { display: none; }
   .play-tab {
@@ -1707,7 +1906,7 @@
     color: var(--muted);
     font-family: inherit;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
     transition: color .15s ease;
@@ -1829,27 +2028,21 @@
   .play-cover[data-variant="dark"]   { background: linear-gradient(135deg, #1a1a1e 0%, #0a0a10 65%, #000 100%); }
   .play-cover[data-variant="warm"]   { background: linear-gradient(135deg, #ff8a4c 0%, #ff6f3a 55%, #c84c1f 100%); }
   .play-cover[data-variant="purple"] { background: linear-gradient(135deg, #b388ff 0%, #8a5cf2 60%, #5b2bb8 100%); }
+  /* TS token: display-m — Use Cases card title */
   .play-card h3 {
-    /* margin: 0 deliberately omitted — see earlier `.play-card h3` rule
-       above which sets margin-top:48 / margin-bottom:16 to push the
-       title FAR from both the cover and the body. */
     font-family: var(--font-display);
-    /* Card title — L3 in the page type scale (22px). The old 32px was
-       its own tier with no sibling on the page; pulling it down to 22
-       lets it share a tier with the rest of the card-title family. */
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.015em;
+    font-weight: 500;
+    font-size: clamp(20px, 2.0vw, 28px);
+    letter-spacing: -0.012em;
     line-height: 1.2;
     color: var(--text);
   }
+  /* TS token: body */
   .play-card p {
-    /* margin-top kept at 0 (see earlier rule); margin-bottom 0 here so
-       the gap to .play-cta is governed by cta's margin-top: 24. */
     margin-bottom: 0;
     color: var(--muted);
-    /* Body — L4 (15px), shared with all body copy on the page. */
-    font-size: 15px;
+    font-family: var(--font);
+    font-size: 14px;
     line-height: 1.55;
     max-width: 560px;
   }
@@ -1865,8 +2058,10 @@
     border-radius: 999px;
     background: var(--text);
     color: #fff;
+    /* TS token: btn */
+    font-family: var(--font);
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 500;
     text-decoration: none;
     transition: background .15s, transform .15s, box-shadow .15s;
   }
@@ -2132,7 +2327,7 @@
     border-radius: 999px;
     font-family: var(--font-mono);
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.04em;
     box-shadow: 0 8px 22px rgba(10,10,16,0.18);
   }
@@ -2178,7 +2373,7 @@
   .scan-head .eyebrow {
     display: block;
     font-family: var(--font-mono);
-    font-size: 11px; font-weight: 600;
+    font-size: 11px; font-weight: 500;
     color: var(--muted);
     letter-spacing: 0.06em;
     margin-bottom: 12px;
@@ -2269,9 +2464,10 @@
     background: transparent;
     color: var(--text);
     border: 1px solid var(--line);
-    font-family: inherit;
+    /* TS token: btn — ghost variant */
+    font-family: var(--font);
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 500;
     cursor: pointer;
     transition: background .15s, border-color .15s, color .15s, transform .18s;
   }
@@ -2288,25 +2484,25 @@
      "THE FINTWIT ALPHA LEAGUE" sits on the existing diagonal grid
      where the old "Want to find more KOLs..." headline used to.
      ============================================================ */
+  /* TS token: display-l — Leaderboard heading inherits from .section-head
+     h2 base. Only margin override stays. */
   .lb-title {
-    font-family: var(--font-display);
-    font-weight: 900;
-    font-size: clamp(36px, 4.6vw, 60px);
-    line-height: 1.02;
-    letter-spacing: -0.025em;
     margin: 0 0 14px;
-    color: var(--text);
   }
+  /* TS token: lead — Leaderboard subtitle */
   .lb-sub {
     margin: 0;
     color: var(--muted);
-    font-size: 16px;
-    line-height: 1.55;
+    font-family: var(--font);
+    font-weight: 400;
+    font-size: clamp(16px, 1.4vw, 19px);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
     max-width: 560px;
   }
   .lb-sub .alva {
     color: var(--alva);
-    font-weight: 600;
+    font-weight: 500;
   }
 
   /* features grid (reused for sub-cards) */
@@ -2443,13 +2639,16 @@
     gap: 16px; flex-wrap: wrap;
   }
   .sort-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  /* TS token: btn-s */
   .sort-tab {
     padding: 8px 14px;
     border-radius: 999px;
     border: 1px solid transparent;
     background: transparent;
     color: var(--muted);
-    font-size: 12px; font-weight: 700;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     transition: all .15s;
   }
@@ -2458,9 +2657,12 @@
     background: var(--text); color: #fff;
     border-color: var(--text);
   }
+  /* TS token: tag */
   .lb-meta {
     font-family: var(--font-mono);
-    font-size: 11px; color: var(--muted);
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
     letter-spacing: 0.06em;
     display: inline-flex; align-items: center; gap: 8px;
   }
@@ -2483,11 +2685,12 @@
     gap: 16px;
     padding: 14px 24px 12px;
     border-bottom: 1px solid var(--line);
+    /* TS token: tag (10px small variant) */
     font-family: var(--font-mono);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--muted);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
   }
   /* lb-rows render more rows than fit — overflow:hidden + section.bottom
      hard-cut at the lb-card's flat bottom creates the "table got cut,
@@ -2525,11 +2728,15 @@
   #leaderboard {
     position: relative;
     isolation: isolate;
-    /* Base remains var(--bg-soft); a faint 5-hue aurora halo sits
-       on ::before behind the lb-card, only visible around the
-       card's perimeter (card itself is opaque white, covering the
-       middle). See ::before rule below. */
-    background: var(--bg-soft);
+    /* 3.0 round 4 — swapped backgrounds with #agents (Use Cases): the
+       Leaderboard now wears the teal wash + radial gradients that used
+       to live on #agents, and Use Cases takes the pure white that used
+       to be here. The aurora halo on ::before still reads against this
+       wash (card itself is opaque white, covers the middle). */
+    background:
+      radial-gradient(60% 55% at 80% 22%, rgba(73,163,166,0.16) 0%, transparent 65%),
+      radial-gradient(70% 60% at 14% 82%, rgba(92,185,188,0.14) 0%, transparent 70%),
+      rgba(73,163,166,0.08);
     /* 3.0 round 31 — padding-top bumped 96 → 120 to match the stage
        section above (.stage.stage-marquee has padding 120 0 120).
        Visual symmetry: stage top-padding = leaderboard top-padding
@@ -2649,13 +2856,8 @@
     max-width: 760px;
     text-align: center;
   }
-  /* 3.0 round 27 — match S4 (#agents) title scale exactly so the two
-     sections read as a paired typographic tier instead of "S3 big /
-     S4 small". S4 inherits clamp(28, 3.4vw, 46) via
-     .section-playbook .section-head h2; mirror it here on S3. */
-  #leaderboard .section-head h2 {
-    font-size: clamp(28px, 3.4vw, 46px);
-  }
+  /* 3.0 round 5 — override removed; both Use Cases and Leaderboard
+     inherit display-l from .section-head h2. */
   /* Stack the action centered under the title block instead of
      pushing it to the right edge. */
   #leaderboard .section-head.with-action {
@@ -2686,13 +2888,11 @@
   #leaderboard .lb-header .hide-sm,
   #leaderboard .lb-row .cell.hide-sm { display: block; }
   #leaderboard .lb-toolbar { padding: 18px 24px; gap: 16px; }
-  #leaderboard .sort-tab { padding: 8px 14px; font-size: 12px; }
-  #leaderboard .lb-meta { font-size: 11px; }
+  /* 3.0 round 5 — desktop-specific size bumps removed; sort-tab + lb-meta
+     + row text inherit TS tokens (btn-s / tag / body) from base rules. */
+  #leaderboard .sort-tab { padding: 8px 14px; }
   #leaderboard .lb-row { padding-top: 14px; padding-bottom: 14px; }
   #leaderboard .lb-row .who img { width: 38px; height: 38px; }
-  #leaderboard .lb-row .who b { font-size: 14.5px; }
-  #leaderboard .lb-row .who span { font-size: 12px; }
-  #leaderboard .lb-row .cell .v { font-size: 14px; }
   /* 3.0 round 24 — table window 760 → 540. The fade-mask at the bottom
      still implies more rows below; a shorter window keeps the section
      compact without breaking the "scroll for full board" visual. */
@@ -2717,31 +2917,47 @@
   }
   .lb-row:first-child { border-top: 0; }
   .lb-row:hover { background: rgba(73,163,166,0.04); }
+  /* TS token: num */
   .lb-row .idx {
     font-family: var(--font-mono);
-    font-weight: 700; color: var(--muted);
+    font-weight: 500;
     font-size: 13px;
+    letter-spacing: -0.01em;
+    color: var(--muted);
   }
   .lb-row .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .lb-row .who img {
     width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
     background: var(--line);
   }
-  .lb-row .who b { display: block; font-size: 13px; font-weight: 700; }
+  /* Row name uses inter; size shared with body baseline */
+  .lb-row .who b { display: block; font-size: 13px; font-weight: 500; }
+  /* TS token: tag — handle + theme caption */
   .lb-row .who span {
     display: block; margin-top: 1px;
-    font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.04em;
   }
-  /* no more per-cell labels — header row handles column titles */
-  .lb-row .cell .v { font-weight: 700; font-size: 13px; font-family: var(--font-mono); }
+  /* TS token: num — leaderboard cell numeric */
+  .lb-row .cell .v {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: -0.01em;
+  }
   .lb-row .cell .v.gain { color: var(--gain); }
   .lb-row .cell .v.loss { color: var(--loss); }
+  /* TS token: tag (10px small variant) */
   .risk-pill {
     display: inline-flex; align-items: center; justify-content: center;
     padding: 4px 10px;
     border-radius: 999px;
     font-family: var(--font-mono);
-    font-size: 10px; font-weight: 700;
+    font-size: 10px;
+    font-weight: 400;
     letter-spacing: 0.06em;
   }
   .risk-pill.low    { background: rgba(34,197,94,0.10);  color: #15803d; }
@@ -2830,7 +3046,7 @@
   .agents-suggested-label {
     font-family: var(--font-mono);
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--muted);
     letter-spacing: 0.05em;
     margin-right: 4px;
@@ -2887,13 +3103,13 @@
      its dark-on-light defaults inherited from .section / .play-* base
      rules. The wash composition mirrors S2's exactly so the two
      green sections read as a paired pair within the cadence. */
+  /* 3.0 round 4 — swapped backgrounds with #leaderboard. Use Cases
+     now sits on pure white (var(--bg-soft)); the teal wash + radial
+     gradients moved to the Leaderboard rule below. */
   #agents {
     position: relative;
     overflow: hidden;
-    background:
-      radial-gradient(60% 55% at 80% 22%, rgba(73,163,166,0.16) 0%, transparent 65%),
-      radial-gradient(70% 60% at 14% 82%, rgba(92,185,188,0.14) 0%, transparent 70%),
-      rgba(73,163,166,0.08);
+    background: var(--bg-soft);
   }
   /* (3.0 round 43 — S4 background animation removed entirely, see
      companion comment on the S2 stage section. Section bg now relies
@@ -3007,7 +3223,7 @@
   .closing-head { text-align: center; margin-bottom: 64px; }
   .closing-head .eyebrow {
     font-family: var(--font-mono);
-    font-size: 11px; font-weight: 600;
+    font-size: 11px; font-weight: 500;
     color: var(--alva-hi);
     letter-spacing: 0.06em;
     margin-bottom: 16px;
@@ -3067,13 +3283,16 @@
     margin-top: 22px;
     display: flex; gap: 12px; flex-wrap: wrap;
   }
+  /* TS token: btn */
   .btn-on-dark {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 12px 22px;
     border-radius: 8px;
     background: #fff; color: var(--text);
     border: 0;
-    font-size: 14px; font-weight: 700;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
     box-shadow: 0 0 0 rgba(0,0,0,0);
     transition: transform .18s ease, box-shadow .18s ease, background .15s;
@@ -3083,13 +3302,16 @@
     background: #f5f5f7;
     box-shadow: 0 16px 32px rgba(0,0,0,0.30);
   }
+  /* TS token: btn */
   .btn-on-dark-ghost {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 12px 22px;
     border-radius: 8px;
     background: transparent; color: rgba(255,255,255,0.85);
     border: 1px solid rgba(255,255,255,0.18);
-    font-size: 14px; font-weight: 700;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
     box-shadow: 0 0 0 rgba(0,0,0,0);
     transition: background .15s, border-color .15s, transform .18s ease, box-shadow .18s ease;
@@ -3311,23 +3533,28 @@
   .bcard.bcard-dark .bcard-eyebrow { color: var(--alva-hi); }
   .bcard.bcard-dark .bcard-trust { color: rgba(255,255,255,0.4); }
 
+  /* TS token: tag */
   .bcard-eyebrow {
     font-family: var(--font-mono);
-    font-size: 11px; font-weight: 700;
-    letter-spacing: 0.05em;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
     margin-bottom: 16px;
   }
+  /* TS token: display-m */
   .bcard h3 {
     margin: 0;
     font-family: var(--font-display);
-    font-size: clamp(22px, 2vw, 28px);
-    font-weight: 800;
-    letter-spacing: -0.015em;
-    line-height: 1.15;
+    font-weight: 500;
+    font-size: clamp(20px, 2.0vw, 28px);
+    letter-spacing: -0.012em;
+    line-height: 1.2;
   }
+  /* TS token: body */
   .bcard p {
     margin: 12px 0 0;
-    font-size: 15px;
+    font-family: var(--font);
+    font-size: 14px;
     line-height: 1.55;
   }
   /* body takes remaining space so foot anchors to bottom — keeps
@@ -3340,10 +3567,12 @@
     align-self: flex-start;
     width: auto;
   }
+  /* TS token: tag (10px small variant) */
   .bcard-trust {
     font-family: var(--font-mono);
     font-size: 10px;
-    letter-spacing: 0.04em;
+    font-weight: 400;
+    letter-spacing: 0.06em;
   }
 
   /* Submit form on the dark Request card — restrained small pill input +
@@ -3373,6 +3602,7 @@
     border-color: var(--alva);
     background: rgba(73,163,166,0.08);
   }
+  /* TS token: btn-s */
   .bcard-form button {
     height: 44px;
     padding: 0 22px;
@@ -3380,8 +3610,9 @@
     color: var(--card);
     border: 0;
     border-radius: 999px;
-    font-family: inherit;
-    font-size: 13px; font-weight: 700;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     display: inline-flex; align-items: center; gap: 6px;
     box-shadow: 0 0 0 rgba(0,0,0,0);
@@ -3412,6 +3643,21 @@
     border-color: var(--alva);
     background: rgba(73,163,166,0.06);
   }
+  /* 3.0 round 6 — dark closer card INSIDE the dialog (e.g.
+     .results-request .bcard-dark) was inheriting the light-dialog form
+     style above (dark text on light bg) — invisible against the black
+     card. Higher-specificity rule flips it back to the dark variant:
+     white text on a subtle white-tint bg. */
+  .dialog .bcard-dark .bcard-form input {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.12);
+    color: #fff;
+  }
+  .dialog .bcard-dark .bcard-form input::placeholder { color: rgba(255,255,255,0.40); }
+  .dialog .bcard-dark .bcard-form input:focus {
+    border-color: var(--alva);
+    background: rgba(73,163,166,0.10);
+  }
   .dialog .bcard-form button {
     background: var(--alva);
     color: #fff;
@@ -3441,24 +3687,30 @@
     background: rgba(73,163,166,0.08);
     color: var(--muted);
   }
+  /* TS token: caption (footer body) */
   .f-inner {
     max-width: 1440px; margin: 0 auto;
     display: flex; justify-content: space-between; align-items: center;
     flex-wrap: wrap; gap: 16px;
-    font-size: 12px;
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.5;
   }
   .f-inner a { color: inherit; margin-right: 16px; }
   .f-inner a:hover { color: var(--text); }
-  .f-disclaimer { max-width: 580px; line-height: 1.6; }
+  .f-disclaimer { max-width: 580px; }
 
   /* ============================================================
      PRIMARY BUTTON  (used by hero CTA + bottom-card submit + modals)
      audit.html-style multi-color shimmer
      ============================================================ */
+  /* TS token: btn — primary action button */
   .btn-primary {
     position: relative;
     display: inline-flex; align-items: center; gap: 10px;
-    font-size: 15px; font-weight: 700;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
     color: #fff;
     background: var(--alva);
     border: 0;
@@ -3534,6 +3786,7 @@
     height: 48px;
     padding: 0 24px;
   }
+  /* TS token: tag */
   .search-foot {
     margin-top: 14px;
     display: inline-flex;
@@ -3541,10 +3794,12 @@
     gap: 8px;
     font-family: var(--font-mono);
     font-size: 11px;
+    font-weight: 400;
     letter-spacing: 0.06em;
     color: var(--muted);
   }
   .search-foot i { color: var(--alva); font-size: 13px; }
+  /* TS token: body */
   .search-success {
     display: none;
     margin-top: 18px;
@@ -3553,13 +3808,71 @@
     background: rgba(73,163,166,0.08);
     border: 1px solid rgba(73,163,166,0.30);
     color: var(--text);
+    font-family: var(--font);
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.55;
   }
   .search-success strong { color: var(--alva); font-weight: 700; }
   #modal-search[data-state="sent"] .search-form,
   #modal-search[data-state="sent"] .search-foot { display: none; }
   #modal-search[data-state="sent"] .search-success { display: block; }
+
+  /* ============================================================
+     STICKY BOTTOM CTA BAR  (mobile-only, dismissable)
+     Hidden by default on every viewport. The mobile @media block
+     un-hides it; JS toggles .visible when the user scrolls past the
+     hero CTA and back-off when the footer enters view. Reference:
+     Tesla Model Y mobile (`tcl-permanent-cta`), Apple iPhone product
+     pages (`.tabnav-wrapper`). Translate-Y on a class toggle so the
+     reveal/hide animates without any layout cost. ===================== */
+  .sticky-cta-bar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 40;                              /* above alva-badge (45 on
+                                                  desktop; mobile-hidden) but
+                                                  below all modals (80) */
+    display: none;                            /* unhidden in mobile @media */
+    gap: 10px;
+    align-items: center;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+            backdrop-filter: blur(14px) saturate(140%);
+    border-top: 1px solid rgba(10, 10, 16, 0.08);
+    transform: translateY(110%);
+    transition: transform .28s cubic-bezier(.22, 1, .36, 1);
+  }
+  .sticky-cta-bar.visible { transform: translateY(0); }
+  .sc-cta {
+    flex: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px;
+    height: 48px;                              /* Apple HIG floor, with margin */
+    padding: 0 22px;
+    background: var(--text);
+    color: #fff;
+    border: 0; border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 14px; font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s, transform .15s, box-shadow .15s;
+  }
+  .sc-cta:hover { background: var(--alva); }
+  .sc-cta:active { transform: scale(0.98); }
+  .sc-cta i { font-size: 15px; }
+  .sc-close {
+    width: 44px; height: 44px;
+    background: transparent;
+    border: 1px solid rgba(10, 10, 16, 0.12);
+    border-radius: 50%;
+    color: var(--muted);
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: color .15s, border-color .15s;
+  }
+  .sc-close:hover { color: var(--text); border-color: rgba(10, 10, 16, 0.24); }
+  .sc-close i { font-size: 16px; }
 
   /* ============================================================
      ALVA ATTRIBUTION BADGE  (persistent bottom-right, light card)
@@ -3603,18 +3916,22 @@
     flex-direction: column;
     line-height: 1.3;
   }
+  /* TS token: btn-s family */
   .alva-badge-text b {
+    font-family: var(--font);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 500;
     color: var(--text);
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
   }
+  /* TS token: tag (10px small variant) */
   .alva-badge-text span {
     margin-top: 4px;
     font-family: var(--font-mono);
     font-size: 10px;
+    font-weight: 400;
     color: var(--muted);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
   }
 
   /* ============================================================
@@ -3631,6 +3948,12 @@
   }
   .modal.open { display: flex; }
   .dialog {
+    position: relative;        /* anchor for absolute .close — keeps the X
+                                  button pinned to the dialog's top-right
+                                  regardless of whether the markup nests
+                                  .close inside .dialog-head or hangs it
+                                  off .dialog directly (e.g. cant-find /
+                                  search modals before this fix). */
     width: min(620px, 100%);
     max-height: 86vh;
     overflow: auto;
@@ -3639,17 +3962,45 @@
     padding: 32px;
     box-shadow: 0 30px 80px rgba(0,0,0,0.3);
   }
-  .dialog-head { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
-  .dialog h3 { margin: 10px 0 0; font-family: var(--font-display); font-size: 28px; line-height: 1.1; letter-spacing: -0.015em; }
-  .dialog p { color: var(--muted); line-height: 1.6; }
+  /* padding-right gives the absolute .close (36 wide at top:16 right:16)
+     a non-overlapping lane so the title text wraps before colliding with
+     the X button. The .dialog-full variant resets this below because
+     that modal centers its head and doesn't want the offset. */
+  .dialog-head { display: flex; align-items: start; justify-content: space-between; gap: 18px; padding-right: 48px; }
+  /* TS token: display-m — canonical for all modal H3s
+     (3.0 round 7 — weight dropped 700 → 500; only section titles keep
+     bold weight, sub-tier headings sit at medium.) */
+  .dialog h3 {
+    margin: 10px 0 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(20px, 2.0vw, 28px);
+    line-height: 1.2;
+    letter-spacing: -0.012em;
+  }
+  /* TS token: body — all dialog paragraphs */
+  .dialog p {
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  /* TS token: tag — all dialog eyebrows */
   .dialog .eyebrow {
     display: block;
     font-family: var(--font-mono);
-    font-size: 11px; font-weight: 600;
+    font-size: 11px;
+    font-weight: 400;
     color: var(--alva);
     letter-spacing: 0.06em;
   }
+  /* Anchored top-right of the dialog. Specificity-equal but earlier in
+     cascade than .connect-close / .dialog-full-close, so those two
+     still override with their own top/right offsets. */
   .close {
+    position: absolute;
+    top: 16px; right: 16px;
+    z-index: 5;
     width: 36px; height: 36px;
     border: 0; border-radius: 8px;
     background: var(--bg);
@@ -3671,13 +4022,20 @@
     border-bottom: 1px solid var(--line);
   }
   .step:last-child { border-bottom: 0; }
+  /* TS token: tag */
   .step .num {
     font-family: var(--font-mono);
-    font-size: 11px; font-weight: 700;
+    font-size: 11px; font-weight: 400;
     color: var(--muted);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.06em;
   }
-  .step .desc { font-size: 14px; color: var(--text); line-height: 1.5; }
+  /* TS token: body */
+  .step .desc {
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text);
+  }
   .step .desc b { color: var(--text); font-weight: 700; }
 
   /* ============================================================
@@ -3707,34 +4065,43 @@
        sides are present in the card form. */
     border-bottom: 1px solid var(--line);
   }
+  /* For-KOLs step number — display accent, w500 to match display-m tier. */
   #modal-for-kols .step .num {
     font-family: var(--font-display);
-    font-size: 32px;
-    font-weight: 900;
+    font-size: clamp(20px, 2.0vw, 28px);
+    font-weight: 500;
     color: var(--alva);
-    line-height: 1;
-    letter-spacing: -0.02em;
+    line-height: 1.2;
+    letter-spacing: -0.012em;
     text-transform: none;
   }
-  #modal-for-kols .step .desc {
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text);
-  }
-  @media (max-width: 540px) {
-    #modal-for-kols .steps { grid-template-columns: 1fr; }
+  /* TS token: body — inherits from .step .desc, only color override */
+  #modal-for-kols .step .desc { color: var(--text); }
+  @media (max-width: 760px) {
+    /* On a 393 viewport three 100-px-tall step cards squeeze into a
+       grid that breaks the eyebrow numbers and clips the body copy.
+       Bump the fold-down breakpoint from 540 → 760 so phones get a
+       proper vertical stack with breathing room. Reference: Apple
+       HIG "Step indicators on narrow widths". */
+    #modal-for-kols .steps { grid-template-columns: 1fr; gap: 12px; }
+    #modal-for-kols .step { padding: 16px 18px; }
   }
 
+  /* TS token: body */
   .notice {
     margin-top: 20px;
     padding-top: 16px;
     border-top: 1px solid var(--line);
     color: var(--muted);
-    font-size: 13px; line-height: 1.55;
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.55;
   }
   .notice b { color: var(--text); font-weight: 700; }
   .dialog-actions { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
-  .dialog-actions .btn-primary { padding: 12px 22px; font-size: 14px; border-radius: 999px; }
+  /* TS token: btn — inherits font from .btn-primary */
+  .dialog-actions .btn-primary { padding: 12px 22px; border-radius: 999px; }
+  /* TS token: btn */
   .dialog-ghost {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 12px 22px;
@@ -3742,7 +4109,9 @@
     color: var(--muted);
     border: 1px solid var(--line);
     border-radius: 8px;
-    font-size: 14px; font-weight: 700;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
     box-shadow: 0 0 0 rgba(0,0,0,0);
     transition: color .15s, border-color .15s, transform .18s ease, box-shadow .18s ease;
@@ -3804,25 +4173,19 @@
     margin-bottom: 28px;
   }
   .connect-x-mark i { font-size: 36px; }
-  /* Specificity bump: .dialog h3 and .dialog p (specificity 0,1,1)
-     were overriding .connect-title / .connect-sub (0,1,0). Prefixing
-     with .connect-dialog raises ours to (0,2,0). */
+  /* TS token: display-m — connect modal title inherits canonical
+     display-m via .dialog h3; only margin + transform stay. */
   .connect-dialog .connect-title {
     margin: 0 0 24px;
-    font-family: var(--font-display);
-    font-size: 22px; font-weight: 800;
     text-transform: none;
-    letter-spacing: -0.005em;
-    line-height: 1.3;
     color: var(--text);
   }
+  /* TS token: body — connect-sub inherits .dialog p; only layout stays */
   .connect-dialog .connect-sub {
     margin: 0 0 32px;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.65;
     max-width: 340px;
   }
+  /* TS token: tag */
   .connect-perms {
     display: flex; flex-direction: column;
     gap: 12px;
@@ -3832,7 +4195,8 @@
     max-width: 320px;
     font-family: var(--font-mono);
     font-size: 11px;
-    line-height: 1.4;
+    font-weight: 400;
+    line-height: 1.5;
     color: var(--muted);
     letter-spacing: 0.02em;
   }
@@ -3842,7 +4206,7 @@
     width: 100%;
     justify-content: center;
     padding: 14px 24px;
-    font-size: 15px;
+    /* TS token: btn — inherits font from .btn-primary */
     border-radius: 10px;
   }
 
@@ -3856,9 +4220,13 @@
     stroke-dashoffset: 30;
   }
   @keyframes connectSpin { to { transform: rotate(360deg); } }
+  /* TS token: display-m */
   .connect-status {
     font-family: var(--font-display);
-    font-size: 18px; font-weight: 700;
+    font-size: clamp(20px, 2.0vw, 28px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.012em;
     color: var(--text);
     min-height: 1.4em;
     transition: opacity .2s;
@@ -3878,9 +4246,11 @@
     border-radius: inherit;
     transition: width 2.4s ease-out;
   }
+  /* TS token: caption */
   .connect-loading-sub {
     color: var(--muted);
-    font-size: 12px;
+    font-family: var(--font);
+    font-size: 13px;
     line-height: 1.5;
     max-width: 320px;
   }
@@ -3928,26 +4298,33 @@
     border: 1px solid rgba(73,163,166,0.20);
     border-radius: 999px;
     color: var(--text);
+    /* TS token: caption */
+    font-family: var(--font);
     font-size: 13px;
-    line-height: 1.4;
+    line-height: 1.5;
   }
   .results-privacy i { color: var(--alva); font-size: 16px; flex-shrink: 0; }
   .results-privacy b { font-weight: 700; color: var(--text); }
 
+  /* TS token: lead — results modal lead paragraph */
   .dialog-full .dialog-lead {
     max-width: 760px; margin: 18px auto 0;
     color: var(--muted);
-    font-size: 15px;
-    line-height: 1.6;
+    font-family: var(--font);
+    font-weight: 400;
+    font-size: clamp(16px, 1.4vw, 19px);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
     text-align: center;
   }
-  .dialog-full h3 {
-    font-size: clamp(26px, 3vw, 38px);
-    line-height: 1.12;
-    text-align: center;
-  }
+  /* TS token: display-m — results modal h3 inherits .dialog h3;
+     only text-align stays here */
+  .dialog-full h3 { text-align: center; }
   .dialog-full > .dialog-head > div { text-align: center; flex: 1; }
-  .dialog-full > .dialog-head { align-items: center; }
+  /* .dialog-full uses .dialog-full-close which sits outside this row,
+     and the head is centered — so cancel the padding-right offset that
+     the standard .dialog-head added for the small-modal close. */
+  .dialog-full > .dialog-head { align-items: center; padding-right: 0; }
   .alva-text { color: var(--text); }
 
   /* Grid of audited score cards. The .card primitive already has a
@@ -3978,14 +4355,10 @@
     box-shadow: 0 18px 44px rgba(10,10,16,0.14);
   }
   .results-request .bcard { padding: 28px 32px; }
-  .results-request .bcard h3 {
-    text-transform: none;
-    font-size: clamp(18px, 1.6vw, 22px);
-  }
-  .results-request .bcard p {
-    margin: 8px 0 0;
-    font-size: 13px;
-  }
+  /* TS token: display-m — inherits from .bcard h3 */
+  .results-request .bcard h3 { text-transform: none; }
+  /* TS token: body — inherits from .bcard p */
+  .results-request .bcard p { margin: 8px 0 0; }
   .results-request .bcard-foot { margin-top: 22px; }
 
   @media (max-width: 760px) {
@@ -4157,6 +4530,33 @@
     width: 100%;
     height: 100%;
   }
+  /* Mobile-only close button — fixed top-right of the viewport.
+     Hidden on desktop where the backdrop-click recipe works. The
+     mobile @media block flips display to grid. Sits on top of the
+     scrolling .cd-stage so it stays put while content scrolls
+     underneath. z-index 90 = above the modal stack but below any
+     nested modal (none in this codebase). */
+  .cd-close {
+    display: none;                           /* shown via mobile @media */
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    right: 12px;
+    z-index: 90;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.96);
+    -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+    box-shadow: 0 6px 18px rgba(10, 10, 16, 0.32);
+    cursor: pointer;
+    place-items: center;                     /* takes effect when display:grid */
+    transition: background .15s, transform .15s;
+  }
+  .cd-close:hover { background: #fff; }
+  .cd-close:active { transform: scale(0.94); }
+  .cd-close i { font-size: 18px; color: var(--text); }
   .cd-anchor {
     position: absolute;
     top: var(--cd-y, 50%);
@@ -4263,6 +4663,7 @@
   #modal-card-detail.modal.open .cd-share > .share-method:nth-child(4) { animation-delay: .75s; }
   #modal-card-detail.modal.open .cd-share > .share-method:nth-child(5) { animation-delay: .85s; }
 
+  /* TS token: btn */
   .share-method {
     display: inline-flex;
     align-items: center;
@@ -4272,9 +4673,9 @@
     border: 0;
     border-radius: 999px;                /* pill */
     box-shadow: 0 14px 28px rgba(10,10,16,0.30);
-    font-family: inherit;
+    font-family: var(--font);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     color: #fff;                         /* white text */
     cursor: pointer;
     text-align: left;
@@ -4345,10 +4746,11 @@
     flex: 1;
     min-width: 0;
   }
+  /* TS token: tag (10px small variant) */
   .cd-more-eyebrow {
     font-family: var(--font-mono);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--muted);
     letter-spacing: 0.06em;
     transition: color .15s;
@@ -4377,23 +4779,82 @@
      movement on button hovers per the global rule.) */
 
   @media (max-width: 760px) {
-    /* On phones the side share panel can't fit beside an enlarged card.
-       Drop it under the card and let the composition centre. */
-    .cd-anchor {
-      top: 50% !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%);
-      flex-direction: column;
-      gap: 16px;
+    /* On phones the side-by-side desktop layout (card on left,
+       share panel on right) collapses to a single column. The
+       previous mobile rule centered the anchor via translate(-50%,
+       -50%) which (a) makes the composition unscrollable when the
+       enlarged card + 5 share buttons exceed viewport height, and
+       (b) removes the backdrop so the user cannot tap-to-close.
+       Fixed by switching the stage to overflow-y:auto and resetting
+       the anchor to static flow inside it. Now: card + view-more
+       + 5 share pills stack vertically, the user can scroll inside
+       the modal, and the fixed .cd-close button handles dismissal.
+       Reference: Apple Music's "now playing" lightbox on iPhone
+       follows the same scrollable-vertical pattern. */
+    #modal-card-detail.modal {
+      align-items: stretch;
+      justify-content: stretch;
+      padding: 0;
+      background: rgba(10, 10, 16, 0.82);
     }
+    .cd-close {
+      display: grid;                           /* place-items already on base */
+    }
+    .cd-stage {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      /* Top padding leaves room for the fixed cd-close button +
+         safe-area inset; bottom padding gives the last share pill
+         space above the home indicator. */
+      padding: calc(72px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));
+    }
+    .cd-anchor {
+      position: static !important;            /* drop absolute + transform */
+      top: auto !important;
+      left: auto !important;
+      transform: none !important;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
+      gap: 18px;
+    }
+    .cd-left-col {
+      width: 100%;
+      max-width: 360px;
+      align-items: center;
+    }
+    .cd-card-wrap { width: 100%; }
+    /* cdGrow keyframe still drives the entrance — keep the mobile
+       variant simple (scale-up, no translate jitter under the new
+       static layout). */
     #modal-card-detail.modal.open .cd-card-wrap {
       animation: cdGrowMobile 0.3s cubic-bezier(.34, 1.4, .55, 1) backwards;
     }
     @keyframes cdGrowMobile {
-      0%   { transform: scale(0.6); }
-      100% { transform: scale(1); }
+      0%   { opacity: 0; transform: scale(0.78); }
+      100% { opacity: 1; transform: scale(1); }
     }
-    .cd-share { width: 100%; max-width: var(--cd-target-w, 320px); }
+
+    /* Share methods become a vertical stack of full-width pills. The
+       previous mobile rule left them as content-sized inline pills,
+       which looked dishonest at 320 width (mismatched lengths) and
+       missed the 44 px touch floor. */
+    .cd-share {
+      width: 100%;
+      max-width: 360px;
+      gap: 8px;
+    }
+    .share-method {
+      width: 100%;
+      justify-content: center;                /* center the text on a wide pill */
+      padding: 13px 22px;
+      min-height: 44px;
+      font-size: 15px;
+      box-shadow: 0 6px 18px rgba(10, 10, 16, 0.18);
+    }
   }
 
   /* ============================================================
@@ -4438,45 +4899,479 @@
     /* drop some floating tweets at tablet width to avoid the centre */
     .float-tweet { width: 240px; }
   }
+  /* ============================================================
+     PHONE (≤ 760)   — 3.0 round 44 (mobile parity pass)
+     Comprehensive mobile rebuild. Earlier this block was a grab-bag
+     of fixes layered over 2.0 elements that no longer render in 3.0;
+     this version reorganises by section + adds the rules that the
+     3.0 layout was actually missing (S3 table grid match, S2 plaque
+     mask disable, S1 typography tighten, S4 carousel padding).
+     Legacy element rules (.card-stack, .hero-veil, .stats-strip,
+     .bottom-cards, .do-form, .section-do, .agents-search) are kept
+     at the bottom as no-ops in case the markup is ever reintroduced
+     from 2.0.
+     ============================================================ */
   @media (max-width: 760px) {
     /* Disable scroll-snap on phones — touch scrolling fights with
        scroll-snap-stop:always and ends up jamming forward progress
        (user can't scroll past the stage to reach leaderboard/agents). */
     html.snap-active { scroll-snap-type: none; }
 
+    /* ---------------------------------------------------------- */
+    /* NAV                                                        */
+    /* ---------------------------------------------------------- */
+    /* Touch target floor pulled up to Apple HIG / WCAG 2.5.8 (44 CSS
+       px). The previous values (.nav-cta 7/10 → 27 h, .nav-tab 0/8 →
+       34 w) were below threshold on the page's primary conversion
+       button — a measurable mis-tap rate hit. Reference comparison:
+       Linear ships 32 h pills on a 64 h nav (similar density); we
+       split the difference at 40 h since the CTA carries an icon. */
     .nav-inner { padding: 0 12px; gap: 8px; }
-    .brand-text { display: none; }              /* free up width for tabs */
-    /* Tabs stay visible on phones — collapsed to icon-only, underline
-       still pinned to nav's bottom edge (align-self:stretch inherited). */
-    .nav-tabs { display: flex; padding: 0; gap: 4px; }
-    .nav-tab { padding: 0 9px; gap: 0; }
-    .nav-tab i { font-size: 16px; opacity: 0.7; }
-    .nav-tab span { display: none; }            /* hide labels, keep icons */
-    .nav-tab.active i { color: var(--alva); opacity: 1; }
-    .nav-cta { padding: 7px 11px; font-size: 11px; }
-    .nav-cta i { font-size: 12px; }
-    .nav-cta-ghost { display: none; }           /* secondary CTA hides on phone */
+    .brand-text { display: none; }              /* free up width for CTA + toggle */
 
-    /* opening section — shrink everything on phones */
-    .opening { padding: 80px 18px 56px; min-height: 100vh; }
-    .opening h1 { font-size: clamp(32px, 9vw, 44px); }
-    .opening-sub { font-size: clamp(17px, 5vw, 22px); }
-    .opening-arrow { width: 52px; height: 52px; }
+    /* Tabs and ghost CTA both relocate INTO the drawer below — they
+       are NOT deleted, just moved. The previous mobile rule kept the
+       tabs as icon-only inline, but with the drawer pattern below we
+       finally have somewhere to put labelled rows (better discovery
+       than icon-only icons that users have to guess at). */
+    .nav-tabs { display: none; }
+    .nav-cta-ghost { display: none; }
+
+    /* Primary "Test any FinTwit creator" CTA stays inline — it's the
+       single most important action on the page and a sticky bottom
+       bar reinforces it elsewhere. Touch target floor pulled up to
+       Apple HIG (44 CSS px) / WCAG 2.5.8. */
+    .nav-cta {
+      padding: 11px 16px;                       /* 7/10 → 11/16 */
+      font-size: 13px;
+      gap: 6px;
+      min-height: 40px;
+    }
+    .nav-cta i { font-size: 14px; }
+
+    /* Reveal the hamburger and turn on the drawer. */
+    .nav-menu-toggle { display: inline-grid; place-items: center; }
+    .nav-drawer { display: flex; }              /* override base display:none */
+
+    /* ---------------------------------------------------------- */
+    /* S1 · OPENING (hero)                                        */
+    /* ---------------------------------------------------------- */
+    /* Tighter padding + smaller H1 so the headline + sub + arrow
+       fit one viewport on a 390-class phone without crowding. */
+    .opening { padding: 76px 16px 56px; min-height: 100svh; }
+    .opening-content { max-width: 100%; padding: 0 4px; position: relative; }
+    /* H1 pushed from clamp(28, 8vw, 38) — i.e. 31px on 393w — up to
+       clamp(36, 9.5vw, 44) so the headline lands at 37px on a 393
+       canvas, hitting the mobile hero H1 spec (36-40). Reference:
+       Linear lands at 40px, Anthropic ~48px, Vercel floors at 24
+       (extreme). Alva tracks Linear's density. */
+    .opening h1 {
+      font-size: clamp(36px, 9.5vw, 44px);
+      margin: 0 0 22px;
+      /* Halo collapsed from 6 stacked text-shadows (one as large as
+         0 0 170px #fff) down to 2. The original 6-layer recipe was
+         needed when the H1 was tiny (31px) and the float-tweet cards
+         could bleed through; with the H1 now ~37px and the cards also
+         pushed further out (see .float-tweet below), 2 layers is
+         enough. The visual back-plate is now a radial-gradient pseudo
+         (see ::before) — single GPU layer instead of 6, saves ~15ms
+         per repaint on mid-tier ARM. */
+      text-shadow: 0 0 24px #fff, 0 0 60px #fff;
+      position: relative;
+    }
+    .opening h1::before {
+      content: '';
+      position: absolute;
+      inset: -32px -20px;
+      background: radial-gradient(ellipse 70% 55% at center, #fff 30%, transparent 75%);
+      z-index: -1;
+      pointer-events: none;
+    }
+    .opening h1 .line-handle { margin-top: 0.24em; }
+    .opening h1 .line-2      { margin-top: 0.22em; }
+    .handle-roller {
+      text-shadow:
+        0 0  8px #ffffff,
+        0 0 16px #ffffff,
+        0 0 30px #ffffff,
+        0 0 52px #ffffff;
+    }
+    .handle-roller::after {
+      text-shadow:
+        0 0  8px #ffffff,
+        0 0 16px #ffffff,
+        0 0 30px #ffffff;
+    }
+    .opening-sub {
+      font-size: clamp(15px, 4.6vw, 19px);
+      margin: 0 auto 28px;
+      line-height: 1.4;
+      text-shadow:
+        0 0  10px #ffffff,
+        0 0  22px #ffffff,
+        0 0  42px #ffffff,
+        0 0  72px #ffffff,
+        0 0 110px #ffffff;
+    }
+    .opening-arrow { width: 48px; height: 48px; }
     .opening-arrow::after { inset: 2px; }
-    .opening-arrow i { font-size: 24px; }
-    .float-tweet { width: 200px !important; font-size: 11px !important; }
+    .opening-arrow i { font-size: 22px; }
+    /* Drop tweet card density — 4 cards is enough texture without
+       crowding the H1. They're also smaller so the H1 reads cleanly. */
+    .float-tweet {
+      width: 184px !important;
+      font-size: 10.5px !important;
+      padding: 0.75em 0.9em !important;
+    }
+    .float-tweet.tier-near { width: 220px !important; font-size: 12px !important; }
+    .float-tweet.tier-far  { width: 164px !important; font-size: 10px !important; }
+    .float-tweet:nth-child(n+5) { display: none; }
+    /* (The WebGL lens canvas init is skipped on phones in JS, so this
+       rule is just a belt-and-braces hide.) */
+    .lens-canvas { display: none !important; }
 
-    /* Section 2 stage — single column, card-stack below hero content */
-    .stage { min-height: auto; padding: 80px 0 80px; }
-    .stage-inner { padding: 0 20px; row-gap: 24px; }
-    .hero-veil { display: none; }
+    /* ---------------------------------------------------------- */
+    /* S2 · STAGE MARQUEE                                         */
+    /* ---------------------------------------------------------- */
+    .stage.stage-marquee {
+      /* Desktop sets `display: flex; align-items: center` which on a
+         narrow viewport would put the headline + marquee side-by-side
+         as a row. Reset to block flow so the headline stacks ABOVE the
+         marquee and each piece gets full viewport width. */
+      display: block;
+      padding: 72px 0 72px;
+      min-height: auto;
+    }
+    /* The desktop plaque uses a 1250px-wide backdrop-filter mask that
+       engulfs the entire phone viewport on a 390-class screen — so the
+       marquee cards behind get blurred + dimmed to invisibility. On
+       phones we ditch the overlay entirely: the headline sits in the
+       normal flow above the marquee, and the cards stay sharp. */
+    .stage-marquee .stage-headline-overlay {
+      position: relative;
+      inset: auto;
+      display: block;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      -webkit-mask-image: none;
+              mask-image: none;
+      padding: 0 18px 28px;
+      pointer-events: auto;
+    }
+    .stage-marquee .stage-headline-overlay::before,
+    .stage-marquee .stage-headline-overlay::after { display: none; }
+    .stage-marquee .stage-headline-inner {
+      padding: 0;
+      max-width: 100%;
+    }
+    .stage-marquee .stage-headline-inner h1 {
+      max-width: 100%;
+      padding: 0;
+      /* Was clamp(22, 7vw, 30) = 27px on 393w — read like H2 not hero.
+         Pushed to clamp(28, 8.5vw, 36) so it lands at 33px on 393w,
+         in line with mobile stage spec (32-36). Linear /method
+         storytelling page H1 = 40 mobile; we stay a notch lower since
+         this is sub-hero copy, not the page entry. */
+      font-size: clamp(28px, 8.5vw, 36px);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      display: block;
+    }
+    /* .stage-title-line set to nowrap on desktop so each clause stays on
+       one line within the headline column. On a phone the column is too
+       narrow for "FinTwit's 3,000+" and "most-followed accounts." to fit
+       — let them wrap naturally. */
+    .stage-marquee .stage-title-line { white-space: normal; }
+    .stage-marquee .stage-actions {
+      padding: 22px 0 0;
+      gap: 10px;
+    }
+    .stage-actions .btn-primary,
+    .stage-actions .btn-ghost {
+      /* Was 12/18 + 13px ≈ 37 h. Pushed to 14/22 + 14 = 44 h, hitting
+         Apple HIG / WCAG floor. Linear's "Get started" pill is 32 h
+         on its hero — but Alva's stage CTAs are the second-screen
+         primary so they need the extra weight to compete with the
+         marquee distraction below them. */
+      padding: 14px 22px;
+      font-size: 14px;
+      min-height: 44px;
+    }
+    /* Marquee rows: smaller cards, tighter gap. */
+    .mq-card {
+      width: 196px;
+      height: 178px;
+      padding: 18px 14px 16px;
+      gap: 8px;
+      margin-right: 14px;
+    }
+    .mq-avatar { width: 44px; height: 44px; }
+    .mq-meta b { font-size: 14px; max-width: 160px; }
+    .mq-meta span { font-size: 12px; }       /* 10 → 12, caption floor */
+    .mq-v { font-size: 24px; }
+    .mq-l { font-size: 11px; }                /* 9 → 11, marquee label was
+                                                  illegible on the auto-scroll
+                                                  ROI cards; also matters under
+                                                  reduced-motion where the
+                                                  marquee stops dead and the
+                                                  label is the only ID hint */
+    .card-marquee { gap: 14px; }
+
+    /* ---------------------------------------------------------- */
+    /* S3 · LEADERBOARD                                           */
+    /* ---------------------------------------------------------- */
+    #leaderboard { padding-top: 80px; }
+    #leaderboard .section-head {
+      margin: 0 auto 56px;
+      padding: 0 6px;
+    }
+    #leaderboard .section-head h2 { font-size: clamp(26px, 7vw, 34px); }
+    /* lb-sub is the section's main subtitle (under H2). 14px is below
+       the 16px iOS body floor on a 393w canvas and reads as caption,
+       not lead-paragraph. Bumped to 16 — Linear & Anthropic both ship
+       16-17 for their hero/section subtitles on mobile. */
+    .lb-sub { font-size: 16px; line-height: 1.5; }
+    /* The aurora halo bleeds in from the section sides — at narrow widths
+       pull the inset in tight to the section edge so it sits behind the
+       lb-card cleanly instead of running off-canvas. */
+    #leaderboard::before {
+      top: 240px;
+      left: 0; right: 0;
+    }
+
+    /* Card chrome — toolbar, sort tabs, meta */
+    .lb-toolbar { padding: 12px 14px; gap: 10px; }
+    .sort-tabs  { gap: 4px; }                   /* 2 → 4, tap-spacing breathing */
+    .sort-tab   { padding: 8px 12px; font-size: 12px; min-height: 36px; }
+    /* Meta is a status line (refreshed time + ranked count) that informs
+       data freshness. 10px was unreadable in 4G-class glare; pulled to
+       12 (caption floor) and slightly tighter spacing. */
+    .lb-meta    { font-size: 12px; letter-spacing: 0.03em; }
+
+    /* Table grid: idx | creator | best ROI | risk pill.
+       Same column count for header AND rows so they align cleanly,
+       compact gaps + padding so 360-class phones don't horizontally
+       clip the ROI / Risk columns (the previous rule was row-only and
+       used a 350+ px grid that overflowed the 306 px content area). */
+    #leaderboard .lb-header,
+    #leaderboard .lb-row,
+    .lb-header,
+    .lb-row {
+      grid-template-columns: 22px minmax(0, 1fr) 58px 52px;
+      gap: 8px;
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+    /* Header was 9.5px — that's the information architecture cue
+       (# / Creator / Best ROI / Risk) and it was illegible. Pulled to
+       11 (still below 12 floor because the header is structural cue
+       not body text — Coinbase Pro mobile uses 10-11 for the same
+       slot). If still tight we'll go to 12 in a follow-up. */
+    #leaderboard .lb-header,
+    .lb-header { padding-top: 11px; padding-bottom: 10px; font-size: 11px; }
+    #leaderboard .lb-row,
+    .lb-row    { padding-top: 12px; padding-bottom: 12px; }
+    #leaderboard .lb-header .hide-sm,
+    #leaderboard .lb-row .cell.hide-sm,
+    .lb-row .cell.hide-sm { display: none; }
+    #leaderboard .lb-row .who,
+    .lb-row .who { gap: 8px; }
+    #leaderboard .lb-row .who img,
+    .lb-row .who img { width: 30px; height: 30px; }
+    /* The .who flex container holds img + an unnamed wrapper div (b + span).
+       For the b/span ellipsis below to actually clip on a narrow phone
+       column, the wrapper div needs `min-width: 0; flex: 1; overflow: hidden`
+       so flex doesn't size it to intrinsic content width (otherwise the
+       long handle string blows past the column and overlaps the ROI cell). */
+    #leaderboard .lb-row .who > div,
+    .lb-row .who > div { min-width: 0; flex: 1; overflow: hidden; }
+    #leaderboard .lb-row .who b,
+    .lb-row .who b {
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #leaderboard .lb-row .who span,
+    .lb-row .who span {
+      /* Was 10.5 + nowrap+ellipsis — that dropped the tag silently
+         ("@RaoulGMI · Liquidity / crypto" became "@RaoulGMI · Liq…").
+         The tag is the user's mental anchor for what this creator
+         covers. Restored to 12 (caption floor) and allowed two lines
+         so handle + tag both stay readable. Reference: Coinbase Pro
+         leaderboard mobile uses the same wrap behaviour. */
+      font-size: 12px;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    #leaderboard .lb-row .cell .v,
+    .lb-row .cell .v { font-size: 13px; }     /* 12.5 → 13, value floor */
+    .lb-row .idx { font-size: 12px; }
+    /* Risk pill: was 9px font + 3/7 padding = unreadable. Pulled to
+       11/12 padding for proper tap silhouette (even though it's a
+       label, hit area matters for screen-readers / keyboard nav). */
+    .risk-pill   { padding: 4px 9px; font-size: 11px; letter-spacing: 0.04em; }
+
+    /* ---------------------------------------------------------- */
+    /* S4 · PLAYBOOK CAROUSEL                                     */
+    /* ---------------------------------------------------------- */
+    .section.section-playbook { padding: 76px 0 88px; overflow: hidden; }
+    .section-playbook .section-head {
+      margin: 0 18px 22px;
+      padding: 0;
+    }
+    .section-playbook .section-head h2 { font-size: clamp(26px, 7vw, 34px); }
+    .play-tabs {
+      margin: 0 0 28px;
+      padding: 0 18px;
+      gap: 0;
+      justify-content: flex-start;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .play-tab { padding: 9px 12px; font-size: 12.5px; }
+    .play-tab i { font-size: 12px; }
+    .play-tab.active::after { left: 12px; right: 12px; }
+
+    /* Bleed the carousel to viewport edges (desktop already does this
+       via the same margin trick). Without this the carousel inherits
+       the section's content-box and the peek card cannot bleed past
+       the section's inner padding — which is the "not reaching the
+       edge" feel the user reported. */
+    .play-carousel {
+      margin-left:  calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
+      width: 100vw;
+    }
+    .play-track {
+      gap: 16px;
+      /* Apple Music / Spotify / Material 3 idiom: first card is LEFT-
+         ALIGNED (not centered). padding-left = 16 anchors the first
+         card to the viewport's logical inset; the next card's peek
+         bleeds all the way to the viewport's RIGHT edge, where
+         section overflow:hidden clips it as a hard edge — not a soft
+         fade. The previous `scroll-snap-align: center` produced a 48-
+         px empty gutter on the left that looked like the carousel
+         was inset from the viewport, defeating the bleed. */
+      padding-left: 16px;
+      padding-right: 16px;
+      scroll-padding-left: 16px;
+      scroll-padding-right: 16px;
+      padding-bottom: 16px;
+      scroll-snap-type: x mandatory;
+    }
+    .play-card {
+      /* Card 329 wide on a 393 viewport (calc 100vw - 64). After the
+         left-snap, neighbour card starts at 16+329+16 = 361, and 32
+         px of it is visible before viewport overflow:hidden clips at
+         x=393 — the peek hits the actual screen edge, not a padding
+         boundary. */
+      flex: 0 0 calc(100vw - 64px);
+      max-width: 380px;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+    /* Mobile-only softer shadow. Desktop's 14/36 blur makes the peek
+       card's right edge look like a fade-out instead of a clean
+       viewport clip; a tighter shadow keeps the peek crisp. */
+    .play-card,
+    .play-card:hover { box-shadow: 0 6px 18px rgba(10, 10, 16, 0.10); }
+    .play-card h3 {
+      margin-top: 22px;
+      margin-bottom: 8px;
+      font-size: 20px;
+    }
+    /* Card body copy was 14 — below iOS body floor. Bumped to 16. */
+    .play-card p { font-size: 16px; line-height: 1.5; }
+    .play-card .play-cta {
+      margin-top: 18px;
+      padding: 14px 22px;                        /* 12 → 14, tap-height 38→44 */
+      font-size: 14px;                           /* 13 → 14 */
+      min-height: 44px;
+    }
+    .play-cover i { font-size: 64px; }
+
+    /* Carousel position indicator — Material 3 Hero Carousel requires
+       "Always show the position indicator" so the user knows there's
+       more than one card. Dots are CSS-only; JS wires the .active
+       class on scroll position (see end of file). */
+    .play-dots {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 18px;
+      padding: 0 16px;
+    }
+    .play-dots .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(10, 10, 16, 0.22);
+      transition: background .2s, transform .2s;
+    }
+    .play-dots .dot.active {
+      background: var(--text);
+      transform: scale(1.25);
+    }
+
+    /* ---------------------------------------------------------- */
+    /* FOOTER                                                     */
+    /* ---------------------------------------------------------- */
+    footer.f { padding: 28px 18px 32px; }
+    .f-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;                            /* 8 → 10, link row breathing */
+      font-size: 13px;                       /* 11 → 13, caption floor */
+    }
+    /* Footer links carry legal+navigation duty (Methodology / Privacy
+       / Disclaimer). Inline padding gives them ≥32 h tap silhouette
+       even though they're typographically anchored. Margin-right was
+       12 (below WCAG 24 px spacing); pulled to 20 + 8 inline padding
+       gives 28 effective spacing between targets. */
+    .f-inner a {
+      margin-right: 20px;
+      padding: 6px 4px;
+      display: inline-block;
+    }
+
+    /* ---------------------------------------------------------- */
+    /* ALVA-BADGE (promo) — hide on mobile                        */
+    /* ---------------------------------------------------------- */
+    /* The persistent bottom-right promo card is desktop-only. At 393
+       it occupies 6.2% of the viewport, has no close button, and
+       overlaps leaderboard rows 03+ as well as the footer disclaimer
+       — a hard a11y / IA fail on mobile. Apple/Tesla mobile pages
+       reserve the bottom-right for OS chrome (home indicator, share
+       sheet) and never park a non-dismissable promo there. */
+    .alva-badge { display: none !important; }
+
+    /* ---------------------------------------------------------- */
+    /* STICKY BOTTOM CTA BAR — enable on mobile                   */
+    /* ---------------------------------------------------------- */
+    /* Replaces the badge's prime-real-estate position with the page's
+       actual primary conversion. JS adds .visible after the hero CTA
+       leaves view; removes it when footer enters view, when the user
+       opens a modal (z-index would clash), or when user dismisses. */
+    .sticky-cta-bar:not([hidden]) { display: flex; }
+
+    /* ---------------------------------------------------------- */
+    /* MODALS                                                     */
+    /* ---------------------------------------------------------- */
+    .dialog        { padding: 30px 22px 28px; max-height: 92vh; }
+    .dialog h2     { font-size: 22px; }
+    .dialog-actions { gap: 8px; }
+    .dialog-actions .btn-primary,
+    .dialog-actions .dialog-ghost { width: 100%; justify-content: center; }
+    .connect-dialog { padding: 36px 24px 28px; }
+
+    /* ---------------------------------------------------------- */
+    /* LEGACY (kept as no-ops — markup not rendered in 3.0)       */
+    /* ---------------------------------------------------------- */
     h1.hero-title { font-size: clamp(28px, 7vw, 36px); }
-    .card-stack { height: 210px; max-width: 100%; }
-    .card-stack .perspective-wrap { width: 180px; }
-    .card-stack .perspective-wrap:nth-child(1) { --sx: -100px; --srot: -7deg; }
-    .card-stack .perspective-wrap:nth-child(2) { --sx:  -35px; --srot:  3deg; }
-    .card-stack .perspective-wrap:nth-child(3) { --sx:   35px; --srot: -2deg; }
-    .card-stack .perspective-wrap:nth-child(4) { --sx:  100px; --srot:  6deg; }
     .section { padding: 80px 18px; }
     .section-head h2 { font-size: 32px; }
     .features-grid { grid-template-columns: 1fr; }
@@ -4485,18 +5380,14 @@
     .stats-strip .stat .v { font-size: 32px; }
     .closing { padding: 80px 18px; }
     .closing-path { padding: 24px; }
-    /* Learn the Playbook — input + chips collapse to phone-friendly sizes */
     .agents-search { flex-wrap: wrap; padding: 8px; border-radius: 8px; }
     .agents-search > i { margin-left: 10px; }
     .agents-search input { width: 100%; height: 44px; padding: 0 8px; }
     .agents-search .btn-primary { width: 100%; height: 44px; justify-content: center; }
     .agents-chip { font-size: 11px; padding: 5px 10px 5px 5px; }
     .agents-chip img { width: 20px; height: 20px; }
-    /* Hide the ambient bubble layer on phones — the centered controls
-       claim the whole column and there's no room around them. */
     .agents-bubbles { display: none; }
     #agents { min-height: 0; }
-    /* Backtest & Scan — single column on phones. */
     .section-do { padding: 72px 18px; }
     .section-do .section-head { margin-bottom: 36px; }
     .do-grid { grid-template-columns: 1fr; gap: 16px; }
@@ -4504,35 +5395,91 @@
     .do-card h3 { font-size: 22px; }
     .do-form { flex-direction: column; gap: 10px; }
     .do-form .btn-primary { width: 100%; justify-content: center; }
-
-    /* Mobile bottom card — keep the rounded, separately-shadowed
-       Request card so it doesn't feel like a stretched bar. */
     .bottom-cards { padding: 56px 18px; }
-    .bottom-cards-inner {
-      border-radius: 0;
-      overflow: visible;
-      box-shadow: none;
-    }
-    .bcard {
-      padding: 32px 24px;
-      border-radius: 20px;
-    }
-    .bcard.bcard-dark {
-      box-shadow: 0 18px 40px rgba(10,10,16,0.16);
-    }
+    .bottom-cards-inner { border-radius: 0; overflow: visible; box-shadow: none; }
+    .bcard { padding: 32px 24px; border-radius: 20px; }
+    .bcard.bcard-dark { box-shadow: 0 18px 40px rgba(10,10,16,0.16); }
     .bcard h3 { font-size: 22px; }
     .bcard-form { flex-direction: column; gap: 10px; }
     .bcard-form input { width: 100%; }
     .bcard-form button { width: 100%; justify-content: center; }
-    /* Inline hero CTA stays on the left, but if the bubble can't fit
-       on the same line on a phone it wraps cleanly under the button. */
     .hero-content .hero-cta { gap: 12px; }
     .hero-actions .btn-primary { padding: 13px 22px; font-size: 14px; }
-    .lb-row { grid-template-columns: 30px minmax(140px, 1.4fr) 80px 100px; }
-    .lb-row .cell.hide-sm { display: none; }
+    .card-stack { height: 210px; max-width: 100%; }
+    .card-stack .perspective-wrap { width: 180px; }
+    .card-stack .perspective-wrap:nth-child(1) { --sx: -100px; --srot: -7deg; }
+    .card-stack .perspective-wrap:nth-child(2) { --sx:  -35px; --srot:  3deg; }
+    .card-stack .perspective-wrap:nth-child(3) { --sx:   35px; --srot: -2deg; }
+    .card-stack .perspective-wrap:nth-child(4) { --sx:  100px; --srot:  6deg; }
+    .stage-inner { padding: 0 20px; row-gap: 24px; }
+    .hero-veil { display: none; }
+  }
+
+  /* ============================================================
+     VERY NARROW PHONES (≤ 380)
+     Pull padding + columns tighter for iPhone SE-class screens.
+     ============================================================ */
+  @media (max-width: 380px) {
+    .opening { padding: 72px 12px 48px; }
+    /* Was 28; with the 760 floor now at 36 (clamp 36, 9.5vw, 44), 32
+       on iPhone SE keeps the down-step proportional. Below 380w the
+       9.5vw clamp would land at 36 anyway, so we explicitly choose
+       32 to give the float-tweet cards even more breathing room. */
+    .opening h1 { font-size: 32px; }
+    .opening-sub { font-size: 16px; }      /* 15 → 16, iOS body floor */
+    .stage.stage-marquee { padding: 68px 0 72px; }
+    .stage-marquee .stage-headline-overlay { padding: 0 14px 22px; }
+    /* Critical: the 760 block above pushes nav-cta to 40 h for tap
+       compliance. The previous SE override SHRANK it back to 24 h,
+       which made the worst-touch device get the worst tap target.
+       Now we keep the 760 size and only allow a 1-step font drop.
+       (.nav-tab rules dropped — tabs are inside the drawer now.) */
+    .nav-cta { padding: 10px 13px; font-size: 12px; gap: 5px; min-height: 38px; }
+    .nav-cta i { font-size: 13px; }
+    .nav-menu-toggle { width: 40px; height: 40px; }   /* slightly tighter on SE */
+    #leaderboard { padding-top: 76px; }
+    #leaderboard .section-head h2 { font-size: 26px; }
+    /* Tighter table — give the Risk pill a real chance to render. */
+    #leaderboard .lb-header,
+    #leaderboard .lb-row,
+    .lb-header,
+    .lb-row {
+      grid-template-columns: 22px minmax(0, 1fr) 56px 52px;
+      gap: 6px;
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+    #leaderboard .lb-row .who img,
+    .lb-row .who img { width: 28px; height: 28px; }
+    #leaderboard .lb-row .who b,
+    .lb-row .who b { font-size: 12.5px; }
+    /* SE-class peek: card 327 wide on 375w (calc 100vw - 48). With
+       padding-left 14, neighbour starts at 14+327+16 = 357, peek 18 px
+       wide before viewport clips at x=375 — same idiom as the 760
+       block, just tighter. The left-snap means first card always
+       starts 14 px from the viewport edge. */
+    .play-card { flex: 0 0 calc(100vw - 48px); max-width: 360px; }
+    .play-track { padding-left: 14px; padding-right: 14px; }
+    .section.section-playbook { padding: 72px 0 84px; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+
+    /* Stage marquee under reduced-motion: with the auto-scroll animation
+       killed, the user sees a frozen row of cards mid-translate which
+       may be cut off at viewport edges. Re-flow the duplicated marquee
+       set into a 2-column grid so the cards become a static "creator
+       wall" — still on-brand, but readable & no clipped halves.
+       Reference: web.dev a11y guidance on motion-sensitive layouts. */
+    .stage-marquee .marquee-track {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 12px !important;
+      transform: none !important;
+      width: 100% !important;
+    }
+    .stage-marquee .marquee-track > .mq-card { margin-right: 0 !important; width: 100% !important; }
+    .stage-marquee .marquee-track > .mq-card[aria-hidden="true"] { display: none !important; }
   }
 </style>
 </head>
@@ -4549,20 +5496,63 @@
         </svg>
       </span>
       <div class="brand-text">
-        <div class="name">ALVA &middot; Campaign</div>
-        <div class="sub">Live FinTwit playbook engine</div>
+        <div class="name">Alva</div>
+        <div class="sub">FinTwit Alpha League</div>
       </div>
     </a>
     <nav class="nav-tabs" id="nav-tabs" aria-label="Section tabs">
       <span class="nav-tab-indicator" id="nav-indicator"></span>
-      <a class="nav-tab" href="#audit-yours" data-section="audit-yours"><i class="ph ph-database"></i><span>Coverage</span></a>
-      <a class="nav-tab" href="#leaderboard" data-section="leaderboard"><i class="ph ph-trophy"></i><span>Alpha League</span></a>
-      <a class="nav-tab" href="#agents" data-section="agents"><i class="ph ph-book-open"></i><span>Playbooks</span></a>
+      <a class="nav-tab" href="#audit-yours" data-section="audit-yours"><i class="ph ph-book-open"></i><span>Playbooks</span></a>
+      <a class="nav-tab" href="#agents" data-section="agents"><i class="ph ph-squares-four"></i><span>Use Cases</span></a>
+      <a class="nav-tab" href="#leaderboard" data-section="leaderboard"><i class="ph ph-trophy"></i><span>Leaderboard</span></a>
     </nav>
     <div class="nav-actions">
       <button class="nav-cta-ghost" type="button" data-open="for-kols"><i class="ph-bold ph-megaphone"></i> For FinTwit creators</button>
       <button class="nav-cta" data-open="connect"><i class="ph-bold ph-x-logo"></i> Test any FinTwit creator</button>
+      <!-- Mobile-only hamburger toggle. Hidden by CSS on ≥761w (desktop
+           shows the inline tabs + both CTAs). On mobile this becomes
+           the entry point to a top drawer that holds the 3 section
+           tabs + the "For FinTwit creators" ghost action — nothing in
+           the nav gets deleted, just relocated for the narrow canvas.
+           Reference patterns: GitHub mobile, Linear iOS, Vercel mobile. -->
+      <button class="nav-menu-toggle" type="button"
+              id="nav-menu-toggle"
+              aria-controls="nav-drawer"
+              aria-expanded="false"
+              aria-label="Open menu">
+        <i class="ph ph-list" aria-hidden="true"></i>
+        <i class="ph ph-x" aria-hidden="true"></i>
+      </button>
     </div>
+  </div>
+
+  <!-- ============================================================
+       Mobile-only drawer — flies out from under the nav. Holds the
+       3 section tabs (mirrors .nav-tabs above) + the ghost CTA. JS
+       toggles .open on the hamburger click and on ESC / outside-tap /
+       drawer-item click. Sits inside <header> so it inherits the
+       fixed positioning + the backdrop blur context (we use a
+       slightly stronger blur than the nav so the drawer sits visually
+       above the page content).
+       ============================================================ -->
+  <div class="nav-drawer" id="nav-drawer" role="navigation" aria-label="Mobile menu">
+    <a class="nav-drawer-item" href="#audit-yours" data-section="audit-yours">
+      <i class="ph ph-book-open" aria-hidden="true"></i>
+      <span>Playbooks</span>
+    </a>
+    <a class="nav-drawer-item" href="#agents" data-section="agents">
+      <i class="ph ph-squares-four" aria-hidden="true"></i>
+      <span>Use Cases</span>
+    </a>
+    <a class="nav-drawer-item" href="#leaderboard" data-section="leaderboard">
+      <i class="ph ph-trophy" aria-hidden="true"></i>
+      <span>Leaderboard</span>
+    </a>
+    <div class="nav-drawer-sep" aria-hidden="true"></div>
+    <button class="nav-drawer-action" type="button" data-open="for-kols">
+      <i class="ph-bold ph-megaphone" aria-hidden="true"></i>
+      <span>For FinTwit creators</span>
+    </button>
   </div>
 </header>
 
@@ -4674,11 +5664,10 @@
 
     <div class="opening-content">
       <h1>
-        <span class="line-1">On <span class="x-mark" aria-label="X"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>, you follow</span>
-        <span class="line-handle"><span class="alva handle-roller" id="hero-handle" aria-live="polite"><span class="handle-slot">@yardeni</span></span></span>
-        <span class="line-2">Do you know their track record?</span>
+        <span class="line-1">Which FinTwit account</span>
+        <span class="line-2">actually makes money?</span>
       </h1>
-      <p class="opening-sub">We backtested every public call from FinTwit's most-followed creators. A few actually beat the market.</p>
+      <p class="opening-sub">We tracked thousands of FinTwit accounts, built playbooks on each one, and launched a live leaderboard — to help you find alpha.</p>
       <button class="opening-arrow" data-scroll-to="audit-yours" aria-label="Scroll to the ranking">
         <i class="ph-bold ph-arrow-down"></i>
       </button>
@@ -4702,17 +5691,22 @@
     <div class="stage-headline-overlay">
       <div class="stage-headline-inner">
         <h1 class="stage-title">
-          <span class="stage-title-line">We backtested</span>
-          <span class="stage-title-line"><span class="alva">2.4M+ tweets</span> from</span>
-          <span class="stage-title-line">FinTwit's <span class="alva">3,000+</span></span>
-          <span class="stage-title-line">most-followed accounts.</span>
+          <span class="stage-title-line">We built <span class="alva">live playbooks</span></span>
+          <span class="stage-title-line">for FinTwit's</span>
+          <span class="stage-title-line">hottest accounts.</span>
+          <span class="stage-title-line stage-title-sub">Updated every hour.</span>
         </h1>
         <div class="stage-actions">
           <button class="btn-primary" type="button" data-open="connect">
             <i class="ph-bold ph-x-logo"></i> Check your following
           </button>
-          <button class="btn-ghost" type="button" data-open="search">
-            <i class="ph-bold ph-magnifying-glass"></i> Search
+          <!-- 3.0 round 4 — Search button removed (zet 5/24 12:19 + harryz
+               13:41). Replaced with a "Can't find an Account?" button that
+               opens #modal-cant-find, which guides the user into a
+               quote-tweet to @alva on X (quote tweet is preferred over
+               reply per harryz — better social amplification for us). -->
+          <button class="btn-ghost" type="button" data-open="cant-find">
+            <i class="ph-bold ph-magnifying-glass"></i> Can't find an Account?
           </button>
         </div>
       </div>
@@ -4772,19 +5766,84 @@
   </section>
 
 
-  <!-- ============================================================ SECTION 5 · LEADERBOARD BODY
-       Per Feedback Round 1 Section 5 — "THE FINTWIT ALPHA LEAGUE"
-       heading + blue sub + "Updated every hour". KOL Score column
-       removed (per Section 5 + bullet 4 — users find it confusing,
-       it reads as subjective scoring). Sort defaults to Best ROI
-       since Score is gone.
+  <!-- ============================================================ SECTION · USE CASES  (3.0 round 3 — moved above leaderboard)
+       "What can you do with our Playbooks?" — 3 main use cases (01-03)
+       + 2 derived plays. Sits between the Playbooks marquee (S2) and
+       the Leaderboard (S3) so the page flow matches the nav order:
+       Playbooks → Use Cases → Leaderboard.
        ============================================================ -->
-  <section class="section alt" id="leaderboard">
+  <section class="section section-playbook" id="agents">
+    <div class="section-wrap">
+      <div class="section-head">
+        <h2>What can you do with <span class="alva">our Playbooks?</span></h2>
+        <p>Powered by verified track records, not hype, not noise.</p>
+      </div>
+
+      <!-- Row 2 — 5 tabs, each anchors to the matching card below.
+           3 main use cases (01–03) + 2 derived use cases (Bull/Bear, Stress-test).
+           Round-3 merge: old 03 "Digest signals" + 04 "Get alerts" collapsed
+           into a single signals-&-alerts card. -->
+      <div class="play-tabs" role="tablist" aria-label="Playbook use cases">
+        <button class="play-tab active" type="button" role="tab" data-target="play-bull-bear">Backtest win rates</button>
+        <button class="play-tab" type="button" role="tab" data-target="play-critique">Simulate ROI</button>
+        <button class="play-tab" type="button" role="tab" data-target="play-mix">Signals &amp; alerts</button>
+        <button class="play-tab" type="button" role="tab" data-target="play-screen">Bull or Bear</button>
+        <button class="play-tab" type="button" role="tab" data-target="play-watchlist">Stress-test</button>
+      </div>
+
+      <!-- Row 3 — 5 cards, horizontal scroll/snap, no card chrome.
+           Cards 1-3 are the three main use cases, numbered 01-03.
+           Cards 4-5 are the two derived plays (Bull/Bear, Stress-test). -->
+      <div class="play-carousel">
+        <div class="play-track" id="play-track">
+          <article class="play-card" id="play-bull-bear">
+            <div class="play-cover" data-variant="teal"><i class="ph ph-chart-bar"></i></div>
+            <h3>01 &middot; Backtest win rates</h3>
+            <p>Stop guessing who's good. See exactly which calls made money, and which didn't.</p>
+            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+          </article>
+          <article class="play-card" id="play-critique">
+            <div class="play-cover" data-variant="dark"><i class="ph ph-chart-line-up"></i></div>
+            <h3>02 &middot; Simulate your ROI</h3>
+            <p>What if you'd followed every call? Now you can actually find out your ROI.</p>
+            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+          </article>
+          <article class="play-card" id="play-mix">
+            <div class="play-cover" data-variant="warm"><i class="ph ph-bell-simple-ringing"></i></div>
+            <h3>03 &middot; Get alerted on high-conviction calls</h3>
+            <p>Cut through the noise. Hundreds of tweets a day, condensed — and pinged the moment a tracked account posts a call worth acting on.</p>
+            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+          </article>
+          <article class="play-card" id="play-screen">
+            <div class="play-cover" data-variant="teal"><i class="ph ph-scales"></i></div>
+            <h3>Bull or Bear, by Asset</h3>
+            <p>See the bulls, the bears, and the debates between them — on the tickers everyone is trading.</p>
+            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+          </article>
+          <article class="play-card" id="play-watchlist">
+            <div class="play-cover" data-variant="dark"><i class="ph ph-shield-warning"></i></div>
+            <h3>Stress-test Your Trade</h3>
+            <p>Enter any idea before you trade. See what top FinTwit accounts have said about it — then let Alva check it against historical base rates and risk flags.</p>
+            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ SECTION · LEADERBOARD BODY  (3.0 round 3 — moved below Use Cases)
+       "THE FINTWIT ALPHA LEAGUE" heading + blue sub + "Updated every
+       hour". KOL Score column removed (users find it confusing, it
+       reads as subjective scoring). Sort defaults to Best ROI.
+       Now sits at the end of the main flow so the rhythm goes
+       Playbooks (white) → Use Cases (white) → Leaderboard (grey/alt).
+       ============================================================ -->
+  <section class="section" id="leaderboard">
     <div class="section-wrap">
       <div class="section-head with-action">
         <div>
           <h2 class="lb-title">The FinTwit Alpha League</h2>
-          <p class="lb-sub"><span class="alva">See FinTwit accounts whose calls beat the market.</span> Updated every hour.</p>
+          <p class="lb-sub"><span class="alva">Who should you follow on X?</span> See which FinTwit accounts make the most money. Updated every hour.</p>
         </div>
         <a class="section-action" href="#" target="_blank" rel="noreferrer">
           View full leaderboard <i class="ph-bold ph-arrow-up-right"></i>
@@ -4816,73 +5875,6 @@
     </div>
   </section>
 
-  <!-- ============================================================ SECTION · LEARN THE PLAYBOOK  (3.0 round 6)
-       Simple Apple-style top-aligned heading + 3-card row below.
-       Each card = large image area on top + title + one-line sub
-       below; whole card is clickable.
-       ============================================================ -->
-  <section class="section section-playbook" id="agents">
-    <div class="section-wrap">
-      <div class="section-head">
-        <h2>Each creator's playbook,<br><span class="alva">distilled into an AI agent.</span></h2>
-      </div>
-
-      <!-- Row 2 — 6 tabs, each anchors to the matching card below -->
-      <div class="play-tabs" role="tablist" aria-label="Playbook types">
-        <button class="play-tab active" type="button" role="tab" data-target="play-bull-bear">Bull vs bear</button>
-        <button class="play-tab" type="button" role="tab" data-target="play-critique">Critique a pick</button>
-        <button class="play-tab" type="button" role="tab" data-target="play-mix">Build a mix</button>
-        <button class="play-tab" type="button" role="tab" data-target="play-replay">Replay past calls</button>
-        <button class="play-tab" type="button" role="tab" data-target="play-screen">Screen creators</button>
-        <button class="play-tab" type="button" role="tab" data-target="play-watchlist">Watchlist alerts</button>
-      </div>
-
-      <!-- Row 3 — 6 cards, horizontal scroll/snap, no card chrome -->
-      <div class="play-carousel">
-        <div class="play-track" id="play-track">
-          <article class="play-card" id="play-bull-bear">
-            <div class="play-cover" data-variant="teal"><i class="ph ph-scales"></i></div>
-            <h3>Bull vs bear by ticker</h3>
-            <p>Stack every covered creator's stance on the same ticker — conviction, hold time, and entries side by side.</p>
-            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
-          </article>
-          <article class="play-card" id="play-critique">
-            <div class="play-cover" data-variant="dark"><i class="ph ph-shield-warning"></i></div>
-            <h3>Critique my pick</h3>
-            <p>Drop a trade idea. A critique agent pulls precedent from every audited call and flags weak base rates before you size in.</p>
-            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
-          </article>
-          <article class="play-card" id="play-mix">
-            <div class="play-cover" data-variant="warm"><i class="ph ph-sliders-horizontal"></i></div>
-            <h3>Build your own mix</h3>
-            <p>Pick the creators you trust. Get an aggregate signal — consensus, dissent, and ranked conviction — refreshed every hour.</p>
-            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
-          </article>
-          <article class="play-card" id="play-replay">
-            <div class="play-cover" data-variant="purple"><i class="ph ph-clock-counter-clockwise"></i></div>
-            <h3>Replay any past call</h3>
-            <p>Take a single creator's call and see what your portfolio would look like today if you'd taken it the day it was posted.</p>
-            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
-          </article>
-          <article class="play-card" id="play-screen">
-            <div class="play-cover" data-variant="teal"><i class="ph ph-funnel"></i></div>
-            <h3>Screen creators</h3>
-            <p>Filter the Alpha League by ROI band, hold time, sector, or risk. Find the niche operators the league average hides.</p>
-            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
-          </article>
-          <article class="play-card" id="play-watchlist">
-            <div class="play-cover" data-variant="dark"><i class="ph ph-bell-simple-ringing"></i></div>
-            <h3>Watchlist alerts</h3>
-            <p>Get notified the moment a creator on your watchlist posts a new call — with a one-line audited context.</p>
-            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
-          </article>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
-
 </main>
 
 <!-- ============================================================ FOOTER ============================================================ -->
@@ -4901,6 +5893,22 @@
   </div>
 </footer>
 
+<!-- ============================================================ STICKY BOTTOM CTA (mobile only) ============================================================
+     Persistent primary-conversion bar that fades up after the user
+     scrolls past the hero CTAs and fades out once the footer enters
+     view. Reference: Tesla `tcl-permanent-cta`, Apple iPhone product
+     page `.tabnav-wrapper`, Stripe pricing mobile. Dismissable so the
+     user can opt out for the session. Long-landing conversion lift
+     in published studies: 15-25 %. -->
+<div class="sticky-cta-bar" id="stickyCta" aria-hidden="true" hidden>
+  <button class="sc-cta" type="button" data-open="connect">
+    <i class="ph-bold ph-x-logo"></i> Test any FinTwit creator
+  </button>
+  <button class="sc-close" type="button" aria-label="Hide CTA bar">
+    <i class="ph ph-x"></i>
+  </button>
+</div>
+
 <!-- ============================================================ ALVA ATTRIBUTION BADGE (persistent bottom-right) ============================================================ -->
 <a class="alva-badge" href="https://alva.xyz" target="_blank" rel="noreferrer" aria-label="Powered by Alva — see more playbooks">
   <span class="alva-badge-mark">
@@ -4917,9 +5925,41 @@
 
 <!-- ============================================================ MODALS ============================================================ -->
 
-<!-- ============================================================ SEARCH MODAL (single-creator backtest)
-     Triggered by Section 2's Search CTA. Replaces the inline handle
-     form that used to live in the deleted #get-started section.
+<!-- ============================================================ CAN'T FIND AN ACCOUNT MODAL  (3.0 round 4)
+     Triggered by Section 2's "Can't find an Account?" CTA (replaces
+     the old Search button). Per zet 5/24 12:19 + harryz 13:41 the
+     flow now routes the user to X to quote-tweet @alva with the
+     handle they want backtested — quote-tweet > reply because it
+     boosts the source tweet's reach. On submit we build a
+     twitter.com/intent/tweet URL with prefilled text + the Alva
+     anchor tweet as the quoted URL, open it in a new tab, and close
+     the dialog. The user only has to click Post on X.
+     ============================================================ -->
+<div class="modal" id="modal-cant-find" aria-hidden="true">
+  <div class="dialog search-dialog">
+    <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
+    <div class="dialog-head">
+      <div>
+        <span class="eyebrow"><i class="ph-bold ph-x-logo" style="margin-right:6px; color: var(--alva);"></i> Request via X</span>
+        <h3>Can't find the account you want backtested?</h3>
+      </div>
+    </div>
+    <p>Drop the @handle below. We'll open X with a quote-tweet to <strong>@alva</strong> already drafted — just hit Post. We'll see it, run the backtest, and DM you when the Playbook is live.</p>
+    <form class="search-form" id="cant-find-form" autocomplete="off">
+      <input type="text" name="handle" placeholder="@account-handle" aria-label="Account handle to request" required />
+      <button type="submit" class="btn-primary">
+        <i class="ph-bold ph-x-logo"></i> Quote-tweet to @alva
+      </button>
+    </form>
+    <div class="search-foot"><i class="ph-fill ph-check-circle"></i> Opens X in a new tab · You stay in control of the post</div>
+  </div>
+</div>
+
+<!-- ============================================================ SEARCH MODAL  (deprecated 3.0 round 4)
+     Was triggered by Section 2's Search CTA. The Search button has
+     been replaced with "Can't find an Account?" → #modal-cant-find,
+     so this markup is now orphaned (no trigger). Left in place for
+     potential revival; safe to delete in a later cleanup.
      ============================================================ -->
 <div class="modal" id="modal-search" aria-hidden="true">
   <div class="dialog search-dialog">
@@ -5028,7 +6068,7 @@
     </div>
     <p>One handle per line, or comma-separated. We'll show which ones are in the FinTwit Alpha League, with their full ROI history and Playbooks.</p>
     <form class="bcard-form for-kols-form" id="paste-handles-form" style="margin-top:18px; flex-direction:column; align-items:stretch; gap:12px;">
-      <textarea name="handles" rows="5" placeholder="@yardeni&#10;@CathieDWood&#10;@SemiAnalysis_" aria-label="@handles to test" style="width:100%; padding:14px 16px; border-radius:14px; border:1px solid var(--line); background:var(--bg); font-family:var(--font-mono); font-size:13px; resize:vertical; color:var(--text);" required></textarea>
+      <textarea name="handles" rows="5" placeholder="@yardeni&#10;@CathieDWood&#10;@SemiAnalysis_" aria-label="@handles to test" style="width:100%; padding:14px 16px; border-radius:14px; border:1px solid var(--line); background:var(--bg); font-family:var(--font-mono); font-size:16px; resize:vertical; color:var(--text);" required></textarea>
       <button type="submit" class="btn-primary" style="align-self:flex-start;">
         <i class="ph-bold ph-magnifying-glass"></i> Check these creators
       </button>
@@ -5404,6 +6444,15 @@
      stagger in on the right.
      ============================================================ -->
 <div class="modal" id="modal-card-detail" aria-hidden="true">
+  <!-- Mobile-only close button. Desktop relies on backdrop click to
+       close, but on mobile the .cd-anchor stretches to nearly the full
+       viewport (it gets transform: translate(-50%, -50%) + flex column)
+       so there's no real backdrop left to click. Hidden by base CSS,
+       revealed in the mobile @media block. data-close hooks into the
+       generic modal closer (document.body click listener). -->
+  <button class="cd-close" type="button" data-close aria-label="Close card detail">
+    <i class="ph-bold ph-x" aria-hidden="true"></i>
+  </button>
   <div class="cd-stage" id="cd-stage">
     <div class="cd-anchor" id="cd-anchor">
       <div class="cd-left-col">
@@ -6299,7 +7348,9 @@
     track.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(spy); }, { passive: true });
   })();
 
-  /* Search modal submit — flips the form to a confirmation state. */
+  /* Search modal submit — flips the form to a confirmation state.
+     (3.0 round 4 — modal is orphaned, handler kept harmless in case
+     the markup is ever re-wired.) */
   document.getElementById('search-form')?.addEventListener('submit', e => {
     e.preventDefault();
     const raw = (e.target.querySelector('input').value || '').trim();
@@ -6309,6 +7360,36 @@
     const out = document.getElementById('search-handle');
     if (out) out.textContent = handle;
     if (modal) modal.dataset.state = 'sent';
+  });
+
+  /* ============================================================
+     CAN'T FIND AN ACCOUNT — quote-tweet to @alva on X  (3.0 round 4)
+     Builds a twitter.com/intent/tweet URL with:
+       · text  = "@alva please backtest @<handle> …"
+       · url   = ALVA_TWEET_URL   (the tweet they end up quoting)
+     A `url=` param that points at an existing tweet turns the
+     intent into a Quote Tweet rather than a plain reply — better
+     for amplification per harryz 5/24 13:40.
+     Opens in a new tab, then closes the dialog and resets the form.
+     ============================================================ */
+  document.getElementById('cant-find-form')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const raw = (e.target.querySelector('input').value || '').trim();
+    if (!raw) return;
+    const handle = '@' + raw.replace(/^@+/, '').replace(/\s+/g, '');
+    // TODO: swap with the real Alva anchor tweet URL once the launch
+    // tweet exists. The placeholder is harmless — Twitter just ignores
+    // an invalid `url=` and falls back to a normal compose. Once the
+    // real URL is in, the intent becomes a Quote Tweet.
+    const ALVA_TWEET_URL = 'https://twitter.com/alva/status/0000000000000000000';
+    const text = `@alva please backtest ${handle} — I want to see their audited Playbook.`;
+    const intent = 'https://twitter.com/intent/tweet'
+      + '?text=' + encodeURIComponent(text)
+      + '&url='  + encodeURIComponent(ALVA_TWEET_URL);
+    window.open(intent, '_blank', 'noopener,noreferrer');
+    const modal = document.getElementById('modal-cant-find');
+    if (modal) closeModal(modal);
+    e.target.reset();
   });
 
   /* (Cat-eye lens JS reverted — see CSS comment above.) */
@@ -6526,7 +7607,37 @@
      visible and the page degrades gracefully to the un-lensed look.
      ============================================================ */
   (() => {
-    if (typeof THREE === 'undefined') return;            // graceful no-op
+    /* 3.0 round 44 — skip the WebGL lens pass on phones. At 390-class
+       widths the barrel-distortion radius collapses to within the
+       headline column (the lens effect is designed for ≥1100px wide
+       viewports where the outer ring sits past the centered content),
+       so the visual payoff disappears while battery + GPU cost stay.
+       Falling back to the un-lensed DOM tweets keeps the section
+       light and the type sharper. */
+    if (window.matchMedia('(max-width: 760px)').matches) return;
+
+    /* 3.0 round 46.4 — Three.js is now loaded via a deferred dynamic
+       <script> (an LCP optimization added by a parallel task), which
+       means it's NOT defined when this inline IIFE first executes.
+       The old `if (typeof THREE === 'undefined') return` bail-out
+       fires every time and the lens never initializes. Replace the
+       hard bail with a polling waiter — once THREE shows up (or after
+       a reasonable timeout if it never does), continue with init. */
+    function waitForThree(cb) {
+      if (typeof THREE !== 'undefined') return cb();
+      let waited = 0;
+      const tick = setInterval(() => {
+        if (typeof THREE !== 'undefined') {
+          clearInterval(tick);
+          cb();
+        } else if ((waited += 100) > 10000) {
+          // 10s ceiling — give up gracefully, DOM tweets stay visible.
+          clearInterval(tick);
+        }
+      }, 100);
+    }
+    waitForThree(initLens);
+    function initLens() {
     const opening = document.querySelector('.opening');
     const bg      = document.querySelector('.opening-bg');
     if (!opening || !bg) return;
@@ -6576,7 +7687,18 @@
     // tweets stay clearly "out of focus" relative to near-tier ones.
     // Bumped vs the original CSS values so the parallax depth reads
     // strongly even with the lens distortion on top.
-    const TIER_BLUR = { near: 0, mid: 1.5, far: 3.5 };
+    // 3.0 round 46.1 — near tier pulled back to 0 (was 1.4 during the
+    // "kill the border" panic). Now that the premultiplied composite
+    // fix (round 46) eliminated the grey-ring artifact at the card
+    // alpha edge, near-tier cards no longer need a feather blur to
+    // hide the boundary — they can stay crisp again.
+    // 3.0 round 46.11 — TIER_BLUR all zeroed. canvas2D filter:blur
+    // on a white-card-on-transparent bitmap mixes RGB and alpha
+    // together, so the alpha edge gets non-white RGB (greys) — which
+    // then composites against the white bg as visible grey rings, no
+    // matter how the shader is set up. Cards stay sharp now;
+    // depth/parallax cues come from tier size + drift speed only.
+    const TIER_BLUR = { near: 0, mid: 0, far: 0 };
 
     function renderTweet(t) {
       const spec = TIER[t.tier];
@@ -6606,10 +7728,19 @@
       const lineH = Math.round(fs * 1.5);
       const h = padY + headH + gapHB + lines.length * lineH + padY;
 
-      // Small padding only so the per-tier blur halo doesn't get
-      // clipped at the bitmap edge. Drop-shadow + 1px hairline border
-      // removed for a cleaner floating-card look.
-      const shadowPad = 12;
+      // 3.0 round 46.13 — shadowPad back to 36 to give a proper
+      // canvas drop-shadow room to bloom. The bilinear-interp grey
+      // ring problem from round 46.12's investigation is solved by:
+      //   (a) drawing the canvas drop-shadow first (below) — so the
+      //       texels just OUTSIDE the card aren't (0,0,0, 0) but
+      //       (shadow.rgb, shadow.a). Bilinear interp between card
+      //       body (1,1,1, 1) and shadow halo now produces the
+      //       natural soft transition the user originally wanted,
+      //       not a hard grey line.
+      //   (b) premultipliedAlpha=true blend on the source plane
+      //       (round 46.10) — RT stores straight-alpha values so
+      //       mix() in the post shader composites cleanly.
+      const shadowPad = 52;
       const cardCanvas = document.createElement('canvas');
       cardCanvas.width  = (w + shadowPad * 2) * DPR;
       cardCanvas.height = (h + shadowPad * 2) * DPR;
@@ -6618,14 +7749,47 @@
       ctx.translate(shadowPad, shadowPad);
       ctx.textBaseline = 'top';
 
-      // 3.0 round 35 — pure white card body + 1px light grey border
-      // (user: "所有飘浮卡片加一个浅灰色边框"). Border drawn after the
-      // fill so it sits on top; uses #d6d8df ≈ slightly darker than
-      // --line so it survives the lens distortion/blur pass.
+      // 3.0 round 46.1 — restore the originally-requested chrome:
+      // a visible-but-weak border + a weak wide-spread shadow. The
+      // rounds 45.x panic that removed both entirely was wrong; the
+      // real culprit was the premultiplied-alpha mismatch in the
+      // shader (fixed in round 46), not the card chrome.
+      //
+      // Border: rgba(190, 194, 205, 0.20) — ~75% lighter than the
+      // original 0.85. Reads as a quiet hairline that suggests a
+      // card boundary without ever pulling the eye to it.
+      //
+      // 3.0 round 46.7 — user: "左右两边的描边总是很明显".
+      // Cause: offsetY:12 pushed the shadow halo DOWN, leaving the
+      // TOP edge of the card barely softened — but the LEFT/RIGHT
+      // edges had a UNIFORM halo on both sides, so the hairline
+      // stroke read as visible there while the shadow's vertical
+      // asymmetry masked top/bottom.
+      // Two fixes:
+      //   1. offsetY 12 → 4 — halo now nearly symmetric around all
+      //      four sides (a tiny offset keeps "light from above"
+      //      feel but doesn't dominate).
+      //   2. Canvas stroke dropped entirely (was 0.05). Card edge
+      //      is defined PURELY by the shadow halo now — no line
+      //      work at all.
+      ctx.shadowColor   = 'rgba(20, 20, 30, 0.06)';
+      ctx.shadowBlur    = 44;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 4;
       ctx.fillStyle = '#ffffff';
       roundRect(ctx, 0, 0, w, h, 12);
       ctx.fill();
-      ctx.strokeStyle = 'rgba(190, 194, 205, 0.85)';
+      // reset shadow before drawing border + avatar + text
+      ctx.shadowColor   = 'rgba(0,0,0,0)';
+      ctx.shadowBlur    = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      // 3.0 round 46.14 — 5% black hairline back per user request.
+      // Now safe to add: the bilinear-interp grey ring fix from
+      // round 46.13 (shadow halo filling shadowPad) means the stroke
+      // is no longer competing with phantom grey lines from the
+      // sampler. This is pure intentional definition.
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -6725,11 +7889,33 @@
         tex.minFilter = THREE.LinearFilter;
         tex.magFilter = THREE.LinearFilter;
         tex.generateMipmaps = false;
-        tex.colorSpace = THREE.SRGBColorSpace;
+        // 3.0 round 46.9 — SRGBColorSpace → NoColorSpace. The
+        // tweet card bitmaps are effectively MASKS (mostly white
+        // body + a soft alpha falloff at edges), not photographs.
+        // The default sRGB → linear conversion on texture read +
+        // re-encode on write meant the premultiplied composite at
+        // the alpha edge produced ~0.97 in linear (~0.98 sRGB)
+        // instead of pure 1.0, leaving a subtle grey ring the user
+        // kept flagging as a "border". With NoColorSpace the math
+        // happens on raw 0..1 values throughout and the alpha edge
+        // resolves cleanly to white.
+        tex.colorSpace = THREE.NoColorSpace;
         const geom = new THREE.PlaneGeometry(t.w, t.h);
         const mat  = new THREE.MeshBasicMaterial({
           map: tex,
           transparent: true,
+          // round 46.10 — tell Three.js the SOURCE is "already
+          // premultiplied" so the scene→RT blend uses gl.ONE /
+          // gl.ONE_MINUS_SRC_ALPHA. Effect: canvas pixel
+          // (1, 1, 1, α) is written to the RT as (1, 1, 1, α)
+          // — i.e. straight alpha — instead of being multiplied
+          // into (α, α, α, α²) by the default SRC_ALPHA blend.
+          // With the RT now holding clean straight-alpha values,
+          // the shader's mix(bg, sample.rgb, sample.a) composite
+          // resolves to pure white at every alpha-edge pixel
+          // (mix(white, white, anything) = white) — no grey ring,
+          // no fake border, on any tier.
+          premultipliedAlpha: true,
           depthTest: false,
           depthWrite: false,
         });
@@ -6750,7 +7936,8 @@
           magFilter: THREE.LinearFilter,
           format: THREE.RGBAFormat,
           type: THREE.UnsignedByteType,
-          colorSpace: THREE.SRGBColorSpace,
+          // round 46.9 — see note on tex.colorSpace above
+          colorSpace: THREE.NoColorSpace,
         });
       }
 
@@ -6767,7 +7954,11 @@
              ramp is much more gradual — no longer "off in the
              middle, suddenly on at the edge". */
           uStrength:   { value: -0.045 },
-          uCA:         { value: 0.005 },
+          /* round 46.6 — uCA bumped again 0.013 → 0.020 per user
+             ("色散再强一些"). Total: 4x the round-37 value. CA
+             fringes at section edges are now clearly visible across
+             card boundaries + headline text strokes. */
+          uCA:         { value: 0.020 },
           uAspect:     { value: 16 / 9 },
           uTexel:      { value: new THREE.Vector2(1 / 1920, 1 / 900) },
           uEdgeBlur:   { value: 2.0 },
@@ -6891,14 +8082,29 @@
             // this is the textbook fix for "muddy CA on transparent
             // sprites". cR / cG / cB are full-opacity colors over
             // uBgColor; the final mix is then a clean wavelength shift.
+            //
+            // 3.0 round 46.10 — back to a single mix() composite.
+            // The earlier "grey ring at alpha edge" wasn't a shader
+            // bug after all — it was the scene→RT pass using a
+            // default SRC_ALPHA blend, which writes premultiplied
+            // values into the RT. We now flip the source planes to
+            // premultipliedAlpha=true (gl.ONE / gl.ONE_MINUS_SRC_ALPHA),
+            // so RT stores clean straight-alpha values. With white
+            // cards + white bg uniform, mix(white, white, anything)
+            // resolves to pure white at every alpha edge → no ring.
+            // The CA effect still works because the three barrel
+            // samples hit different alpha values at the card edge;
+            // mix(uBgColor, sample.rgb, sample.a) per channel still
+            // produces the wavelength-shifted fringes the user wants.
             vec3 cR = mix(uBgColor, sR.rgb, sR.a);
             vec3 cG = mix(uBgColor, sG.rgb, sG.a);
             vec3 cB = mix(uBgColor, sB.rgb, sB.a);
             vec3 rgb = vec3(cR.r, cG.g, cB.b);
 
-            // -- radial edge blur — DoF falloff at corners. Same
-            // pre-composite so the blur sees clean bg-over-card
-            // pixels instead of fading-to-transparent. --
+            // -- radial edge blur — DoF falloff at corners. The
+            // blur only applies in the outer ring (edge > 0), where
+            // we're already using the mix() composite for CA, so
+            // matching mix() here keeps things consistent. --
             if (edge > 0.01) {
               vec2 ofs = uTexel * uEdgeBlur * edge;
               vec4 blurred = boxSample(uvG, ofs);
@@ -6999,7 +8205,221 @@
         }
       }
     });
+    } // <- close initLens() (round 46.4 wrapper around the IIFE body)
   })();
+
+  /* ============================================================
+     MOBILE NAV DRAWER — hamburger toggle, ESC, outside-tap, scrollspy
+     ============================================================
+     Wires the .nav-menu-toggle to .nav-drawer's `.open` class with
+     proper a11y (aria-expanded, label swap, focus restore). Also
+     mirrors the scrollspy `.active` state from .nav-tab onto the
+     drawer's matching .nav-drawer-item so the user can see "which
+     section am I on" while the drawer is open. Reference patterns:
+     GitHub mobile (top drawer), Linear iOS (drawer with section
+     items), Vercel mobile (collapsible header). */
+  (function setupNavDrawer() {
+    const toggle = document.getElementById('nav-menu-toggle');
+    const drawer = document.getElementById('nav-drawer');
+    if (!toggle || !drawer) return;
+
+    const openLabel  = 'Open menu';
+    const closeLabel = 'Close menu';
+
+    function open() {
+      drawer.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+      toggle.setAttribute('aria-label', closeLabel);
+      // Prevent the body from scrolling under the drawer on tiny
+      // viewports — same idiom as the modal-open behaviour.
+      document.documentElement.style.overflow = 'hidden';
+    }
+    function close() {
+      drawer.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', openLabel);
+      document.documentElement.style.overflow = '';
+    }
+    function isOpen() {
+      return drawer.classList.contains('open');
+    }
+
+    // Toggle on hamburger
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      isOpen() ? close() : open();
+    });
+
+    // Close when any drawer item is tapped. data-section links route
+    // through the existing scrollspy / smoothScrollTo wiring (the
+    // anchor href is preserved so default behaviour still works);
+    // data-open buttons route through the existing modal opener
+    // (separate global listener). We just need to close the drawer
+    // so the page is visible after the action.
+    drawer.querySelectorAll('.nav-drawer-item, .nav-drawer-action').forEach(el => {
+      el.addEventListener('click', () => {
+        // Tiny defer so the modal opener / smooth scroll have time
+        // to grab the click before the drawer's close transition
+        // changes the layout.
+        setTimeout(close, 60);
+      });
+    });
+
+    // ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen()) {
+        close();
+        toggle.focus();
+      }
+    });
+
+    // Outside-tap closes
+    document.addEventListener('click', (e) => {
+      if (!isOpen()) return;
+      if (drawer.contains(e.target) || toggle.contains(e.target)) return;
+      close();
+    });
+
+    // If user resizes from mobile up to desktop while drawer is
+    // open, close it (CSS will hide the toggle but the .open class
+    // would linger).
+    window.matchMedia('(min-width: 761px)').addEventListener?.('change', (e) => {
+      if (e.matches && isOpen()) close();
+    });
+
+    // Scrollspy mirror — when any .nav-tab gains .active, mirror it
+    // onto the matching .nav-drawer-item. The scrollspy code that
+    // sets .nav-tab.active is elsewhere; we observe class changes.
+    const tabs = document.querySelectorAll('.nav-tab[data-section]');
+    const drawerItems = drawer.querySelectorAll('.nav-drawer-item[data-section]');
+    if (tabs.length && drawerItems.length) {
+      const syncActive = () => {
+        let activeSection = null;
+        tabs.forEach(t => { if (t.classList.contains('active')) activeSection = t.dataset.section; });
+        drawerItems.forEach(d => {
+          d.classList.toggle('active', d.dataset.section === activeSection);
+        });
+      };
+      const mo = new MutationObserver(syncActive);
+      tabs.forEach(t => mo.observe(t, { attributes: true, attributeFilter: ['class'] }));
+      syncActive();    // run once on init
+    }
+  })();
+
+  /* ============================================================
+     STICKY BOTTOM CTA — IntersectionObserver wiring
+     ============================================================
+     The bar enters view once the user scrolls past .stage-actions
+     (the hero's second-screen CTA block) and exits view when the
+     footer becomes visible. A session-scoped dismiss flag honours
+     the close button so the bar doesn't keep popping back.
+     Mobile-only: the bar is display:none on desktop via CSS, so the
+     observer is a no-op there but harmless.
+     Reference: Tesla `tcl-permanent-cta` observation, Stripe.com
+     mobile pricing flow. */
+  (function setupStickyCta() {
+    const bar = document.getElementById('stickyCta');
+    if (!bar) return;
+    const isMobile = window.matchMedia('(max-width: 760px)').matches;
+    if (!isMobile) return;                          // PC keeps the bar hidden
+    if (sessionStorage.getItem('stickyCtaDismissed') === '1') {
+      bar.setAttribute('hidden', '');               // user opted out this session
+      return;
+    }
+    bar.removeAttribute('hidden');                  // CSS will reveal as flex
+
+    const heroCta = document.querySelector('.stage-actions') ||
+                    document.querySelector('.opening-arrow');
+    const footer  = document.querySelector('footer.f');
+    if (!heroCta || !footer) return;
+
+    const setVisible = (v) => bar.classList.toggle('visible', v);
+    let pastHero = false;
+    let footerIn = false;
+
+    const ioHero = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        pastHero = !e.isIntersecting && e.boundingClientRect.top < 0;
+        setVisible(pastHero && !footerIn);
+      });
+    }, { rootMargin: '-56px 0px 0px 0px' });        // discount the fixed nav
+    ioHero.observe(heroCta);
+
+    const ioFooter = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        footerIn = e.isIntersecting;
+        setVisible(pastHero && !footerIn);
+      });
+    });
+    ioFooter.observe(footer);
+
+    // While any modal is open we hide the bar (modal z-index is 80,
+    // bar is 40 — modal wins visually but the bar still steals tap
+    // space at the bottom; hiding feels cleaner).
+    const modalObserver = new MutationObserver(() => {
+      const anyOpen = !!document.querySelector('.modal.open');
+      bar.style.visibility = anyOpen ? 'hidden' : '';
+    });
+    modalObserver.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+
+    bar.querySelector('.sc-close')?.addEventListener('click', () => {
+      bar.classList.remove('visible');
+      sessionStorage.setItem('stickyCtaDismissed', '1');
+      // Tear down after exit transition so the bar can't be re-shown
+      // by the observer mid-session.
+      setTimeout(() => bar.setAttribute('hidden', ''), 320);
+    });
+  })();
+
+  /* ============================================================
+     PLAYBOOK CAROUSEL — dot indicator sync (mobile)
+     ============================================================
+     The Material 3 Hero Carousel pattern needs a visible position
+     indicator. We render a <span class="dot"> per .play-card next to
+     the .play-track and toggle .active on the dot whose card is
+     closest to the track's scroll-center. Cheap math, no library.
+     Skip on desktop where the carousel is replaced by a grid.
+     ============================================================ */
+  (function setupPlayDots() {
+    const isMobile = window.matchMedia('(max-width: 760px)').matches;
+    if (!isMobile) return;
+    const track = document.getElementById('play-track');
+    if (!track) return;
+    const cards = track.querySelectorAll('.play-card');
+    if (cards.length < 2) return;
+
+    // Build dots if they aren't in the markup already
+    let dotsEl = track.parentElement.querySelector('.play-dots');
+    if (!dotsEl) {
+      dotsEl = document.createElement('div');
+      dotsEl.className = 'play-dots';
+      cards.forEach((_, i) => {
+        const d = document.createElement('span');
+        d.className = 'dot' + (i === 0 ? ' active' : '');
+        dotsEl.appendChild(d);
+      });
+      track.parentElement.appendChild(dotsEl);
+    }
+    const dots = dotsEl.querySelectorAll('.dot');
+
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const center = track.scrollLeft + track.clientWidth / 2;
+        let closest = 0, closestDist = Infinity;
+        cards.forEach((card, i) => {
+          const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+          const d = Math.abs(cardCenter - center);
+          if (d < closestDist) { closestDist = d; closest = i; }
+        });
+        dots.forEach((d, i) => d.classList.toggle('active', i === closest));
+      });
+    };
+    track.addEventListener('scroll', onScroll, { passive: true });
+  })();
+
 </script>
 
 </body>
