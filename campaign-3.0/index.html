@@ -4529,98 +4529,210 @@
      bordered tile, side-by-side. Collapses to single column on
      narrow widths.
      ============================================================ */
-  /* 3.0 round 21 — For-FinTwit-Traders modal rewritten (see HTML
-     comment in #modal-for-kols). The .steps grid below was the
-     original 3-step explainer; the modal no longer uses it, but the
-     rules are left as legacy fallbacks (#modal-for-kols .steps is
-     now an empty selector for this DOM). New layout drives off the
-     .fk-* class family. */
-  .fk-dialog {
-    /* Dialog with breathing room around a single column of content. */
-    padding: 56px 56px 48px;
+  /* 3.0 round 25 — FinTwit Rewards modal (3-step wizard). Replaces
+     the round-21 .fk-* layout. Mirrors the reference implementation
+     at ~/Downloads/campaign-3.0.html. */
+  #modal-for-kols .reward-panel[hidden] { display: none !important; }
+  #modal-for-kols .reward-dialog {
+    max-width: 760px;
+    position: relative;
   }
-  .fk-state {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+  #modal-for-kols .reward-dialog > .close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 2;
   }
-  .fk-state[hidden] { display: none; }
-  /* Big single-stack headline — the offer/reward IS the hook. */
-  .fk-headline {
-    margin: 0;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(26px, 2.8vw, 36px);
-    line-height: 1.18;
-    letter-spacing: -0.018em;
-    color: var(--text);
-    max-width: 640px;
-  }
-  .fk-headline .alva { color: var(--alva); }
-  .fk-form {
-    margin-top: 8px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .fk-form input {
-    flex: 1 1 280px;
-    min-width: 240px;
-  }
-  .fk-form .btn-primary {
-    flex: 0 0 auto;
-  }
-  .fk-secondary {
-    align-self: flex-start;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 0;
-    background: transparent;
-    border: 0;
-    color: var(--muted);
-    font-family: var(--font);
-    font-size: 14px;
-    font-weight: 500;
-    text-decoration: none;
-    cursor: pointer;
-    transition: color .15s;
-  }
-  .fk-secondary:hover { color: var(--text); }
-  .fk-result-body {
-    margin: 0;
-    color: var(--muted);
-    font-family: var(--font);
-    font-size: 15px;
-    line-height: 1.55;
-    max-width: 560px;
-  }
-  .fk-result-body strong {
-    color: var(--text);
-    font-weight: 600;
-  }
-  .fk-actions {
-    margin-top: 4px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  /* Eyebrow accent when the result is "Congratulations" — brand-teal
-     so it reads as a win, not a neutral label. */
-  .fk-eyebrow-good {
-    color: var(--alva);
-  }
-  @media (max-width: 760px) {
-    .fk-dialog { padding: 40px 28px 32px; }
-    .fk-headline { font-size: clamp(22px, 6vw, 28px); }
-  }
+  #modal-for-kols .dialog-head { padding-right: 48px; }
   #modal-for-kols .steps {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
     margin-top: 28px;
     border-top: 0;
+  }
+  #modal-for-kols .step {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 22px 18px 20px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  #modal-for-kols .step .num {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--alva);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-transform: none;
+  }
+  #modal-for-kols .step .desc {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  #modal-for-kols .reward-form {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+  }
+  #modal-for-kols .reward-form input {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-weight: 500;
+    font-size: 14px;
+    outline: none;
+  }
+  #modal-for-kols .reward-form input:focus {
+    border-color: rgba(73,163,166,0.55);
+    box-shadow: 0 0 0 4px rgba(73,163,166,0.13);
+  }
+  #modal-for-kols .reward-result {
+    display: none;
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: rgba(10,10,16,0.03);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  #modal-for-kols .reward-result.is-visible { display: block; }
+  #modal-for-kols .reward-result.is-eligible {
+    border-color: rgba(34,197,94,0.28);
+    background: rgba(34,197,94,0.08);
+    color: #166534;
+  }
+  #modal-for-kols .reward-result.is-error {
+    border-color: rgba(239,68,68,0.22);
+    background: rgba(239,68,68,0.07);
+    color: #991b1b;
+  }
+  #modal-for-kols .reward-result b {
+    display: block;
+    margin-bottom: 4px;
+    color: currentColor;
+    font-size: 14px;
+  }
+  #modal-for-kols .creator-share-card {
+    margin-top: 22px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 16% 10%, rgba(73,163,166,0.22), transparent 34%),
+      linear-gradient(135deg, #ffffff 0%, #f5fbfb 48%, #eff7f7 100%);
+    box-shadow: 0 10px 28px rgba(10,10,16,0.06);
+  }
+  #modal-for-kols .creator-share-top {
+    padding: 22px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: center;
+  }
+  #modal-for-kols .creator-share-top img {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1px solid rgba(10,10,16,0.08);
+    background: #fff;
+  }
+  #modal-for-kols .creator-share-name {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.05;
+    color: var(--text);
+  }
+  #modal-for-kols .creator-share-handle {
+    margin-top: 4px;
+    font-family: var(--font);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  #modal-for-kols .creator-share-badge {
+    padding: 8px 11px;
+    border-radius: 999px;
+    background: rgba(73,163,166,0.13);
+    color: var(--alva);
+    font-family: var(--font);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  #modal-for-kols .creator-share-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid rgba(10,10,16,0.08);
+  }
+  #modal-for-kols .creator-share-stat {
+    padding: 16px 20px;
+    border-right: 1px solid rgba(10,10,16,0.08);
+  }
+  #modal-for-kols .creator-share-stat:last-child { border-right: 0; }
+  #modal-for-kols .creator-share-stat span {
+    display: block;
+    color: var(--muted);
+    font-family: var(--font);
+    font-weight: 500;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  #modal-for-kols .creator-share-stat b {
+    display: block;
+    margin-top: 6px;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--text);
+    font-weight: 700;
+  }
+  #modal-for-kols .reward-share-actions {
+    margin-top: 22px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #modal-for-kols .reward-switch {
+    margin-top: 12px;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: var(--muted);
+    font-family: var(--font);
+    font-weight: 500;
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
+  #modal-for-kols .reward-switch:hover { color: var(--text); }
+  @media (max-width: 540px) {
+    #modal-for-kols .steps { grid-template-columns: 1fr; }
+    #modal-for-kols .reward-form { grid-template-columns: 1fr; }
+    #modal-for-kols .creator-share-top { grid-template-columns: auto 1fr; }
+    #modal-for-kols .creator-share-badge { grid-column: 1 / -1; justify-self: start; }
+    #modal-for-kols .creator-share-stats { grid-template-columns: 1fr; }
+    #modal-for-kols .creator-share-stat {
+      border-right: 0;
+      border-bottom: 1px solid rgba(10,10,16,0.08);
+    }
+    #modal-for-kols .creator-share-stat:last-child { border-bottom: 0; }
   }
   #modal-for-kols .step {
     display: flex;
@@ -6151,7 +6263,7 @@
       <a class="nav-tab" href="#leaderboard" data-section="leaderboard"><i class="ph ph-trophy"></i><span>Leaderboard</span></a>
     </nav>
     <div class="nav-actions">
-      <button class="nav-cta-ghost" type="button" data-open="for-kols"><i class="ph-bold ph-megaphone"></i> For FinTwit Traders</button>
+      <button class="nav-cta-ghost" type="button" data-open="for-kols"><i class="ph-bold ph-megaphone"></i> FinTwit Rewards</button>
       <!-- Mobile-only hamburger toggle. Hidden by CSS on ≥761w (desktop
            shows the inline tabs + both CTAs). On mobile this becomes
            the entry point to a top drawer that holds the 3 section
@@ -6194,7 +6306,7 @@
     <div class="nav-drawer-sep" aria-hidden="true"></div>
     <button class="nav-drawer-action" type="button" data-open="for-kols">
       <i class="ph-bold ph-megaphone" aria-hidden="true"></i>
-      <span>For FinTwit Traders</span>
+      <span>FinTwit Rewards</span>
     </button>
   </div>
 </header>
@@ -6710,80 +6822,90 @@
   </div>
 </div>
 
-<!-- 3.0 round 21 — For FinTwit Traders modal rewritten per harryz
-     5/25 16:46 brief. Removes the 3-step explainer + private-preview
-     copy in favor of a single one-line hook + handle input. Headline
-     drives the offer (top XX get $XXX in Claude Opus credits) so
-     submission is an immediate self-test ("did I make the cut?")
-     rather than a private onboarding flow.
-
-     The modal cycles between 4 states:
-       input         — initial; eyebrow + headline + handle field +
-                       "Check if I made the cut" CTA + View Full
-                       Leaderboard link
-       result-on     — handle is on the leaderboard. Congratulatory
-                       headline + Share my Playbook CTA (opens an X
-                       quote-tweet intent like the cant-find modal).
-       result-tracked — handle is tracked but not on the leaderboard.
-                        Routes the user to their Playbook page +
-                        Leaderboard link.
-       result-untracked — handle never seen. Submit-index-request CTA.
-
-     For the demo, JS hashes the entered handle into one of the three
-     result buckets so the experience is deterministic per input. -->
+<!-- 3.0 round 25 — modal restructured to match the reference rewards
+     flow at ~/Downloads/campaign-3.0.html. Three sequential panels:
+       intro — pitch + 3-step explainer + Check eligibility CTA
+       check — handle input + result area (Not Eligible / proceed to card)
+       card  — share card with Best ROI · Rank · Reward + X share CTA
+     Demo eligibility table: handle "2" → eligible; everything else
+     comes back Not Eligible. -->
 <div class="modal" id="modal-for-kols" aria-hidden="true">
-  <div class="dialog fk-dialog">
+  <div class="dialog reward-dialog">
     <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
 
-    <!-- STATE 1 — input -->
-    <div class="fk-state" data-fk-state="input">
-      <span class="eyebrow">For FinTwit Traders</span>
-      <h3 class="fk-headline">We backtested thousands of FinTwit accounts. The top 50 get <span class="alva">$5,000 in Claude Opus credits</span>.</h3>
-      <form class="bcard-form fk-form" id="for-kols-form">
-        <input type="text" name="handle" placeholder="@your-x-handle" aria-label="Your X handle" required />
-        <button type="submit" class="btn-primary">Check if I made the cut</button>
+    <!-- STEP 1 — intro -->
+    <section class="reward-panel" data-reward-step="intro">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">FinTwit Rewards</span>
+          <h3>Share your Playbook Card. Earn Alva Credits.</h3>
+        </div>
+      </div>
+      <p>Eligible FinTwit Traders can share their audited Playbook Card on X and unlock FinTwit Rewards, including up to <b>$10,000 worth of Alva Credits</b>.</p>
+      <div class="steps">
+        <div class="step"><span class="num">01</span><span class="desc">Check whether your X handle is on the current reward list.</span></div>
+        <div class="step"><span class="num">02</span><span class="desc">If eligible, share your Playbook Card on X.</span></div>
+        <div class="step"><span class="num">03</span><span class="desc">We verify the public share and DM you on X with the next reward steps.</span></div>
+      </div>
+      <div class="notice">Rewards are not issued instantly in this demo. After you share, Alva will review the X post and contact eligible Traders directly.</div>
+      <div class="dialog-actions">
+        <button class="btn-primary" type="button" id="reward-start-btn">
+          <i class="ph-bold ph-arrow-right"></i> Check eligibility
+        </button>
+      </div>
+    </section>
+
+    <!-- STEP 2 — check eligibility -->
+    <section class="reward-panel" data-reward-step="check" hidden>
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">Step 1 · Eligibility</span>
+          <h3>Enter your X handle.</h3>
+        </div>
+      </div>
+      <p>We'll check whether this handle is on the current Trader reward list.</p>
+      <form class="reward-form" id="for-kols-form" autocomplete="off">
+        <input type="text" name="handle" placeholder="Try 1 or 2" aria-label="Trader X handle" required />
+        <button type="submit" class="btn-primary">
+          <i class="ph-bold ph-magnifying-glass"></i> Check
+        </button>
       </form>
-      <a class="fk-secondary" href="#leaderboard" data-fk-leaderboard>View Full Leaderboard →</a>
-    </div>
+      <div class="reward-result" id="reward-result" role="status" aria-live="polite"></div>
+    </section>
 
-    <!-- STATE 2 — found on leaderboard -->
-    <div class="fk-state" data-fk-state="result-on" hidden>
-      <span class="eyebrow fk-eyebrow-good"><i class="ph-bold ph-trophy"></i> Congratulations</span>
-      <h3 class="fk-headline">You made the <span class="alva">Alva FinTwit Alpha League</span>.</h3>
-      <p class="fk-result-body">Share your verified track record on X and we'll be in touch to distribute your <strong>$5,000 in Claude Opus credits</strong>.</p>
-      <div class="fk-actions">
-        <button type="button" class="btn-primary fk-share">
-          <i class="ph-bold ph-x-logo"></i> Share my Playbook
-        </button>
-        <button type="button" class="fk-secondary fk-reset">Check another handle</button>
+    <!-- STEP 3 — eligible card + share -->
+    <section class="reward-panel" data-reward-step="card" hidden>
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">Eligible</span>
+          <h3>You're eligible for FinTwit Rewards.</h3>
+        </div>
       </div>
-    </div>
-
-    <!-- STATE 3 — tracked but not on leaderboard -->
-    <div class="fk-state" data-fk-state="result-tracked" hidden>
-      <span class="eyebrow">You're indexed</span>
-      <h3 class="fk-headline">Your <span class="alva">Playbook</span> is live — keep posting.</h3>
-      <p class="fk-result-body">You didn't crack the top 50 this round. Your full audited track record is published; rankings refresh every hour.</p>
-      <div class="fk-actions">
-        <button type="button" class="btn-primary fk-open-playbook">
-          <i class="ph-bold ph-arrow-up-right"></i> Open my Playbook
+      <p>Share your Playbook Card on X. After you post, the Alva team will manually verify the public share and DM you on X with next steps.</p>
+      <article class="creator-share-card" aria-label="Trader reward share card">
+        <div class="creator-share-top">
+          <img id="reward-card-avatar" src="" alt="">
+          <div>
+            <div class="creator-share-name" id="reward-card-name">Trader</div>
+            <div class="creator-share-handle" id="reward-card-handle">@trader</div>
+          </div>
+          <div class="creator-share-badge">Eligible</div>
+        </div>
+        <div class="creator-share-stats">
+          <div class="creator-share-stat"><span>Best ROI</span><b id="reward-card-roi">+0.0%</b></div>
+          <div class="creator-share-stat"><span>Rank</span><b id="reward-card-rank">Top 10%</b></div>
+          <div class="creator-share-stat"><span>Reward</span><b>$10K</b></div>
+        </div>
+      </article>
+      <div class="reward-share-actions">
+        <button class="btn-primary" type="button" id="reward-share-btn">
+          <i class="ph-bold ph-x-logo"></i> Share Playbook Card on X
         </button>
-        <a class="fk-secondary" href="#leaderboard" data-fk-leaderboard>View Full Leaderboard →</a>
       </div>
-    </div>
-
-    <!-- STATE 4 — not yet indexed -->
-    <div class="fk-state" data-fk-state="result-untracked" hidden>
-      <span class="eyebrow">Not yet indexed</span>
-      <h3 class="fk-headline">We haven't backtested <span class="alva" data-fk-handle>@you</span> yet.</h3>
-      <p class="fk-result-body">Drop a request and we'll kick off your full audited backtest end-to-end. Public posts only, failed calls counted.</p>
-      <div class="fk-actions">
-        <button type="button" class="btn-primary fk-submit-index">
-          <i class="ph-bold ph-paper-plane-tilt"></i> Submit index request
-        </button>
-        <button type="button" class="fk-secondary fk-reset">Try another handle</button>
-      </div>
-    </div>
+      <button class="reward-switch" type="button" id="reward-check-another-btn">Check a different handle</button>
+      <div class="reward-result" id="reward-share-note" role="status" aria-live="polite"></div>
+      <div class="notice">Rewards are not issued instantly. Keep the post public until verification is complete.</div>
+    </section>
   </div>
 </div>
 
@@ -8002,101 +8124,162 @@
     card.classList.add('bcard-dark');
   });
 
-  /* 3.0 round 21 — For-FinTwit-Traders modal: handle a deterministic
-     state cycle (input → one of three result states). The result is
-     decided by a tiny FNV-1a hash of the cleaned handle so the same
-     handle always lands in the same bucket — feels real to QA, not
-     random. Real backend would replace `pickResultState(handle)`
-     with a fetch against the leaderboard index. */
+  /* 3.0 round 25 — FinTwit Rewards claim flow (3-step wizard):
+       intro  → user reads the pitch + clicks "Check eligibility"
+       check  → user enters their handle; demo-eligibility table
+                says only "2" is eligible. Non-match shows
+                Not-Eligible result line; match advances to next step.
+       card   → eligible share card with avatar + name + handle +
+                Best ROI · Rank · Reward, plus "Share Playbook Card
+                on X" CTA and a "Check a different handle" reset.
+     Reset every time the modal re-opens unless the user is mid-flow
+     in an eligible state, in which case we keep the share card. */
   (() => {
     const modal = document.getElementById('modal-for-kols');
     if (!modal) return;
-    const dialog = modal.querySelector('.fk-dialog');
+    const panels = modal.querySelectorAll('[data-reward-step]');
+    const startBtn = document.getElementById('reward-start-btn');
     const form = document.getElementById('for-kols-form');
-    if (!dialog || !form) return;
+    const result = document.getElementById('reward-result');
+    const shareBtn = document.getElementById('reward-share-btn');
+    const shareNote = document.getElementById('reward-share-note');
+    const checkAnotherBtn = document.getElementById('reward-check-another-btn');
+    const input = form?.querySelector('input');
 
-    function showState(name) {
-      dialog.querySelectorAll('.fk-state').forEach(el => {
-        el.hidden = (el.dataset.fkState !== name);
+    // Demo eligibility table. Handle "2" is the only eligible. The
+    // single demo entry is enough to show the eligible UI path —
+    // everything else lands in the Not-Eligible result.
+    const eligibleTraders = {
+      '2': { name: 'Demo Trader 2', handle: '@2', roi: '+28.1%', rank: 'Top 18%', avatar: 'https://ui-avatars.com/api/?name=2&background=49A3A6&color=fff&bold=true&size=128' }
+    };
+    let selectedTrader = null;
+    let hasEligibleState = false;
+
+    function showStep(step) {
+      panels.forEach(panel => {
+        panel.hidden = panel.dataset.rewardStep !== step;
       });
     }
-
-    function normaliseHandle(raw) {
-      const cleaned = (raw || '').trim().replace(/^@+/, '').replace(/\s+/g, '');
-      return cleaned ? '@' + cleaned : '';
+    function cleanHandle(raw) {
+      const text = (raw || '').trim();
+      const match = text.match(/(?:x\.com|twitter\.com)\/([A-Za-z0-9_]+)/i);
+      return (match ? match[1] : text)
+        .replace(/^@+/, '')
+        .split(/[\s/?#]/)[0]
+        .toLowerCase();
     }
-
-    // FNV-1a 32-bit → 3 buckets. Deterministic.
-    function pickResultState(handle) {
-      let h = 0x811c9dc5;
-      for (let i = 0; i < handle.length; i++) {
-        h = h ^ handle.charCodeAt(i);
-        h = (h * 0x01000193) >>> 0;
+    function setResult(type, title, body) {
+      if (!result) return;
+      result.className = `reward-result is-visible ${type}`;
+      result.innerHTML = `<b>${title}</b>${body}`;
+    }
+    function clearShareNote() {
+      if (!shareNote) return;
+      shareNote.className = 'reward-result';
+      shareNote.innerHTML = '';
+    }
+    function resetCheckState(focusInput = false) {
+      selectedTrader = null;
+      hasEligibleState = false;
+      if (result) {
+        result.className = 'reward-result';
+        result.innerHTML = '';
       }
-      const bucket = h % 3;
-      return ['result-on', 'result-tracked', 'result-untracked'][bucket];
+      clearShareNote();
+      if (input) {
+        input.disabled = false;
+        if (focusInput) input.focus();
+      }
     }
+    function populateCard(trader) {
+      const avatar = document.getElementById('reward-card-avatar');
+      const name = document.getElementById('reward-card-name');
+      const handle = document.getElementById('reward-card-handle');
+      const roi = document.getElementById('reward-card-roi');
+      const rank = document.getElementById('reward-card-rank');
+      if (avatar) {
+        avatar.src = trader.avatar;
+        avatar.alt = trader.handle;
+        avatar.onerror = () => {
+          avatar.onerror = null;
+          avatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(trader.name)}&background=49A3A6&color=fff&bold=true&size=128`;
+        };
+      }
+      if (name) name.textContent = trader.name;
+      if (handle) handle.textContent = trader.handle;
+      if (roi) roi.textContent = trader.roi;
+      if (rank) rank.textContent = trader.rank;
+    }
+    function resetRewardFlow() {
+      showStep('intro');
+      resetCheckState(false);
+      if (form) form.reset();
+    }
+    function prepareRewardFlow() {
+      if (hasEligibleState && selectedTrader) {
+        populateCard(selectedTrader);
+        showStep('card');
+        return;
+      }
+      resetRewardFlow();
+    }
+    window.resetCreatorRewardsFlow = resetRewardFlow;
+    window.prepareCreatorRewardsFlow = prepareRewardFlow;
 
-    form.addEventListener('submit', e => {
+    startBtn?.addEventListener('click', () => {
+      showStep('check');
+      requestAnimationFrame(() => input?.focus());
+    });
+    checkAnotherBtn?.addEventListener('click', () => {
+      resetCheckState(true);
+      if (form) form.reset();
+      showStep('check');
+    });
+    form?.addEventListener('submit', e => {
       e.preventDefault();
-      const handle = normaliseHandle(form.querySelector('input').value);
-      if (!handle) return;
-      const state = pickResultState(handle);
-      // Fill in handle placeholders that the untracked-state needs.
-      dialog.querySelectorAll('[data-fk-handle]').forEach(el => {
-        el.textContent = handle;
-      });
-      showState(state);
+      const key = cleanHandle(input?.value);
+      if (!key) return;
+      hasEligibleState = false;
+      if (input) input.disabled = true;
+      setResult('', 'Checking reward list…', 'Matching your handle against the current eligible Trader list.');
+
+      setTimeout(() => {
+        const trader = eligibleTraders[key];
+        if (!trader) {
+          selectedTrader = null;
+          hasEligibleState = false;
+          if (input) {
+            input.disabled = false;
+            input.focus();
+          }
+          setResult('is-error', 'Not Eligible', 'This handle is not on the current reward list yet. Keep publishing strong market calls and check back in the next campaign.');
+          return;
+        }
+        selectedTrader = trader;
+        hasEligibleState = true;
+        if (input) input.disabled = false;
+        populateCard(trader);
+        clearShareNote();
+        showStep('card');
+      }, 650);
+    });
+    shareBtn?.addEventListener('click', () => {
+      if (!selectedTrader) return;
+      const text = `My Alva FinTwit Playbook Card is eligible for FinTwit Rewards.\n\n${selectedTrader.handle} · ${selectedTrader.roi} Best ROI · ${selectedTrader.rank}\n\nWho else should Alva track?`;
+      const url = 'https://alva.xyz/leaderboard';
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+      if (shareNote) {
+        shareNote.className = 'reward-result is-visible is-eligible';
+        shareNote.innerHTML = '<b>X opened in a new tab.</b>After you publish the post, the Alva team will manually verify it and DM you on X. The reward is not issued instantly.';
+      }
     });
 
-    // Reset → back to the input state, clear the field.
-    dialog.querySelectorAll('.fk-reset').forEach(btn => {
-      btn.addEventListener('click', () => {
-        form.querySelector('input').value = '';
-        showState('input');
-      });
-    });
-
-    // Share (state result-on) → X quote-tweet intent.
-    dialog.querySelector('.fk-share')?.addEventListener('click', () => {
-      const handle = normaliseHandle(form.querySelector('input').value);
-      const text = encodeURIComponent(
-        `Just made the Alva FinTwit Alpha League. Verified track record, every public call backtested. ${handle}`
-      );
-      const url = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent('https://alva.xyz/leaderboard')}`;
-      window.open(url, '_blank', 'noopener,noreferrer');
-    });
-
-    // Open Playbook (state result-tracked) → demo route.
-    dialog.querySelector('.fk-open-playbook')?.addEventListener('click', () => {
-      const handle = normaliseHandle(form.querySelector('input').value);
-      window.open(`https://alva.xyz/p/${handle.replace(/^@/, '')}`, '_blank', 'noopener,noreferrer');
-    });
-
-    // Submit index request (state result-untracked) → demo confirm.
-    dialog.querySelector('.fk-submit-index')?.addEventListener('click', () => {
-      const handle = normaliseHandle(form.querySelector('input').value);
-      const text = encodeURIComponent(`Please index and backtest ${handle} in the FinTwit Alpha League.`);
-      const url = `https://twitter.com/intent/tweet?text=${text}`;
-      window.open(url, '_blank', 'noopener,noreferrer');
-    });
-
-    // View Full Leaderboard link → close modal + jump to #leaderboard.
-    dialog.querySelectorAll('[data-fk-leaderboard]').forEach(a => {
-      a.addEventListener('click', () => {
-        // Trigger the modal's standard close mechanism by emulating a
-        // data-close click (parent script wires data-close to closeModal).
-        const closeBtn = modal.querySelector('[data-close]');
-        if (closeBtn) closeBtn.click();
-      });
-    });
-
-    // Whenever the modal is (re)opened, snap back to the input state.
-    // The shared modal-open dispatch path adds .open on the modal — we
-    // listen via MutationObserver on `class` for resilience.
+    // Reset to intro each time the modal opens — unless user has an
+    // active eligible state, in which case prepareRewardFlow lands
+    // them back on the share card.
     const mo = new MutationObserver(() => {
       if (modal.classList.contains('open')) {
-        showState('input');
+        prepareRewardFlow();
       }
     });
     mo.observe(modal, { attributes: true, attributeFilter: ['class'] });
