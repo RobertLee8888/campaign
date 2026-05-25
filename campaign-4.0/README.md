@@ -1,4 +1,11 @@
-# Campaign 3.0
+# Campaign 4.0
+
+Forked from `campaign-3.0/` at the end of round 46.27 (2026-05-25)
+as a clean starting point for the next iteration. The 3.0 narrative,
+S1 lens shader, mobile parity work, and card-chrome final state all
+carry over verbatim. New 4.0 changes will land on top.
+
+— originally (from 3.0):
 
 Iteration on `campaign-2.0/` after Feedback Round 1 (2026-05-22)
 + Round 2 in-conversation revisions the same day.
