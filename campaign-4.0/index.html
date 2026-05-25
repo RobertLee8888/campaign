@@ -78,14 +78,14 @@
      TOKENS
      ============================================================ */
   :root {
-    --bg:        #f5f5f7;
-    --bg-soft:   #ffffff;
-    --text:      #1a1a1e;
-    --muted:     #6b7280;
-    --muted-2:   #9ca3af;
-    --line:      #e5e5ea;
-    --card:      #0a0a10;
-    --card-line: rgba(255,255,255,0.06);
+    --bg:        #0a0a0e;
+    --bg-soft:   #15151c;
+    --text:      #f5f5f7;
+    --muted:     #a1a1aa;
+    --muted-2:   #71717a;
+    --line:      #2a2a32;
+    --card:      #1c1c24;
+    --card-line: rgba(255,255,255,0.08);
     --alva:      #49A3A6;
     --alva-hi:   #5cb9bc;
     --alva-dim:  rgba(73,163,166,0.18);
@@ -260,14 +260,14 @@
     text-decoration: none;
     white-space: nowrap;
   }
-  .nav-tab i { font-size: 14px; opacity: 0.7; transition: opacity .2s, color .2s; }
+  .nav-tab i { font-size: 13px; color: inherit; transition: color .2s; }
   .nav-tab span { line-height: 1; }
   .nav-tab:hover { color: var(--text); }
-  .nav-tab:hover i { opacity: 1; color: var(--alva); }
-  /* Active state uses color/underline (not weight) — keep w600 to stay
-     in btn-s family. */
+  .nav-tab:hover i { color: inherit; }
+  /* Active state uses color/underline (not weight) — keep w500 to stay
+     in btn-s family. Icon inherits the same color as the text. */
   .nav-tab.active { color: var(--text); }
-  .nav-tab.active i { color: var(--alva); opacity: 1; }
+  .nav-tab.active i { color: inherit; }
   /* The moving indicator — now a thin teal underline that slides along
      the bottom of the tabs row. Width = active tab width, X = active tab
      offset; both already set by the existing scrollspy JS so no JS change
@@ -311,15 +311,15 @@
     padding: 0;
     margin: 0;
     background: transparent;
-    border: 1px solid rgba(10, 10, 16, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 999px;
     color: var(--text);
     cursor: pointer;
     transition: background .15s, border-color .15s;
   }
   .nav-menu-toggle:hover {
-    background: rgba(10, 10, 16, 0.04);
-    border-color: rgba(10, 10, 16, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.18);
   }
   .nav-menu-toggle i {
     position: absolute; inset: 0;
@@ -339,7 +339,7 @@
     position: absolute;
     top: 100%;
     left: 0; right: 0;
-    background: rgba(255, 255, 255, 0.97);
+    background: rgba(21, 21, 28, 0.97);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
             backdrop-filter: blur(18px) saturate(150%);
     border-bottom: 1px solid var(--line);
@@ -408,7 +408,7 @@
   .nav-drawer-action:hover i {
     color: var(--alva);
   }
-  .nav-drawer-item.active { color: var(--text); font-weight: 600; }
+  .nav-drawer-item.active { color: var(--text); font-weight: 500; }
   /* Hairline separator between the section-nav block and the
      account-action block — same idiom as iOS settings list. */
   .nav-drawer-sep {
@@ -422,7 +422,7 @@
     display: inline-flex; align-items: center; gap: 8px;
     padding: 9px 16px;
     border-radius: 999px;
-    background: var(--text);
+    background: var(--alva);
     color: #fff;
     border: 0;
     font-family: var(--font);
@@ -451,7 +451,7 @@
     border-radius: 999px;
     background: transparent;
     color: var(--text);
-    border: 1px solid rgba(10, 10, 16, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.55);
     font-family: var(--font);
     font-size: 13px;
     font-weight: 500;
@@ -491,10 +491,10 @@
        neutral grey, keeping the CSS+WebGL transition continuous. */
     background:
       radial-gradient(ellipse 110% 90% at 50% 50%,
-        #ffffff 0%,
-        #ffffff 55%,
-        #f4f4f6 85%,
-        #ededf0 100%);
+        #0a0a0e 0%,
+        #0a0a0e 55%,
+        #15151c 85%,
+        #1c1c24 100%);
     padding: 96px 32px 80px;
     display: grid;
     place-items: center;
@@ -520,10 +520,10 @@
        behind the heading band so the H1 stays readable. */
     background:
       radial-gradient(ellipse 48% 18% at 50% 50%,
-        rgba(255,255,255,0.78) 0%,
-        rgba(255,255,255,0.5)  45%,
-        rgba(255,255,255,0.18) 75%,
-        rgba(255,255,255,0)    100%);
+        rgba(10,10,14,0.78) 0%,
+        rgba(10,10,14,0.5)  45%,
+        rgba(10,10,14,0.18) 75%,
+        rgba(10,10,14,0)    100%);
   }
   /* (3.0 round 20 — dark vignette removed; replaced by a CRT-style
      warm/amber edge COLOR shift in the WebGL post shader.) */
@@ -537,14 +537,11 @@
     left: 0;
     top: var(--y, 50%);
     padding: 0.85em 1em;
-    background: #fff;
-    /* 3.0 round 46.15 — SOLID light grey (#e5e5ea, the --line token).
-       Replaces the previous translucent rgba(0,0,0,0.05). Reason:
-       an alpha stroke compounds with the GPU bilinear sampler's
-       edge artifact and reads unevenly on different sides; a solid
-       color overwrites the underlying sample, so the hairline is
-       perfectly uniform on every side. */
-    border: 1px solid #e5e5ea;
+    background: var(--bg-soft);
+    /* 4.0 round 8 — border bumped slightly so the card silhouette
+       reads on dark dialogs (results modal) where bg-soft was
+       blending into the modal slab. */
+    border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 12px;
     will-change: transform;
     animation: drift var(--dur, 145s) linear infinite;
@@ -603,7 +600,7 @@
      content the eye should land on (the H1 + subtitle are) */
   .float-tweet .ft-name {
     font-size: 1em;
-    font-weight: 700;
+    font-weight: 500;
     color: #2a2a30;
     line-height: 1.2;
   }
@@ -644,7 +641,7 @@
      reverted per user; H1 is now just solid brand teal). */
   .opening h1 {
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 500;
     font-size: clamp(40px, 4.6vw, 60px);
     line-height: 0.88;
     letter-spacing: -0.02em;
@@ -681,7 +678,7 @@
   .handle-roller {
     display: inline-block;
     position: relative;
-    font-weight: 900;
+    font-weight: 500;
     text-shadow:
       0 0  12px #ffffff,
       0 0  24px #ffffff,
@@ -698,7 +695,7 @@
     display: inline-block;
     margin-left: 3px;
     color: var(--alva);
-    font-weight: 800;
+    font-weight: 500;
     /* same halo as the handle text so the caret never disappears
        behind a tweet card when the slot is empty */
     text-shadow:
@@ -720,15 +717,13 @@
     font-size: clamp(16px, 1.4vw, 19px);
     line-height: 1.5;
     letter-spacing: -0.005em;
-    color: #3a3a44;
+    color: #d4d4dc;
     max-width: 640px;
     margin: 0 auto 36px;
     text-shadow:
-      0 0  12px #ffffff,
-      0 0  26px #ffffff,
-      0 0  50px #ffffff,
-      0 0  85px #ffffff,
-      0 0 130px #ffffff;
+      0 0  12px rgba(10, 10, 14, 0.75),
+      0 0  26px rgba(10, 10, 14, 0.55),
+      0 0  50px rgba(10, 10, 14, 0.35);
   }
   .opening-sub .alva { color: var(--alva); }
   /* inline X.com glyph — single dark mark, no background shape;
@@ -757,18 +752,18 @@
     height: 0.72em;
     vertical-align: -0.06em;
     filter:
-      drop-shadow(0 0 8px #ffffff)
-      drop-shadow(0 0 18px #ffffff)
-      drop-shadow(0 0 32px #ffffff);
+      drop-shadow(0 0 8px rgba(10,10,14,0.75))
+      drop-shadow(0 0 18px rgba(10,10,14,0.55))
+      drop-shadow(0 0 32px rgba(10,10,14,0.35));
   }
   .opening-sub .x-mark {
     /* halo matches the surrounding text-shadow so the X reads as part
        of the line, not a foreign element pasted on top. */
     margin: 0 0.14em;
     filter:
-      drop-shadow(0 0 6px #ffffff)
-      drop-shadow(0 0 12px #ffffff)
-      drop-shadow(0 0 22px #ffffff);
+      drop-shadow(0 0 6px rgba(10,10,14,0.75))
+      drop-shadow(0 0 12px rgba(10,10,14,0.55))
+      drop-shadow(0 0 22px rgba(10,10,14,0.35));
   }
 
   /* scroll cue — circle ring + arrow both shimmer with the same multi-color
@@ -788,12 +783,11 @@
     cursor: pointer;
     isolation: isolate;
     transition: transform .2s;
-    /* halo = pure white, matches the .opening gradient center so the
-       halo disappears into the white center band and cards drifting
-       behind don't bleed into the ring outline. */
+    /* halo — soft dark glow on dark page, just enough to lift the
+       arrow off drifting cards without bleeding white. */
     box-shadow:
-      0 0 24px 10px #ffffff,
-      0 0 48px 20px #ffffff;
+      0 0 24px 10px rgba(10, 10, 14, 0.65),
+      0 0 48px 20px rgba(10, 10, 14, 0.40);
   }
   .opening-arrow:hover { transform: translateY(-2px) scale(1.02); }
 
@@ -828,7 +822,7 @@
     position: absolute;
     inset: 2.5px;
     border-radius: inherit;
-    background: #fff;
+    background: var(--bg-soft);
     z-index: 1;
   }
   /* sweep happens in the first ~22% of the cycle (~1.4s), then holds for
@@ -866,7 +860,7 @@
   }
 
   /* hover: invert — black disc + white arrow, no shimmer */
-  .opening-arrow:hover::after { background: var(--text); }
+  .opening-arrow:hover::after { background: var(--alva); }
   .opening-arrow:hover i {
     background: none;
     -webkit-text-fill-color: #fff;
@@ -1095,7 +1089,7 @@
      text, and disable both decorative pseudo-elements so no shimmer
      remains. */
   .stage-marquee .stage-actions .btn-primary {
-    background: var(--text);
+    background: var(--alva);
     color: #fff;
     box-shadow: 0 8px 20px rgba(10,10,16,0.18);
   }
@@ -1104,7 +1098,7 @@
     display: none;
   }
   .stage-marquee .stage-actions .btn-primary:hover {
-    background: var(--text);
+    background: var(--alva);
     color: #fff;
     transform: translateY(-1px);
     box-shadow: 0 14px 28px rgba(10,10,16,0.26);
@@ -1117,17 +1111,17 @@
      .btn-ghost:hover rule would set color:#fff and erase the text on
      a white pill, that's the regression the user hit. */
   .stage-actions .btn-ghost {
-    background: #fff;
+    background: var(--bg-soft);
     /* 3.0 round 36 — border darkened from rgba(10,10,16,0.10) →
        rgba(10,10,16,0.55) so the outline is clearly visible against
        the mint section wash (user: "第二个黑边明显一点"). */
-    border-color: rgba(10,10,16,0.55);
+    border-color: rgba(255, 255, 255,0.55);
     color: var(--text);
   }
   .stage-actions .btn-ghost:hover {
-    background: #fff;
+    background: var(--bg-soft);
     /* Hover bumps the same darker border closer to full ink. */
-    border-color: rgba(10,10,16,0.80);
+    border-color: rgba(255, 255, 255,0.80);
     color: var(--text);
   }
   /* The headline lives on top of the marquee now — kept this older
@@ -1143,7 +1137,7 @@
      (clamp 20-28) so all three sections share the same heading scale. */
   .stage-marquee .stage-title {
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 500;
     font-size: clamp(28px, 3.2vw, 44px);
     line-height: 1.15;
     letter-spacing: -0.018em;
@@ -1221,12 +1215,11 @@
     /* margin-right replaces flex gap so the duplicate set starts on
        an exact card boundary and -50% loops seamlessly. */
     margin-right: 20px;
-    /* 3.0 round 35 — shadow recolored from neutral grey to alva
-       mint. The previous (10,10,16) cast a dirty grey halo on the
-       mint section bg ("在绿色背景上很脏"). Same darkness ramp, just
-       hue-shifted to the brand teal so the shadow reads as a
-       coherent extension of the section color. */
-    box-shadow: 0 6px 18px rgba(73,163,166,0.18);
+    /* 4.0 — shadow deepened to a saturated dark teal so the cards
+       lift visibly off the brand-green section. */
+    box-shadow:
+      0 10px 28px rgba(8, 40, 40, 0.55),
+      0 2px 6px rgba(8, 40, 40, 0.45);
     cursor: pointer;
     transition: transform .2s cubic-bezier(.22,1,.36,1),
                 box-shadow .2s ease,
@@ -1242,10 +1235,11 @@
   }
   .mq-card:hover {
     transform: translate3d(0, -4px, 0);
-    /* 3.0 round 35 — hover shadow matches the default shadow's mint
-       hue, just deeper. */
-    box-shadow: 0 14px 32px rgba(73,163,166,0.32);
-    border-color: rgba(73,163,166,0.4);
+    /* 4.0 — hover lifts the card with a deeper, darker green halo. */
+    box-shadow:
+      0 18px 40px rgba(6, 36, 36, 0.7),
+      0 4px 10px rgba(6, 36, 36, 0.55);
+    border-color: rgba(73,163,166,0.5);
   }
   .mq-avatar {
     width: 56px; height: 56px;
@@ -1314,6 +1308,149 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .marquee-track { animation: none; }
+  }
+
+  /* ============================================================
+     4.0 — KOL CARD V2 (rich playbook preview)
+     Replaces the simple avatar + ROI cell with a 2-row layout:
+       top : left column (avatar/name/handle + win-rate donut) +
+             right column (3 best calls)
+       bottom : full-width ROI sparkline + footer caption
+     The original .mq-card width / marquee mechanics are preserved
+     by widening the card; the inner DOM is rebuilt by JS at load.
+     ============================================================ */
+  .mq-card {
+    width: 420px;
+    height: 320px;
+    padding: 18px 20px 16px;
+    gap: 0;
+    align-items: stretch;
+    text-align: left;
+    margin-right: 24px;
+    overflow: hidden;
+    position: relative;
+    isolation: isolate;
+  }
+  /* 4.0 round 7 — per-card identity comes from a corner gradient
+     instead of a blurred avatar (matches the fullscreen results-modal
+     card treatment). The dark base + tinted top-left wash gives every
+     card a unique color cue without competing with content. The actual
+     gradient is set inline via JS so each card picks its own hue. */
+  .mq-card .mq-bg,
+  .mq-card .mq-bg-veil { display: none; }
+  .mq-card > .mq-top,
+  .mq-card > .mq-chart,
+  .mq-card > .mq-foot { position: relative; z-index: 1; }
+  .mq-card .mq-top {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    column-gap: 18px;
+    align-items: start;
+    flex: 0 0 auto;
+  }
+  .mq-card .mq-id {
+    display: flex; align-items: center; gap: 10px;
+    min-width: 0;
+  }
+  .mq-card .mq-avatar { width: 40px; height: 40px; }
+  .mq-card .mq-meta { align-items: flex-start; text-align: left; }
+  .mq-card .mq-meta b { max-width: 100%; font-size: 15px; }
+  .mq-card .mq-winrate {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    column-gap: 12px;
+    align-items: center;
+  }
+  .mq-card .mq-winrate .mq-donut {
+    width: 64px; height: 64px;
+    display: block;
+  }
+  .mq-card .mq-winrate-text { line-height: 1.1; }
+  .mq-card .mq-winrate-pct {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--alva);
+    letter-spacing: -0.01em;
+  }
+  .mq-card .mq-winrate-lbl {
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text);
+    margin-top: 2px;
+  }
+  .mq-card .mq-winrate-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+  .mq-card .mq-calls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .mq-card .mq-calls-head {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 2px;
+    text-transform: uppercase;
+  }
+  .mq-card .mq-call {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 8px;
+    padding: 5px 8px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+  }
+  .mq-card .mq-call-tk {
+    font-family: var(--font);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+  .mq-card .mq-call-val {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--gain);
+    letter-spacing: -0.01em;
+  }
+  .mq-card .mq-call-val.gain { color: var(--gain); }
+  .mq-card .mq-call-val.loss { color: var(--loss); }
+  .mq-card .mq-chart {
+    /* 4.0 round 3 — chart anchored just above the footer, tall enough
+       to fill the empty mid-card gap that previous rounds left behind. */
+    margin-top: auto;
+    width: 100%;
+    height: 124px;
+    display: block;
+    position: relative;
+  }
+  .mq-card .mq-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .mq-card .mq-foot {
+    margin-top: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    line-height: 1.2;
+  }
+  .mq-card .mq-foot .mq-foot-r { text-align: right; opacity: 0.7; }
+  @media (max-width: 760px) {
+    .mq-card { width: 320px; height: 280px; padding: 14px 14px 12px; }
+    .mq-card .mq-winrate { grid-template-columns: 52px 1fr; column-gap: 10px; }
+    .mq-card .mq-winrate .mq-donut { width: 52px; height: 52px; }
+    .mq-card .mq-winrate-pct { font-size: 22px; }
+    .mq-card .mq-call-val { font-size: 12px; }
   }
 
   /* ============================================================
@@ -1406,7 +1543,7 @@
     align-items: baseline;
     font-family: var(--font-display);
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 500;
     color: #fff;
     letter-spacing: -0.005em;
     height: 16px;
@@ -1515,7 +1652,7 @@
      within the left column. */
   h1.hero-title {
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 500;
     font-size: clamp(26px, 3.2vw, 38px);
     line-height: 1.18;
     letter-spacing: -0.02em;
@@ -1527,7 +1664,7 @@
     font-size: 17px; line-height: 1.6;
     max-width: 560px; margin: 0 0 28px;
   }
-  .hero-sub b { color: var(--text); font-weight: 700; }
+  .hero-sub b { color: var(--text); font-weight: 500; }
   .hero-actions {
     display: flex; align-items: center; gap: 22px;
     flex-wrap: wrap;
@@ -1646,7 +1783,7 @@
     width: 100%; aspect-ratio: 4 / 2.7;
     container-type: inline-size;
     border-radius: 8px;
-    background: #fff;
+    background: var(--bg-soft);
     border: 1px solid var(--line);
     position: relative;
     overflow: hidden;
@@ -1658,11 +1795,11 @@
   }
   /* per-card colored wash — pulled down to 12–16% opacity since the
      base is now white instead of near-black */
-  .card.c-1 { background: linear-gradient(135deg, rgba(73,163,166,0.16),  rgba(255,255,255,0) 60%), #fff; }
-  .card.c-2 { background: linear-gradient(135deg, rgba(179,136,255,0.14), rgba(255,255,255,0) 60%), #fff; }
-  .card.c-3 { background: linear-gradient(135deg, rgba(255,138,76,0.14),  rgba(255,255,255,0) 60%), #fff; }
-  .card.c-4 { background: linear-gradient(135deg, rgba(244,114,182,0.14), rgba(255,255,255,0) 60%), #fff; }
-  .card.c-5 { background: linear-gradient(135deg, rgba(96,165,250,0.14),  rgba(255,255,255,0) 60%), #fff; }
+  .card.c-1 { background: linear-gradient(135deg, rgba(73,163,166,0.16),  rgba(255,255,255,0) 60%), var(--bg-soft); }
+  .card.c-2 { background: linear-gradient(135deg, rgba(179,136,255,0.14), rgba(255,255,255,0) 60%), var(--bg-soft); }
+  .card.c-3 { background: linear-gradient(135deg, rgba(255,138,76,0.14),  rgba(255,255,255,0) 60%), var(--bg-soft); }
+  .card.c-4 { background: linear-gradient(135deg, rgba(244,114,182,0.14), rgba(255,255,255,0) 60%), var(--bg-soft); }
+  .card.c-5 { background: linear-gradient(135deg, rgba(96,165,250,0.14),  rgba(255,255,255,0) 60%), var(--bg-soft); }
   .card:hover {
     transform: scale(1.05);
     box-shadow:
@@ -1708,7 +1845,7 @@
   }
   .pc-name {
     font-family: var(--font-display);
-    font-weight: 700; font-size: 1.21em;
+    font-weight: 500; font-size: 1.21em;
     color: var(--text); line-height: 1.1;
   }
   .pc-handle {
@@ -1733,7 +1870,7 @@
   }
   .pc-score .val {
     font-family: var(--font-display);
-    font-size: 4.57em; font-weight: 900;
+    font-size: 4.57em; font-weight: 500;
     line-height: 1;
     letter-spacing: -0.04em;
     color: var(--alva);
@@ -1742,7 +1879,7 @@
   }
   .pc-score .type {
     font-family: var(--font-mono);
-    font-size: 0.79em; font-weight: 700;
+    font-size: 0.79em; font-weight: 500;
     color: var(--alva);
     letter-spacing: 0.04em;
     margin-top: 0.57em;
@@ -1782,7 +1919,7 @@
   }
   .pc-rank .ring-text .v {
     font-family: var(--font-display);
-    font-size: 1em; font-weight: 700;
+    font-size: 1em; font-weight: 500;
     color: var(--text);
   }
 
@@ -1799,7 +1936,7 @@
     gap: 24px; text-align: center;
   }
   .stats-strip .stat .v {
-    font-weight: 900;
+    font-weight: 500;
     font-size: 40px;
     line-height: 1;
     letter-spacing: -0.02em;
@@ -1807,7 +1944,7 @@
     margin-bottom: 8px;
   }
   .stats-strip .stat .l {
-    font-size: 12px; font-weight: 700;
+    font-size: 12px; font-weight: 500;
     color: var(--muted);
     letter-spacing: 0.06em;
   }
@@ -1848,7 +1985,7 @@
     gap: 8px;
     padding: 14px 26px;
     border-radius: 999px;
-    background: var(--text);
+    background: var(--alva);
     color: #fff;
     border: 0;
     /* TS token: btn */
@@ -1880,7 +2017,7 @@
      Use Cases, Leaderboard, and any future sections all cascade here. */
   .section-head h2 {
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 500;
     font-size: clamp(28px, 3.2vw, 44px);
     line-height: 1.15;
     letter-spacing: -0.018em;
@@ -2094,7 +2231,7 @@
     margin-top: 0;
     padding: 14px 26px;
     border-radius: 999px;
-    background: var(--text);
+    background: var(--alva);
     color: #fff;
     /* TS token: btn */
     font-family: var(--font);
@@ -2116,7 +2253,7 @@
   }
   .playbook-text h2 {
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 500;
     font-size: clamp(30px, 4.0vw, 56px);
     line-height: 1.06;
     letter-spacing: -0.025em;
@@ -2219,7 +2356,7 @@
     margin: 0;
     font-family: var(--font-display);
     font-size: 22px;
-    font-weight: 800;
+    font-weight: 500;
     letter-spacing: -0.01em;
     line-height: 1.18;
   }
@@ -2295,7 +2432,7 @@
     margin: 0;
     font-family: var(--font-display);
     font-size: 22px;
-    font-weight: 800;
+    font-weight: 500;
     letter-spacing: -0.015em;
     color: var(--text);
     line-height: 1.18;
@@ -2377,7 +2514,7 @@
   }
   .lb-intro-live b {
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 500;
     font-size: 14px;
     color: #fff;
   }
@@ -2418,7 +2555,7 @@
   }
   .scan-head h2 {
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 500;
     font-size: clamp(26px, 3.0vw, 36px);
     line-height: 1.12;
     letter-spacing: -0.02em;
@@ -2452,7 +2589,7 @@
   .scan-steps .step-num {
     font-family: var(--font-mono);
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 500;
     color: var(--alva);
     letter-spacing: 0.04em;
     flex-shrink: 0;
@@ -2463,7 +2600,7 @@
     margin: 0 0 6px;
     font-family: var(--font);
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 500;
     color: var(--text);
     line-height: 1.35;
     letter-spacing: -0.005em;
@@ -2510,7 +2647,7 @@
     transition: background .15s, border-color .15s, color .15s, transform .18s;
   }
   .btn-ghost:hover {
-    background: var(--text);
+    background: var(--alva);
     color: #fff;
     border-color: var(--text);
     transform: translateY(-1px);
@@ -2540,7 +2677,9 @@
   }
   .lb-sub .alva {
     color: var(--alva);
-    font-weight: 500;
+    /* 4.0 — keep the same regular weight as the surrounding text;
+       the alva color alone carries the accent, no weight bump. */
+    font-weight: inherit;
   }
 
   /* features grid (reused for sub-cards) */
@@ -2552,7 +2691,7 @@
   .feat {
     padding: 32px;
     border-radius: 6px;
-    background: #fff;
+    background: var(--bg-soft);
     border: 1px solid var(--line);
     transition: box-shadow .25s ease;
   }
@@ -2568,10 +2707,10 @@
     margin-bottom: 24px;
     transition: background .25s, color .25s;
   }
-  .section.alt .feat .ic { background: #fff; }
+  .section.alt .feat .ic { background: var(--bg-soft); }
   .feat:hover .ic { background: rgba(73,163,166,0.10); color: var(--alva); }
   .feat h3 {
-    font-size: 18px; font-weight: 700;
+    font-size: 18px; font-weight: 500;
     margin: 0 0 12px;
     color: var(--text);
   }
@@ -2579,7 +2718,7 @@
   .feat .tags { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 4px; }
   .feat .tag-pill {
     font-family: var(--font-mono);
-    font-size: 10px; font-weight: 700;
+    font-size: 10px; font-weight: 500;
     padding: 4px 8px;
     border-radius: 4px;
     background: rgba(73,163,166,0.10);
@@ -2648,16 +2787,16 @@
     display: inline-flex; align-items: center; gap: 8px;
     padding: 6px 12px 6px 6px;
     border-radius: 999px;
-    background: #fff;
+    background: var(--bg-soft);
     border: 1px solid var(--line);
     font-size: 12px;
   }
   .audit-preview .chip img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
-  .audit-preview .chip b { font-weight: 700; }
+  .audit-preview .chip b { font-weight: 500; }
   .audit-preview .chip span {
     font-family: var(--font-mono);
     color: var(--alva);
-    font-weight: 700;
+    font-weight: 500;
   }
   .audit-preview .chip.miss span { color: var(--loss); }
 
@@ -2665,7 +2804,7 @@
      LEADERBOARD (compact preview — full table on alva.ai)
      ============================================================ */
   .lb-card {
-    background: #fff;
+    background: var(--bg-soft);
     border: 1px solid var(--line);
     border-radius: 8px;
     overflow: hidden;
@@ -2690,10 +2829,14 @@
     cursor: pointer;
     transition: all .15s;
   }
-  .sort-tab:hover:not(.active) { background: rgba(0,0,0,0.04); color: var(--text); }
+  .sort-tab:hover:not(.active) { background: rgba(255,255,255,0.06); color: var(--text); }
+  /* 4.0 — active sort tab uses an alva outline + alva ink instead of a
+     filled pill; reads as a focused option without competing with the
+     aurora behind. */
   .sort-tab.active {
-    background: var(--text); color: #fff;
-    border-color: var(--text);
+    background: transparent;
+    color: var(--alva);
+    border-color: var(--alva);
   }
   /* TS token: tag */
   .lb-meta {
@@ -2848,17 +2991,17 @@
     z-index: 0;
     pointer-events: none;
     background:
-      radial-gradient(280px 200px at 38% 14%, rgba(255,158,200,0.22) 0%, transparent 70%),
-      radial-gradient(280px 200px at 62% 14%, rgba(212,178,255,0.22) 0%, transparent 70%),
-      radial-gradient(360px 260px at 22% 36%, rgba(255,196,158,0.32) 0%, transparent 70%),
-      radial-gradient(360px 260px at 78% 36%, rgba(160,200,255,0.32) 0%, transparent 70%),
-      radial-gradient(440px 320px at  8% 58%, rgba(170,240,220,0.45) 0%, transparent 70%),
-      radial-gradient(440px 320px at 92% 58%, rgba(255,158,200,0.45) 0%, transparent 70%),
-      radial-gradient(540px 380px at -2% 80%, rgba(212,178,255,0.55) 0%, transparent 70%),
-      radial-gradient(540px 380px at 102% 80%, rgba(255,226,170,0.55) 0%, transparent 70%),
-      radial-gradient(680px 460px at -8% 105%, rgba(255,196,158,0.60) 0%, transparent 72%),
-      radial-gradient(680px 460px at 108% 105%, rgba(170,240,220,0.60) 0%, transparent 72%),
-      radial-gradient(600px 420px at 50% 112%, rgba(160,200,255,0.55) 0%, transparent 72%);
+      radial-gradient(280px 200px at 38% 14%, rgba(255,158,200,0.08) 0%, transparent 70%),
+      radial-gradient(280px 200px at 62% 14%, rgba(212,178,255,0.08) 0%, transparent 70%),
+      radial-gradient(360px 260px at 22% 36%, rgba(255,196,158,0.11) 0%, transparent 70%),
+      radial-gradient(360px 260px at 78% 36%, rgba(160,200,255,0.11) 0%, transparent 70%),
+      radial-gradient(440px 320px at  8% 58%, rgba(170,240,220,0.16) 0%, transparent 70%),
+      radial-gradient(440px 320px at 92% 58%, rgba(255,158,200,0.16) 0%, transparent 70%),
+      radial-gradient(540px 380px at -2% 80%, rgba(212,178,255,0.20) 0%, transparent 70%),
+      radial-gradient(540px 380px at 102% 80%, rgba(255,226,170,0.20) 0%, transparent 70%),
+      radial-gradient(680px 460px at -8% 105%, rgba(255,196,158,0.22) 0%, transparent 72%),
+      radial-gradient(680px 460px at 108% 105%, rgba(170,240,220,0.22) 0%, transparent 72%),
+      radial-gradient(600px 420px at 50% 112%, rgba(160,200,255,0.20) 0%, transparent 72%);
     filter: blur(30px) hue-rotate(0deg);
     animation: lbHueRotate 18s linear infinite;
     will-change: filter;
@@ -2902,6 +3045,10 @@
   #leaderboard .lb-card {
     width: 100%;
     position: relative; z-index: 1;
+    /* 4.0 — nudged a few pixels past the section's bottom so the table
+       gets clipped by the section's overflow:hidden, reading as
+       "more rows scroll below" instead of a clean stop. */
+    transform: translateY(8px);
   }
   /* Wide table — show every column at desktop widths. Larger row
      padding for legibility now that the table is the page's hero
@@ -2997,8 +3144,8 @@
     display: inline-flex; align-items: center; justify-content: center; gap: 4px;
     padding: 7px 12px;
     border-radius: 999px;
-    background: var(--text); color: #fff;
-    font-size: 11px; font-weight: 700;
+    background: var(--alva); color: #fff;
+    font-size: 11px; font-weight: 500;
   }
   /* (previous fade-out treatment removed — leaderboard now shows a clean
      5-row table with explicit header and bordered card) */
@@ -3026,7 +3173,7 @@
     align-items: stretch;
     gap: 0;
     padding: 6px;
-    background: #fff;
+    background: var(--bg-soft);
     border: 1px solid var(--line);
     border-radius: 999px;
     box-shadow: 0 14px 36px rgba(10,10,16,0.08);
@@ -3086,12 +3233,12 @@
     align-items: center;
     gap: 8px;
     padding: 6px 14px 6px 6px;
-    background: #fff;
+    background: var(--bg-soft);
     border: 1px solid var(--line);
     border-radius: 999px;
     font-family: var(--font-mono);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 500;
     color: var(--text);
     cursor: pointer;
     box-shadow: 0 0 0 rgba(0,0,0,0);
@@ -3230,24 +3377,25 @@
   .agents-side {
     display: flex;
     flex-direction: column;
-    /* 3.0 round 17 — content vertically centered in the side rail
-       so heading + tabs sit as a single block, equal top/bottom
-       breathing room (instead of glued to the top). */
-    justify-content: center;
+    /* 4.0 — first tab aligns with the right card's top edge. JS sets
+       --side-shift (can be negative) so the tab list starts exactly
+       where the active card starts; the heading floats above. */
+    justify-content: flex-start;
     height: 100%;
     min-height: 0;
+    transform: translateY(var(--side-shift, 0px));
   }
   .agents-head {
-    /* 3.0 round 17 — gap to tabs grown 32 → 56 so the tabs feel
-       like a distinct group, not an extension of the subtitle. */
-    margin-bottom: 56px;
+    /* 4.0 — gap retuned (was 12, too tight) → 28; still much tighter
+       than the 3.0 default of 56. */
+    margin-bottom: 28px;
     flex-shrink: 0;
   }
   /* TS token: display-l — canonical for all section H2s (S2/S3/S4) */
   .agents-head h2 {
     margin: 0 0 18px;
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 500;
     font-size: clamp(28px, 3.2vw, 44px);
     line-height: 1.15;
     letter-spacing: -0.018em;
@@ -3300,14 +3448,14 @@
     display: flex;
     flex-direction: column;
     gap: 0;
-    background: rgba(10, 10, 16, 0.04);
+    background: rgba(255, 255, 255, 0.04);
     border: 0;
     border-radius: 14px;
     padding: 14px 22px;
     transition: background .2s;
   }
   .agents-tab-item:hover {
-    background: rgba(10, 10, 16, 0.07);
+    background: rgba(255, 255, 255, 0.07);
   }
   .agents-tab-v {
     position: relative;
@@ -3331,7 +3479,7 @@
      comes from the EXPANDED detail block beneath the title. */
   .agents-tab-item.active .agents-tab-v {
     color: var(--alva);
-    font-weight: 600;
+    font-weight: 500;
   }
   /* 3.0 round 24 — active card: brand-teal tint only, no shadow.
      User flagged shadow as unwanted; the bg-color difference between
@@ -3376,7 +3524,7 @@
     align-self: flex-start;
     padding: 12px 24px;
     border-radius: 999px;
-    background: var(--text);
+    background: var(--alva);
     color: #fff;
     text-decoration: none;
     font-family: var(--font);
@@ -3407,9 +3555,16 @@
     /* Track is taller than stage; JS sets translateY in PIXELS to
        center the active card within stage (so card[0] starts
        vertically centered, not flush with top). */
-    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    /* 4.0 round 5 — transition removed. The earlier 0.5s easing
+       stuttered with fast scrolls because each idx step restarted
+       the animation. The track now follows scroll continuously
+       (set per-frame from JS) and the document's own smooth-scroll
+       handles snap. */
     will-change: transform;
   }
+  /* Restore an eased motion only during programmatic snap so the
+     "after 1s idle → align to nearest tab" animation reads soft. */
+  .agents-track.snapping { transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
   .agents-card {
     flex: 0 0 auto;
     /* 3.0 round 24 — card proportionally scaled up. max-width 620 →
@@ -3529,7 +3684,7 @@
        across all items (no active-state teal tint). */
     .agents-tab-v {
       font-size: 22px;
-      font-weight: 600;
+      font-weight: 500;
       line-height: 1.25;
       color: var(--text);
       padding: 0 18px;
@@ -3630,7 +3785,7 @@
     /* "名字可以大一点" — per the reference image, name is meaningful
        sized, above the bubble. Avatar tops align with this name. */
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 500;
     font-size: 15px;
     color: var(--muted);
     line-height: 1.2;
@@ -3641,7 +3796,7 @@
   .bubble-card .bc-bubble {
     /* Pure white so the bubble pops off the grey section bg
        — was a near-white tinted color that blended in. */
-    background: #fff;
+    background: var(--bg-soft);
     color: var(--text);
     padding: 12px 16px;
     border-radius: 8px;
@@ -3652,7 +3807,7 @@
     font-size: 14px;
     line-height: 1.45;
     box-shadow: 0 14px 36px rgba(10,10,16,0.12), 0 2px 6px rgba(10,10,16,0.06);
-    border: 1px solid rgba(10,10,16,0.04);
+    border: 1px solid rgba(255, 255, 255,0.04);
   }
   @keyframes bubblePop {
     /* Spring in (0 → 4%), hold visible for most of the cycle
@@ -3693,7 +3848,7 @@
   }
   .closing h2 {
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 500;
     font-size: clamp(36px, 4.6vw, 60px);
     line-height: 1.05;
     letter-spacing: -0.025em;
@@ -3722,7 +3877,7 @@
   .closing-path .tag-pill {
     display: inline-flex; align-items: center; gap: 6px;
     font-family: var(--font-mono);
-    font-size: 10px; font-weight: 700;
+    font-size: 10px; font-weight: 500;
     color: var(--alva-hi);
     letter-spacing: 0.06em;
     padding: 5px 10px;
@@ -3732,7 +3887,7 @@
   .closing-path h3 {
     margin: 18px 0 0;
     font-family: var(--font-display);
-    font-size: 24px; font-weight: 700;
+    font-size: 24px; font-weight: 500;
     line-height: 1.1;
     color: #fff;
   }
@@ -3750,7 +3905,7 @@
     display: inline-flex; align-items: center; gap: 8px;
     padding: 12px 22px;
     border-radius: 8px;
-    background: #fff; color: var(--text);
+    background: var(--bg-soft); color: var(--text);
     border: 0;
     font-family: var(--font);
     font-size: 14px;
@@ -3818,7 +3973,7 @@
   }
   .section-do .section-head h2 {
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 500;
     font-size: clamp(28px, 3.4vw, 46px);
     line-height: 1.08;
     letter-spacing: -0.025em;
@@ -3876,14 +4031,14 @@
   .do-tag {
     font-family: var(--font-mono);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 500;
     letter-spacing: 0.06em;
     color: var(--muted);
     }
   .do-card h3 {
     font-family: var(--font-display);
     font-size: 24px;
-    font-weight: 800;
+    font-weight: 500;
     line-height: 1.18;
     letter-spacing: -0.015em;
     margin: 0 0 10px;
@@ -3961,7 +4116,7 @@
     font-size: 14px;
     line-height: 1.5;
   }
-  .do-success strong { color: var(--alva); font-weight: 700; }
+  .do-success strong { color: var(--alva); font-weight: 500; }
   .do-card[data-state="sent"] .do-success { display: block; }
 
   /* Full-width WHITE band wrapping the card — alternates with the grey
@@ -4068,7 +4223,7 @@
   .bcard-form button {
     height: 44px;
     padding: 0 22px;
-    background: #fff;
+    background: var(--bg-soft);
     color: var(--card);
     border: 0;
     border-radius: 999px;
@@ -4096,8 +4251,8 @@
      the form ONLY when nested in a .dialog so the dark-card variant
      stays untouched. */
   .dialog .bcard-form input {
-    background: rgba(10,10,16,0.04);
-    border-color: rgba(10,10,16,0.10);
+    background: rgba(255, 255, 255,0.04);
+    border-color: rgba(255, 255, 255,0.10);
     color: var(--text);
   }
   .dialog .bcard-form input::placeholder { color: rgba(10,10,16,0.40); }
@@ -4131,8 +4286,8 @@
     box-shadow: 0 18px 40px rgba(73,163,166,0.40);
   }
   .dialog .bcard-form textarea {
-    background: rgba(10,10,16,0.04) !important;
-    border-color: rgba(10,10,16,0.10) !important;
+    background: rgba(255, 255, 255,0.04) !important;
+    border-color: rgba(255, 255, 255,0.10) !important;
     color: var(--text) !important;
   }
 
@@ -4141,12 +4296,9 @@
      ============================================================ */
   footer.f {
     padding: 28px 32px;
-    /* 3.0 round 28 — footer follows S4 which is back to the light
-       mint wash. We use just the SOLID base (no radial blobs) so the
-       footer reads as a quiet outro rather than its own ambient slab.
-       Text color reverts to var(--muted) for the dark-on-light
-       palette. */
-    background: rgba(73,163,166,0.08);
+    /* 4.0 — footer is a solid black slab; quiet outro under the
+       leaderboard's aurora. */
+    background: #000000;
     color: var(--muted);
   }
   /* TS token: caption (footer body) */
@@ -4226,7 +4378,7 @@
   .cant-find-headline {
     margin: 0;
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 500;
     font-size: clamp(24px, 2.6vw, 32px);
     line-height: 1.25;
     letter-spacing: -0.018em;
@@ -4289,7 +4441,7 @@
     font-size: 14px;
     line-height: 1.55;
   }
-  .search-success strong { color: var(--alva); font-weight: 700; }
+  .search-success strong { color: var(--alva); font-weight: 500; }
   #modal-search[data-state="sent"] .search-form,
   #modal-search[data-state="sent"] .search-foot { display: none; }
   #modal-search[data-state="sent"] .search-success { display: block; }
@@ -4312,10 +4464,10 @@
     gap: 10px;
     align-items: center;
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(21, 21, 28, 0.94);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
             backdrop-filter: blur(14px) saturate(140%);
-    border-top: 1px solid rgba(10, 10, 16, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     transform: translateY(110%);
     transition: transform .28s cubic-bezier(.22, 1, .36, 1);
   }
@@ -4326,11 +4478,11 @@
     gap: 8px;
     height: 48px;                              /* Apple HIG floor, with margin */
     padding: 0 22px;
-    background: var(--text);
+    background: var(--alva);
     color: #fff;
     border: 0; border-radius: 999px;
     font-family: var(--font-display);
-    font-size: 14px; font-weight: 700;
+    font-size: 14px; font-weight: 500;
     line-height: 1;
     cursor: pointer;
     transition: background .15s, transform .15s, box-shadow .15s;
@@ -4341,14 +4493,14 @@
   .sc-close {
     width: 44px; height: 44px;
     background: transparent;
-    border: 1px solid rgba(10, 10, 16, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 50%;
     color: var(--muted);
     cursor: pointer;
     display: grid; place-items: center;
     transition: color .15s, border-color .15s;
   }
-  .sc-close:hover { color: var(--text); border-color: rgba(10, 10, 16, 0.24); }
+  .sc-close:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.24); }
   .sc-close i { font-size: 16px; }
 
   /* ============================================================
@@ -4367,7 +4519,7 @@
     display: inline-flex;
     align-items: center;
     padding: 12px 18px;
-    background: rgba(255,255,255,0.94);
+    background: rgba(21, 21, 28, 0.94);
     border: 1px solid var(--line);
     border-radius: 12px;
     box-shadow: 0 10px 28px rgba(10,10,16,0.08);
@@ -4398,7 +4550,7 @@
     line-height: 1;
   }
   .alva-badge-line1 b {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text);
     letter-spacing: -0.005em;
   }
@@ -4427,7 +4579,7 @@
     display: none;
     align-items: center; justify-content: center;
     padding: 24px;
-    background: rgba(10,10,16,0.5);
+    background: rgba(0, 0, 0, 0.65);
     backdrop-filter: blur(8px);
   }
   .modal.open { display: flex; }
@@ -4442,7 +4594,7 @@
     max-height: 86vh;
     overflow: auto;
     border-radius: 10px;
-    background: #fff;
+    background: var(--bg-soft);
     padding: 32px;
     box-shadow: 0 30px 80px rgba(0,0,0,0.3);
   }
@@ -4487,10 +4639,22 @@
     z-index: 5;
     width: 36px; height: 36px;
     border: 0; border-radius: 8px;
-    background: var(--bg);
+    /* 4.0 — close button needs to read on top of dark dialogs; use a
+       semi-transparent white chip + explicit icon color rather than the
+       page bg (which was rendering invisible on .modal/.dialog now that
+       the whole palette is dark). */
+    background: rgba(255, 255, 255, 0.10);
+    color: var(--text);
     cursor: pointer;
     display: grid; place-items: center;
+    transition: background .15s, color .15s, transform .15s;
   }
+  .close:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    transform: scale(1.04);
+  }
+  .close i { color: inherit; font-size: 16px; }
   /* methodology modal — single flat list, no per-step cards or color chips */
   .dialog .steps {
     margin-top: 24px;
@@ -4520,7 +4684,7 @@
     line-height: 1.55;
     color: var(--text);
   }
-  .step .desc b { color: var(--text); font-weight: 700; }
+  .step .desc b { color: var(--text); font-weight: 500; }
 
   /* ============================================================
      FOR-KOLs MODAL — 3 steps laid out as horizontal cards
@@ -4549,7 +4713,7 @@
   .fk-headline {
     margin: 0;
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 500;
     font-size: clamp(26px, 2.8vw, 36px);
     line-height: 1.18;
     letter-spacing: -0.018em;
@@ -4597,7 +4761,7 @@
   }
   .fk-result-body strong {
     color: var(--text);
-    font-weight: 600;
+    font-weight: 500;
   }
   .fk-actions {
     margin-top: 4px;
@@ -4667,7 +4831,7 @@
     font-size: 14px;
     line-height: 1.55;
   }
-  .notice b { color: var(--text); font-weight: 700; }
+  .notice b { color: var(--text); font-weight: 500; }
   .dialog-actions { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
   /* TS token: btn — inherits font from .btn-primary */
   .dialog-actions .btn-primary { padding: 12px 22px; border-radius: 999px; }
@@ -4705,7 +4869,7 @@
     max-height: 86vh;
     overflow: auto;
     border-radius: 10px;
-    background: #fff;
+    background: var(--bg-soft);
     padding: 44px 36px 36px;
     box-shadow: 0 30px 80px rgba(0,0,0,0.3);
     text-align: center;
@@ -4737,7 +4901,7 @@
   .connect-x-mark {
     width: 72px; height: 72px;
     display: grid; place-items: center;
-    background: var(--text);
+    background: var(--alva);
     color: #fff;
     border-radius: 8px;
     margin-bottom: 28px;
@@ -4805,7 +4969,7 @@
     width: 100%;
     max-width: 320px;
     height: 4px;
-    background: rgba(10,10,16,0.08);
+    background: rgba(255, 255, 255,0.08);
     border-radius: 999px;
     overflow: hidden;
   }
@@ -4874,7 +5038,7 @@
     line-height: 1.5;
   }
   .results-privacy i { color: var(--alva); font-size: 16px; flex-shrink: 0; }
-  .results-privacy b { font-weight: 700; color: var(--text); }
+  .results-privacy b { font-weight: 500; color: var(--text); }
 
   /* TS token: lead — results modal lead paragraph */
   .dialog-full .dialog-lead {
@@ -4907,10 +5071,19 @@
     max-width: 1320px;
     margin: 48px auto 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 16px;
+    /* 4.0 — widened track so the new rich-playbook cards fit (avatar +
+       win-rate donut + best calls + sparkline + footer). 3 columns at
+       desktop max-width, gracefully collapses to 2/1 on smaller screens. */
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 20px;
     perspective: 1200px;
     perspective-origin: 50% 0%;
+  }
+  /* When a results card is upgraded to the mq-card rich layout, drop the
+     marquee-only width / margin so it fills its grid cell cleanly. */
+  .results-grid .card.mq-card {
+    width: 100%;
+    margin-right: 0;
   }
   /* Inline request — same bcard treatment as the homepage closer, but
      visually de-emphasised in this context (smaller, narrower, pushed
@@ -4933,7 +5106,7 @@
 
   @media (max-width: 760px) {
     .dialog-full { padding: 36px 18px 40px; }
-    .results-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 32px; }
+    .results-grid { grid-template-columns: 1fr; gap: 14px; margin-top: 32px; }
     .results-request { margin-top: 64px; }
     .results-request .bcard { padding: 24px 20px; }
     .results-privacy { padding: 10px 14px; font-size: 12px; }
@@ -4975,8 +5148,8 @@
     animation: modalBackdropIn .3s ease-out both;
   }
   @keyframes modalBackdropIn {
-    0%   { background-color: rgba(10,10,16,0); }
-    100% { background-color: rgba(10,10,16,0.5); }
+    0%   { background-color: rgba(255, 255, 255,0); }
+    100% { background-color: rgba(255, 255, 255,0.5); }
   }
 
   /* (2) The white dialog panel fades in — opacity only, NO scale.
@@ -5088,7 +5261,7 @@
   #modal-card-detail.modal {
     /* Solid dim — no backdrop-filter blur. Fullscreen blur was the
        expensive op behind the click jank. */
-    background: rgba(10,10,16,0.62);
+    background: rgba(255, 255, 255,0.62);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     padding: 0;
@@ -5116,7 +5289,7 @@
     height: 44px;
     border: 0;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.96);
+    background: rgba(21, 21, 28, 0.96);
     -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
     box-shadow: 0 6px 18px rgba(10, 10, 16, 0.32);
@@ -5124,7 +5297,7 @@
     place-items: center;                     /* takes effect when display:grid */
     transition: background .15s, transform .15s;
   }
-  .cd-close:hover { background: #fff; }
+  .cd-close:hover { background: var(--bg-soft); }
   .cd-close:active { transform: scale(0.94); }
   .cd-close i { font-size: 18px; color: var(--text); }
   .cd-anchor {
@@ -5239,7 +5412,7 @@
     align-items: center;
     gap: 10px;
     padding: 13px 22px;
-    background: var(--text);             /* black */
+    background: var(--alva);             /* black */
     border: 0;
     border-radius: 999px;                /* pill */
     box-shadow: 0 14px 28px rgba(10,10,16,0.30);
@@ -5275,7 +5448,7 @@
     align-items: center;
     gap: 16px;
     padding: 22px 26px;
-    background: #fff;
+    background: var(--bg-soft);
     /* Inherit a CSS var set by openCardLightbox so the corners match
        the source card type (10px for .card, 28px for .mq-card). */
     border-radius: var(--cd-radius, 10px);
@@ -5302,7 +5475,7 @@
     100% { opacity: 1; transform: scale(1);   }
   }
   .cd-more:hover {
-    background: var(--text);
+    background: var(--alva);
     color: #fff;
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 26px 56px rgba(10,10,16,0.32);
@@ -5328,14 +5501,14 @@
   .cd-more-name {
     font-family: var(--font-display);
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 500;
     line-height: 1.2;
     letter-spacing: -0.005em;
     color: inherit;
   }
   .cd-more-name b {
     color: var(--alva);
-    font-weight: 700;
+    font-weight: 500;
   }
   .cd-more:hover .cd-more-name b { color: var(--alva-hi); }
   .cd-more-arrow {
@@ -5365,7 +5538,7 @@
       align-items: stretch;
       justify-content: stretch;
       padding: 0;
-      background: rgba(10, 10, 16, 0.82);
+      background: rgba(21, 21, 28, 0.82);
     }
     .cd-close {
       display: grid;                           /* place-items already on base */
@@ -5553,7 +5726,7 @@
       content: '';
       position: absolute;
       inset: -32px -20px;
-      background: radial-gradient(ellipse 70% 55% at center, #fff 30%, transparent 75%);
+      background: radial-gradient(ellipse 70% 55% at center, var(--bg-soft) 30%, transparent 75%);
       z-index: -1;
       pointer-events: none;
     }
@@ -5931,11 +6104,11 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: rgba(10, 10, 16, 0.22);
+      background: rgba(255, 255, 255, 0.22);
       transition: background .2s, transform .2s;
     }
     .play-dots .dot.active {
-      background: var(--text);
+      background: var(--alva);
       transform: scale(1.25);
     }
 
@@ -6103,6 +6276,138 @@
     .stage-marquee .marquee-track > .mq-card { margin-right: 0 !important; width: 100% !important; }
     .stage-marquee .marquee-track > .mq-card[aria-hidden="true"] { display: none !important; }
   }
+
+  /* ============================================================
+     campaign-4.0 dark-mode section accents
+     ============================================================ */
+  /* Section 2 — KOL marquee on brand green */
+  .stage.stage-marquee { background: var(--alva); }
+  .stage.stage-marquee .alva { color: #ffffff; }
+  .stage-marquee .stage-headline-overlay,
+  .stage-marquee .stage-title,
+  .stage-marquee .stage-title-sub { color: #ffffff; }
+  /* CTAs sitting on the green field — invert to white pill + alva ink */
+  .stage-marquee .btn-primary {
+    background: #ffffff;
+    color: var(--alva);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  }
+  .stage-marquee .btn-primary:hover {
+    background: #f5f5f7;
+    box-shadow: 0 22px 44px rgba(0, 0, 0, 0.28);
+  }
+  .stage-marquee .btn-ghost {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.55);
+  }
+  .stage-marquee .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+
+  /* Section 3 — use-cases on a distinct dark-gray slab, with a
+     full-bleed Silk shader behind the pinned content (reactbits.dev). */
+  #agents.agents-pin-section { background: #16161c; }
+  /* Silk canvas — lives inside .agents-pin (the 100vh sticky child)
+     so it fills the viewport-sized pin and never bloats the section. */
+  .agents-pin { position: sticky; }
+  .agents-silk {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+    /* multiply onto dark slab so pattern reads without ever lifting
+       above the section's value; opacity kept moderate so silk feels
+       ambient, not loud. */
+    mix-blend-mode: screen;
+    opacity: 0.85;
+  }
+  /* Lift the actual content above the canvas. */
+  #agents .agents-pin-inner { position: relative; z-index: 1; }
+
+  /* ============================================================
+     4.0 — reactbits shader backdrops (Aurora · Iridescence · Burst)
+     ============================================================ */
+
+  /* Hero · prismatic-burst behind everything else in .opening */
+  .opening-burst {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+    mix-blend-mode: screen;
+    opacity: 0.7;
+  }
+  /* Hero H1 — iridescence via pure CSS gradient animation. Replaces
+     the earlier WebGL+toDataURL pipeline that caused choppy color
+     flow + significant CPU cost. GPU-accelerated, runs at native
+     refresh rate, zero JS overhead. */
+  .opening-content h1 { position: relative; z-index: 6; }
+  /* legacy canvas (kept off-DOM): no longer rendered, kept harmless. */
+  .opening-h1-iridescence { display: none; }
+  .opening h1.h1-iridescent {
+    /* alva-anchored stops with frequent excursions to purple / orange /
+       lime so the iridescent feel is preserved while green stays the
+       dominant brand color. First + last stop match → seamless tile. */
+    background-image: linear-gradient(
+      105deg,
+      #49A3A6   0%,
+      #5cb9bc   8%,
+      #6dd5a6  16%,
+      #4ade80  22%,
+      #5cb9bc  30%,
+      #b388ff  38%,
+      #5cb9bc  46%,
+      #49A3A6  54%,
+      #ff8a4c  62%,
+      #6dd5a6  70%,
+      #5cb9bc  78%,
+      #b388ff  86%,
+      #5cb9bc  94%,
+      #49A3A6 100%
+    );
+    background-size: 200% 100%;
+    background-position: 0% 50%;
+    /* repeat keeps the strip wrapping seamlessly so background-position
+       can drift through one full size unit without ever clipping the
+       glyphs on the right edge (was happening in the previous round). */
+    background-repeat: repeat;
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: h1IridescentSlide 16s linear infinite;
+    will-change: background-position;
+  }
+  .opening h1.h1-iridescent .alva { color: transparent; }
+  @keyframes h1IridescentSlide {
+    from { background-position:   0% 50%; }
+    to   { background-position: 200% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .opening h1.h1-iridescent { animation: none; background-position: 40% 50%; }
+  }
+
+  /* Leaderboard · aurora replaces the static cone halo */
+  #leaderboard::before { display: none !important; }
+  .lb-aurora {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+    opacity: 0.9;
+  }
+  #leaderboard .section-wrap { position: relative; z-index: 1; }
 </style>
 </head>
 <body>
@@ -6207,6 +6512,9 @@
        Visual: KOL tweets drift randomly in the background.
        ============================================================ -->
   <section class="opening" id="top">
+    <!-- 4.0 — prismatic-burst WebGL backdrop (reactbits port). Sits at
+         the very back of the hero, behind the tweet drift + headline. -->
+    <canvas class="opening-burst" aria-hidden="true"></canvas>
     <div class="opening-bg" aria-hidden="true">
       <!-- 18 free-floating tweet cards from real finance/investment voices on X.
            Each card has independent y / size / opacity / blur / duration /
@@ -6307,6 +6615,9 @@
 
     <div class="opening-content">
       <h1>
+        <!-- 4.0 — iridescence shader overlay, blended onto the H1
+             letters so the headline shimmers with shifting colors. -->
+        <canvas class="opening-h1-iridescence" aria-hidden="true"></canvas>
         <span class="line-1">Which FinTwit account</span>
         <span class="line-2">actually makes money?</span>
       </h1>
@@ -6426,6 +6737,11 @@
        ============================================================ -->
   <section class="section agents-pin-section" id="agents">
     <div class="agents-pin">
+      <!-- 4.0 — silk-shader backdrop (reactbits.dev/Silk port). Renders
+           a flowing, muted teal-slate pattern behind the pinned use-cases
+           content. Lives INSIDE .agents-pin so it inherits the 100vh
+           sticky viewport — no document height stretch. -->
+      <canvas class="agents-silk" aria-hidden="true"></canvas>
       <div class="agents-pin-inner">
         <div class="agents-stage">
           <!-- Left column: section heading + tabs stacked. Heading is
@@ -6521,6 +6837,10 @@
        Playbooks (white) → Use Cases (white) → Leaderboard (grey/alt).
        ============================================================ -->
   <section class="section" id="leaderboard">
+    <!-- 4.0 — aurora WebGL backdrop (reactbits port). Replaces the
+         static 11-blob cone halo with a real noise-driven aurora band
+         that flows across the section bottom. -->
+    <canvas class="lb-aurora" aria-hidden="true"></canvas>
     <div class="section-wrap">
       <div class="section-head with-action">
         <div>
@@ -8429,6 +8749,11 @@
        light and the type sharper. */
     if (window.matchMedia('(max-width: 760px)').matches) return;
 
+    /* 4.0 — cat-eye lens + film grain disabled per user feedback.
+       DOM tweets keep their CSS-driven drift and read sharply; no
+       WebGL pass, no chromatic aberration, no noise. */
+    return;
+
     /* 3.0 round 46.4 — Three.js is now loaded via a deferred dynamic
        <script> (an LCP optimization added by a parallel task), which
        means it's NOT defined when this inline IIFE first executes.
@@ -8628,15 +8953,15 @@
       // browser's filter pipeline.
       ctx.save();
       ctx.filter = 'blur(10px)';
-      ctx.fillStyle = '#c8c8cd';
+      ctx.fillStyle = '#000000';
       roundRect(ctx, -1, -1, w + 2, h + 2, 6);
       ctx.fill();
       ctx.restore();
-      // Sharp border + white card on top, in the regular ctx state
-      ctx.fillStyle = '#e5e5ea';
+      // Sharp border + dark card on top, in the regular ctx state
+      ctx.fillStyle = '#2a2a32';
       roundRect(ctx, -1, -1, w + 2, h + 2, 6);
       ctx.fill();
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#1c1c24';
       roundRect(ctx, 0, 0, w, h, 5);
       ctx.fill();
 
@@ -8655,15 +8980,15 @@
       // name + handle
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
-      ctx.fillStyle = '#2a2a30';
-      ctx.font = `700 ${fs}px Inter, system-ui, sans-serif`;
+      ctx.fillStyle = '#f5f5f7';
+      ctx.font = `500 ${fs}px Inter, system-ui, sans-serif`;
       ctx.fillText(t.name, padX + avR * 2 + 10, padY + 1);
-      ctx.fillStyle = '#9ca3af';
+      ctx.fillStyle = '#a1a1aa';
       ctx.font = `500 ${Math.round(fs * 0.82)}px "JetBrains Mono", ui-monospace, monospace`;
       ctx.fillText(t.handle, padX + avR * 2 + 10, padY + 1 + Math.round(fs * 1.45));
 
       // body text
-      ctx.fillStyle = '#6b7280';
+      ctx.fillStyle = '#c5c5cd';
       ctx.font = `400 ${fs}px Inter, system-ui, sans-serif`;
       let yy = padY + headH + gapHB;
       for (const line of lines) {
@@ -8822,7 +9147,7 @@
           // an edge color shift (see `mintShift` below), so the bg
           // only needs to be #ffffff at canvas pixel level; the corners
           // get the mint tint at render time.
-          uBgColor:    { value: new THREE.Color(0xffffff) },
+          uBgColor:    { value: new THREE.Color(0x0a0a0e) },
         },
         vertexShader: /* glsl */ `
           varying vec2 vUv;
@@ -9326,6 +9651,791 @@
   })();
 
   /* ============================================================
+     SILK SHADER BACKDROP — Section 3
+     Vanilla Three.js port of reactbits.dev/Silk. Renders a single
+     fullscreen plane with a flowing-noise fragment shader; uniforms
+     match the reactbits "Silk" preset (speed 0.9 / scale 0.9 /
+     noiseIntensity 1.4 / rotation 1.7). Color is tuned to a dark
+     muted teal-slate so it reads against #16161c.
+     ============================================================ */
+  (() => {
+    const canvas = document.querySelector('.agents-silk');
+    if (!canvas) return;
+    function waitForThree(cb) {
+      if (typeof THREE !== 'undefined') return cb();
+      let waited = 0;
+      const tick = setInterval(() => {
+        if (typeof THREE !== 'undefined') { clearInterval(tick); cb(); }
+        else if ((waited += 100) > 10000) { clearInterval(tick); }
+      }, 100);
+    }
+    waitForThree(initSilk);
+    function initSilk() {
+      const VERT = `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `;
+      const FRAG = `
+        varying vec2 vUv;
+        uniform float uTime;
+        uniform vec3  uColor;
+        uniform float uSpeed;
+        uniform float uScale;
+        uniform float uRotation;
+        uniform float uNoiseIntensity;
+        const float e = 2.71828182845904523536;
+        float noise(vec2 texCoord) {
+          float G = e;
+          vec2  r = (G * sin(G * texCoord));
+          return fract(r.x * r.y * (1.0 + texCoord.x));
+        }
+        vec2 rotateUvs(vec2 uv, float angle) {
+          float c = cos(angle);
+          float s = sin(angle);
+          mat2  rot = mat2(c, -s, s, c);
+          return rot * uv;
+        }
+        void main() {
+          float rnd        = noise(gl_FragCoord.xy);
+          vec2  uv         = rotateUvs(vUv * uScale, uRotation);
+          vec2  tex        = uv * uScale;
+          float tOffset    = uSpeed * uTime;
+          tex.y += 0.03 * sin(8.0 * tex.x - tOffset);
+          float pattern = 0.6 +
+                          0.4 * sin(5.0 * (tex.x + tex.y +
+                                           cos(3.0 * tex.x + 5.0 * tex.y) +
+                                           0.02 * tOffset) +
+                                   sin(20.0 * (tex.x + tex.y - 0.1 * tOffset)));
+          vec4 col = vec4(uColor, 1.0) * vec4(pattern) - rnd / 15.0 * uNoiseIntensity;
+          col.a = 1.0;
+          gl_FragColor = col;
+        }
+      `;
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+      renderer.setClearColor(0x000000, 0);
+      const scene = new THREE.Scene();
+      const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
+      const uniforms = {
+        uTime:           { value: 0 },
+        uSpeed:          { value: 0.9 },
+        uScale:          { value: 0.9 },
+        uNoiseIntensity: { value: 1.4 },
+        uRotation:       { value: 1.7 },
+        uColor:          { value: new THREE.Color(0x4a6a72) },
+      };
+      const mat = new THREE.ShaderMaterial({ uniforms, vertexShader: VERT, fragmentShader: FRAG });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
+      scene.add(mesh);
+      function resize() {
+        const r = canvas.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          renderer.setSize(r.width, r.height, false);
+        }
+      }
+      resize();
+      window.addEventListener('resize', resize);
+      // 4.0 round 4 — pause when the section isn't on screen.
+      let visible = true;
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver(entries => {
+          visible = entries[0].isIntersecting;
+        }, { threshold: 0.01 });
+        io.observe(canvas);
+      }
+      let last = performance.now();
+      function tick(now) {
+        const dt = Math.min(0.05, (now - last) * 0.001);
+        last = now;
+        uniforms.uTime.value += 0.1 * dt;
+        if (visible && !document.hidden) renderer.render(scene, camera);
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+  })();
+
+  /* ============================================================
+     REACTBITS SHADER BACKDROPS  (4.0)
+     Three ports — Aurora, Iridescence, PrismaticBurst — all driving
+     fullscreen quads via Three.js ShaderMaterial. Each waits for
+     THREE to be defined, then sets up its canvas + RAF loop.
+     ============================================================ */
+  (() => {
+    function waitForThree(cb) {
+      if (typeof THREE !== 'undefined') return cb();
+      let waited = 0;
+      const tick = setInterval(() => {
+        if (typeof THREE !== 'undefined') { clearInterval(tick); cb(); }
+        else if ((waited += 100) > 10000) { clearInterval(tick); }
+      }, 100);
+    }
+
+    function makeShaderCanvas(canvas, vertSrc, fragSrc, uniforms, onFrame, opts) {
+      const dprCap = (opts && opts.dpr) || 2;
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(dprCap, window.devicePixelRatio || 1));
+      renderer.setClearColor(0x000000, 0);
+      const scene = new THREE.Scene();
+      const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
+      const mat = new THREE.ShaderMaterial({
+        uniforms,
+        vertexShader: vertSrc,
+        fragmentShader: fragSrc,
+        transparent: true,
+      });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
+      scene.add(mesh);
+      function resize() {
+        const r = canvas.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          renderer.setSize(r.width, r.height, false);
+          if (uniforms.uResolution) {
+            uniforms.uResolution.value.x = r.width * renderer.getPixelRatio();
+            uniforms.uResolution.value.y = r.height * renderer.getPixelRatio();
+          }
+        }
+      }
+      resize();
+      window.addEventListener('resize', resize);
+      // 4.0 round 4 — pause when scrolled offscreen. The PrismaticBurst
+      // raymarch + aurora noise each cost real GPU time per frame;
+      // skipping render() when the canvas isn't visible recovers most
+      // of that budget for the rest of the page.
+      let visible = true;
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver(entries => {
+          visible = entries[0].isIntersecting;
+        }, { threshold: 0.01 });
+        io.observe(canvas);
+      }
+      let last = performance.now();
+      function tick(now) {
+        const dt = Math.min(0.05, (now - last) * 0.001);
+        last = now;
+        if (uniforms.uTime) uniforms.uTime.value += dt;
+        if (onFrame) onFrame(dt);
+        if (visible && !document.hidden) renderer.render(scene, camera);
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // ------- 1. AURORA (leaderboard) ------- //
+    function initAurora() {
+      const canvas = document.querySelector('.lb-aurora');
+      if (!canvas) return;
+      const VERT = `
+        void main() {
+          gl_Position = vec4(position.xy, 0.0, 1.0);
+        }
+      `;
+      const FRAG = `
+        precision highp float;
+        uniform float uTime;
+        uniform float uAmplitude;
+        uniform vec3  uColor0;
+        uniform vec3  uColor1;
+        uniform vec3  uColor2;
+        uniform vec2  uResolution;
+        uniform float uBlend;
+        vec3 permute(vec3 x) { return mod(((x * 34.0) + 1.0) * x, 289.0); }
+        float snoise(vec2 v){
+          const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                              -0.577350269189626, 0.024390243902439);
+          vec2 i  = floor(v + dot(v, C.yy));
+          vec2 x0 = v - i + dot(i, C.xx);
+          vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+          vec4 x12 = x0.xyxy + C.xxzz;
+          x12.xy -= i1;
+          i = mod(i, 289.0);
+          vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0))
+                  + i.x + vec3(0.0, i1.x, 1.0));
+          vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+          m = m*m; m = m*m;
+          vec3 x = 2.0 * fract(p * C.www) - 1.0;
+          vec3 h = abs(x) - 0.5;
+          vec3 ox = floor(x + 0.5);
+          vec3 a0 = x - ox;
+          m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+          vec3 g;
+          g.x  = a0.x  * x0.x  + h.x  * x0.y;
+          g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+          return 130.0 * dot(m, g);
+        }
+        void main() {
+          vec2 uv = gl_FragCoord.xy / uResolution;
+          vec3 rampColor = (uv.x < 0.5)
+            ? mix(uColor0, uColor1, uv.x / 0.5)
+            : mix(uColor1, uColor2, (uv.x - 0.5) / 0.5);
+          float height = snoise(vec2(uv.x * 2.0 + uTime * 0.1, uTime * 0.25)) * 0.5 * uAmplitude;
+          height = exp(height);
+          height = (uv.y * 2.0 - height + 0.2);
+          float intensity = 0.6 * height;
+          float midPoint = 0.20;
+          float auroraAlpha = smoothstep(midPoint - uBlend * 0.5, midPoint + uBlend * 0.5, intensity);
+          vec3 auroraColor = intensity * rampColor;
+          gl_FragColor = vec4(auroraColor * auroraAlpha, auroraAlpha);
+        }
+      `;
+      const uniforms = {
+        uTime:       { value: 0 },
+        uAmplitude:  { value: 1.0 },
+        uBlend:      { value: 0.5 },
+        uColor0:     { value: new THREE.Color(0x5cb9bc) }, // alva-hi
+        uColor1:     { value: new THREE.Color(0xb388ff) }, // purple
+        uColor2:     { value: new THREE.Color(0x49A3A6) }, // alva
+        uResolution: { value: new THREE.Vector2(1, 1) },
+      };
+      makeShaderCanvas(canvas, VERT, FRAG, uniforms, () => {
+        // uTime base is in seconds; aurora wants slow drift — already scaled in shader.
+      });
+    }
+
+    // ------- 2. IRIDESCENCE (hero H1) ------- //
+    // 4.0 round 4 — iridescence is now pure CSS (see .h1-iridescent
+    // rule). The WebGL pipeline below is kept dormant; we just add
+    // the activating class and bail out, avoiding the expensive
+    // toDataURL pump that was making the headline color flow stutter.
+    function initIridescence() {
+      const h1 = document.querySelector('.opening-content h1');
+      if (h1) h1.classList.add('h1-iridescent');
+      return;
+      /* legacy WebGL path below — intentionally unreachable */ // eslint-disable-line
+      // eslint-disable-next-line no-unreachable
+      const canvas = document.querySelector('.opening-h1-iridescence');
+      if (!canvas) return;
+      const VERT = `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = vec4(position.xy, 0.0, 1.0);
+        }
+      `;
+      const FRAG = `
+        precision highp float;
+        uniform float uTime;
+        uniform vec3 uColor;
+        uniform vec3 uResolution;
+        uniform vec2 uMouse;
+        uniform float uAmplitude;
+        uniform float uSpeed;
+        varying vec2 vUv;
+        void main() {
+          float mr = min(uResolution.x, uResolution.y);
+          vec2 uv = (vUv.xy * 2.0 - 1.0) * uResolution.xy / mr;
+          uv += (uMouse - vec2(0.5)) * uAmplitude;
+          float d = -uTime * 0.5 * uSpeed;
+          float a = 0.0;
+          for (float i = 0.0; i < 8.0; ++i) {
+            a += cos(i - d - a * uv.x);
+            d += sin(uv.y * i + a);
+          }
+          d += uTime * 0.5 * uSpeed;
+          vec3 col = vec3(cos(uv * vec2(d, a)) * 0.6 + 0.4, cos(a + d) * 0.5 + 0.5);
+          col = cos(col * cos(vec3(d, a, 2.5)) * 0.5 + 0.5) * uColor;
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `;
+      const uniforms = {
+        uTime:       { value: 0 },
+        // mild green push so the multi-hue iridescent pattern keeps
+        // its variety; the bg-blend-mode: overlay above lets other
+        // colors flash through against the alva-green base.
+        uColor:      { value: new THREE.Color(0.85, 1.10, 1.0) },
+        uResolution: { value: new THREE.Vector3(1, 1, 1) },
+        uMouse:      { value: new THREE.Vector2(0.5, 0.5) },
+        uAmplitude:  { value: 0.1 },
+        uSpeed:      { value: 1.0 },
+      };
+      // Size the offscreen canvas to roughly the H1's visual footprint
+      // so the texture covers the headline without unnecessary cost.
+      function targetSize() {
+        const r = h1.getBoundingClientRect();
+        return {
+          w: Math.max(320, Math.round(r.width)),
+          h: Math.max(120, Math.round(r.height))
+        };
+      }
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(1); // toDataURL cost scales with pixels — keep DPR low
+      renderer.setClearColor(0x000000, 0);
+      const scene = new THREE.Scene();
+      const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
+      const mat = new THREE.ShaderMaterial({ uniforms, vertexShader: VERT, fragmentShader: FRAG, transparent: true });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
+      scene.add(mesh);
+      function resize() {
+        const s = targetSize();
+        renderer.setSize(s.w, s.h, false);
+        uniforms.uResolution.value.set(s.w, s.h, s.w / s.h);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+      let last = performance.now();
+      let syncEvery = 0;
+      let pushing = false; // single-flight to avoid stacked decodes
+      function pushToH1() {
+        if (pushing) return;
+        let url;
+        try { url = canvas.toDataURL('image/png'); }
+        catch (e) { return; }
+        pushing = true;
+        // Pre-decode the new texture so the H1 swaps with a fully
+        // ready image — eliminates the one-frame "no bg" flash that
+        // was making the headline flicker.
+        const img = new Image();
+        img.decoding = 'async';
+        img.onload = img.onerror = () => {
+          h1.style.backgroundImage = 'url("' + url + '")';
+          pushing = false;
+        };
+        img.src = url;
+      }
+      function tick(now) {
+        const dt = Math.min(0.05, (now - last) * 0.001);
+        last = now;
+        uniforms.uTime.value += dt;
+        renderer.render(scene, camera);
+        // ~5 fps sync — slow enough that decode-driven flicker is
+        // imperceptible and toDataURL CPU is bounded.
+        if (++syncEvery >= 12) {
+          syncEvery = 0;
+          pushToH1();
+        }
+        requestAnimationFrame(tick);
+      }
+      // first push immediately so the H1 isn't flat-teal on load
+      requestAnimationFrame(() => { renderer.render(scene, camera); pushToH1(); });
+      requestAnimationFrame(tick);
+    }
+
+    // ------- 3. PRISMATIC BURST (hero bg) ------- //
+    function initPrismaticBurst() {
+      const canvas = document.querySelector('.opening-burst');
+      if (!canvas) return;
+      const VERT = `
+        void main() {
+          gl_Position = vec4(position.xy, 0.0, 1.0);
+        }
+      `;
+      // GLSL1 port — drops the user-gradient texture; uses spectralDefault.
+      const FRAG = `
+        precision highp float;
+        uniform vec2  uResolution;
+        uniform float uTime;
+        uniform float uIntensity;
+        uniform float uSpeed;
+        uniform float uDistort;
+        uniform vec2  uOffset;
+        uniform float uNoiseAmount;
+        float hash21(vec2 p){
+          p = floor(p);
+          float f = 52.9829189 * fract(dot(p, vec2(0.065, 0.005)));
+          return fract(f);
+        }
+        mat2 rot30(){ return mat2(0.8, -0.5, 0.5, 0.8); }
+        float layeredNoise(vec2 fragPx){
+          vec2 p = mod(fragPx + vec2(uTime * 30.0, -uTime * 21.0), 1024.0);
+          vec2 q = rot30() * p;
+          float n = 0.0;
+          n += 0.40 * hash21(q);
+          n += 0.25 * hash21(q * 2.0 + 17.0);
+          n += 0.20 * hash21(q * 4.0 + 47.0);
+          n += 0.10 * hash21(q * 8.0 + 113.0);
+          n += 0.05 * hash21(q * 16.0 + 191.0);
+          return n;
+        }
+        vec3 rayDir(vec2 frag, vec2 res, vec2 offset, float dist){
+          float focal = res.y * max(dist, 1e-3);
+          return normalize(vec3(2.0 * (frag - offset) - res, focal));
+        }
+        float edgeFade(vec2 frag, vec2 res, vec2 offset){
+          vec2 toC = frag - 0.5 * res - offset;
+          float r = length(toC) / (0.5 * min(res.x, res.y));
+          float x = clamp(r, 0.0, 1.0);
+          float q = x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
+          float s = q * 0.5;
+          s = pow(s, 1.5);
+          float tail = 1.0 - pow(1.0 - s, 2.0);
+          s = mix(s, tail, 0.2);
+          float dn = (layeredNoise(frag * 0.15) - 0.5) * 0.0015 * s;
+          return clamp(s + dn, 0.0, 1.0);
+        }
+        mat3 rotX(float a){ float c=cos(a), s=sin(a); return mat3(1.,0.,0., 0.,c,-s, 0.,s,c); }
+        mat3 rotY(float a){ float c=cos(a), s=sin(a); return mat3(c,0.,s, 0.,1.,0., -s,0.,c); }
+        mat3 rotZ(float a){ float c=cos(a), s=sin(a); return mat3(c,-s,0., s,c,0., 0.,0.,1.); }
+        vec2 rot2(vec2 v, float a){ float s=sin(a), c=cos(a); return mat2(c,-s, s,c) * v; }
+        float bendAngle(vec3 q, float t){
+          float a = 0.8 * sin(q.x * 0.55 + t * 0.6)
+                  + 0.7 * sin(q.y * 0.50 - t * 0.5)
+                  + 0.6 * sin(q.z * 0.60 + t * 0.7);
+          return a;
+        }
+        void main(){
+          vec2 frag = gl_FragCoord.xy;
+          float t = uTime * uSpeed;
+          float jitterAmp = 0.1 * clamp(uNoiseAmount, 0.0, 1.0);
+          vec3 dir = rayDir(frag, uResolution, uOffset, 1.0);
+          float marchT = 0.0;
+          vec3 col = vec3(0.0);
+          float n = layeredNoise(frag);
+          float amp = clamp(uDistort, 0.0, 50.0) * 0.15;
+          vec3 ang = vec3(t * 0.31, t * 0.21, t * 0.17);
+          mat3 rot3dMat = rotZ(ang.z) * rotY(ang.y) * rotX(ang.x);
+          for (int i = 0; i < 28; ++i) {
+            vec3 P = marchT * dir;
+            P.z -= 2.0;
+            float rad = length(P);
+            vec3 Pl = P * (10.0 / max(rad, 1e-6));
+            Pl = rot3dMat * Pl;
+            float stepLen = min(rad - 0.3, n * jitterAmp) + 0.1;
+            float grow = smoothstep(0.35, 3.0, marchT);
+            float a1 = amp * grow * bendAngle(Pl * 0.6, t);
+            float a2 = 0.5 * amp * grow * bendAngle(Pl.zyx * 0.5 + 3.1, t * 0.9);
+            vec3 Pb = Pl;
+            Pb.xz = rot2(Pb.xz, a1);
+            Pb.xy = rot2(Pb.xy, a2);
+            float rayPattern = smoothstep(
+              0.5, 0.7,
+              sin(Pb.x + cos(Pb.y) * cos(Pb.z)) *
+              sin(Pb.z + sin(Pb.y) * cos(Pb.x + t))
+            );
+            vec3 spectral = 1.0 + vec3(
+              cos(marchT * 3.0 + 0.0),
+              cos(marchT * 3.0 + 1.0),
+              cos(marchT * 3.0 + 2.0)
+            );
+            vec3 base = (0.05 / (0.4 + stepLen))
+                      * smoothstep(5.0, 0.0, rad)
+                      * spectral;
+            col += base * rayPattern;
+            marchT += stepLen;
+          }
+          col *= edgeFade(frag, uResolution, uOffset);
+          col *= uIntensity;
+          gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+        }
+      `;
+      const uniforms = {
+        uTime:        { value: 0 },
+        uResolution:  { value: new THREE.Vector2(1, 1) },
+        uIntensity:   { value: 2.0 },
+        uSpeed:       { value: 0.5 },
+        uDistort:     { value: 0.0 },
+        uOffset:      { value: new THREE.Vector2(0, 0) },
+        uNoiseAmount: { value: 0.8 },
+      };
+      // 28-step raymarch is fill-rate bound; capping DPR to 1 cuts
+      // total fragments to ~25% of DPR=2, keeping the hero scrollable.
+      makeShaderCanvas(canvas, VERT, FRAG, uniforms, null, { dpr: 1 });
+    }
+
+    waitForThree(() => {
+      initAurora();
+      initIridescence();
+      initPrismaticBurst();
+    });
+  })();
+
+  /* ============================================================
+     KOL CARD V2 UPGRADER  (4.0)
+     Walks every .mq-card and replaces its simple innerHTML with a
+     rich playbook preview: avatar/name/handle + win-rate donut on
+     the left, three "best calls" on the right, ROI sparkline across
+     the bottom, and a footer caption. Mock data (win rate, best
+     calls, signal count, date window) is derived deterministically
+     from the KOL's handle so every reload produces the same card.
+     ============================================================ */
+  (() => {
+    const cards = document.querySelectorAll('.mq-card');
+    if (!cards.length) return;
+
+    // Cheap deterministic hash → 0..1
+    function rand(seed) {
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < seed.length; i++) {
+        h ^= seed.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return () => {
+        h = Math.imul(h ^ (h >>> 13), 2246822507);
+        h = Math.imul(h ^ (h >>> 16), 3266489909);
+        return ((h ^= h >>> 16) >>> 0) / 4294967296;
+      };
+    }
+
+    // Plausible ticker pool — varied themes
+    const TKPOOL = ['NVDA','AAOI','AXTI','AEHR','TSLA','META','GOOG','AMD','MSTR','BTC','ETH','SOL','MRVL','AVGO','NBIS','PLTR','SHOP','CRM','UBER','NET','SNOW','CRWD','PANW','SMCI','ARM','RKLB','HOOD','COIN','SQ','ADBE'];
+
+    // Per-card corner-gradient palette (mirrors the results-modal card
+    // treatment). Picked deterministically per card so identity stays
+    // stable across reloads.
+    const CARD_TINTS = [
+      'rgba(73,163,166,0.22)',   // alva teal
+      'rgba(92,185,188,0.22)',   // alva-hi
+      'rgba(179,136,255,0.22)',  // purple
+      'rgba(255,138,76,0.20)',   // orange
+      'rgba(96,165,250,0.20)',   // blue
+      'rgba(255,158,200,0.22)',  // pink
+      'rgba(110,231,183,0.20)',  // mint
+      'rgba(255,200,76,0.18)',   // amber
+    ];
+
+    function fmtPct(v) { return (v > 0 ? '+' : '') + v.toFixed(0) + '%'; }
+    function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+    // 4.0 round 2 — chart now has four "personalities" so adjacent
+    // cards don't all read as the same gentle drift. Picked
+    // deterministically by the per-card rng.
+    function makeChart(rng, finalPct) {
+      const N = 44;
+      const W = 380, H = 86, PAD_X = 4, PAD_Y = 14;
+      const personality = Math.floor(rng() * 4); // 0=rally 1=volatile 2=recovery 3=drift
+      const noise = [0.10, 0.32, 0.22, 0.06][personality];
+      const pts = [];
+      let v = 0;
+      const stepTarget = finalPct / N;
+      for (let i = 0; i < N; i++) {
+        const t = i / (N - 1);
+        let bias = stepTarget;
+        if (personality === 0) {
+          // rally: most gains in last third
+          bias = stepTarget * (0.4 + 1.8 * t);
+        } else if (personality === 2) {
+          // recovery: dip first, then climb
+          const dipShape = Math.sin(Math.PI * t);
+          bias = stepTarget + (t < 0.45 ? -Math.abs(stepTarget) * 1.2 * dipShape : stepTarget * 1.2 * dipShape);
+        } else if (personality === 1) {
+          // volatile: bigger swings throughout
+          bias = stepTarget * (0.3 + 1.4 * t);
+        }
+        const jitter = (rng() - 0.5) * Math.max(10, Math.abs(finalPct) * (noise + 0.04));
+        v += bias + jitter;
+        pts.push(v);
+      }
+      pts[N - 1] = finalPct;
+      // peak (max positive) — index + value for the "BEST ROI" annotation
+      let peakIdx = 0, peakVal = -Infinity;
+      for (let i = 0; i < N; i++) if (pts[i] > peakVal) { peakVal = pts[i]; peakIdx = i; }
+      const minV = Math.min(0, ...pts);
+      const maxV = Math.max(finalPct, peakVal);
+      const range = (maxV - minV) || 1;
+      const innerW = W - PAD_X * 2;
+      const innerH = H - PAD_Y * 2;
+      const x = i => PAD_X + (i / (N - 1)) * innerW;
+      const y = v => PAD_Y + (1 - (v - minV) / range) * innerH;
+      let d = 'M ' + x(0).toFixed(1) + ' ' + y(pts[0]).toFixed(1);
+      for (let i = 1; i < N; i++) d += ' L ' + x(i).toFixed(1) + ' ' + y(pts[i]).toFixed(1);
+      const zeroY = y(0).toFixed(1);
+      const stroke = finalPct >= 0 ? '#22c55e' : '#ef4444';
+      const fill   = finalPct >= 0 ? 'rgba(34,197,94,0.18)' : 'rgba(239,68,68,0.18)';
+      const fillPath = d + ' L ' + x(N - 1).toFixed(1) + ' ' + zeroY + ' L ' + x(0).toFixed(1) + ' ' + zeroY + ' Z';
+      const peakX = x(peakIdx);
+      const peakY = y(peakVal);
+      // anchor flips so the label never overflows the right edge
+      const anchor = peakX > W * 0.78 ? 'end' : (peakX < W * 0.18 ? 'start' : 'middle');
+      const labelDx = anchor === 'end' ? -8 : (anchor === 'start' ? 8 : 0);
+      const peakLabel = (peakVal >= 0 ? '+' : '') + peakVal.toFixed(peakVal >= 100 || peakVal <= -100 ? 0 : 1) + '%';
+      const labelColor = finalPct >= 0 ? '#22c55e' : '#ef4444';
+      // place the two-line annotation either above (default) or below
+      // the peak point depending on available vertical room. The two
+      // tspans share an x anchor and use explicit dy for spacing so
+      // they never overlap regardless of where peakY lands.
+      const placeAbove = peakY > 26;
+      const labelY = placeAbove ? (peakY - 22) : (peakY + 14);
+      return (
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+          '<path d="M 0 ' + zeroY + ' L ' + W + ' ' + zeroY + '" stroke="rgba(255,255,255,0.10)" stroke-width="1" fill="none" stroke-dasharray="2 3"/>' +
+          '<path d="' + fillPath + '" fill="' + fill + '"/>' +
+          '<path d="' + d + '" stroke="' + stroke + '" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>' +
+          // peak marker
+          '<circle cx="' + peakX.toFixed(1) + '" cy="' + peakY.toFixed(1) + '" r="6" fill="' + stroke + '" opacity="0.18"/>' +
+          '<circle cx="' + peakX.toFixed(1) + '" cy="' + peakY.toFixed(1) + '" r="3.2" fill="' + stroke + '"/>' +
+          // "BEST ROI" two-line annotation — single <text> with two
+          // <tspan>s so dy guarantees vertical separation.
+          '<text x="' + (peakX + labelDx).toFixed(1) + '" y="' + labelY.toFixed(1) + '" ' +
+            'text-anchor="' + anchor + '" font-family="var(--font-mono)">' +
+            '<tspan font-size="8" fill="rgba(255,255,255,0.65)" letter-spacing="0.14em">BEST ROI</tspan>' +
+            '<tspan x="' + (peakX + labelDx).toFixed(1) + '" dy="13" font-size="13" font-weight="600" ' +
+              'fill="' + labelColor + '" letter-spacing="-0.01em">' + peakLabel + '</tspan>' +
+          '</text>' +
+          // end dot
+          '<circle cx="' + x(N - 1).toFixed(1) + '" cy="' + y(pts[N - 1]).toFixed(1) + '" r="3" fill="' + stroke + '"/>' +
+        '</svg>'
+      );
+    }
+
+    // donut ring color picks up the win-rate tier so the deck shows
+    // visible chromatic variation across the 32 cards.
+    function donutColor(pct) {
+      if (pct >= 65) return '#5cb9bc';   // strong → alva-hi
+      if (pct >= 50) return '#49A3A6';   // mid → alva
+      if (pct >= 42) return '#ff8a4c';   // ok → orange
+      return '#b388ff';                  // low → purple
+    }
+    function makeDonut(pct) {
+      const R = 22, C = 32;
+      const circ = 2 * Math.PI * R;
+      const dash = (pct / 100) * circ;
+      const color = donutColor(pct);
+      return (
+        '<svg class="mq-donut" viewBox="0 0 64 64" aria-hidden="true">' +
+          '<circle cx="' + C + '" cy="' + C + '" r="' + R + '" stroke="rgba(255,255,255,0.10)" stroke-width="6" fill="none"/>' +
+          '<circle cx="' + C + '" cy="' + C + '" r="' + R + '" stroke="' + color + '" stroke-width="6" fill="none" ' +
+            'stroke-linecap="round" stroke-dasharray="' + dash.toFixed(2) + ' ' + circ.toFixed(2) + '" ' +
+            'transform="rotate(-90 ' + C + ' ' + C + ')"/>' +
+        '</svg>'
+      );
+    }
+
+    function dateWindow(rng) {
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      // pick a start in 2025, span 6–10 months landing somewhere in 2026
+      const startM = Math.floor(rng() * 8); // 0..7
+      const span = 6 + Math.floor(rng() * 4); // 6..9
+      const endM = (startM + span) % 12;
+      const endYearOffset = Math.floor((startM + span) / 12);
+      return months[startM] + ' 2025 - ' + months[endM] + ' ' + (2025 + endYearOffset);
+    }
+
+    // 4.0 round 8 — buildRichCard centralises the card content; called
+    // for landing marquee (.mq-card) AND for the post-connect results
+    // modal (.results-grid .card) so both decks render the same rich
+    // playbook preview (avatar + win-rate donut + best calls + chart
+    // + footer caption) and pick up the same corner-gradient tint.
+    function buildRichCard(card, src) {
+      const { name, handle, avatarSrc, onerr, roi } = src;
+      const rng = rand(handle + '|' + name);
+      const winRate = 38 + Math.floor(rng() * 45);
+      const totalCalls = 80 + Math.floor(rng() * 160);
+      const winCalls = Math.round(totalCalls * winRate / 100);
+
+      const tickers = [];
+      for (let i = 0; i < 3; i++) {
+        let pick = TKPOOL[Math.floor(rng() * TKPOOL.length)];
+        while (tickers.includes(pick)) pick = TKPOOL[Math.floor(rng() * TKPOOL.length)];
+        tickers.push(pick);
+      }
+      const baseHigh = Math.max(180, Math.abs(roi) * 2.2 + 120);
+      let tickerRois;
+      if (roi < 0) {
+        tickerRois = [
+          Math.round(baseHigh * 0.45 + rng() * 80),
+          -Math.round(20 + rng() * 60),
+          -Math.round(45 + rng() * 90)
+        ];
+      } else if (winRate < 50) {
+        tickerRois = [
+          Math.round(baseHigh + rng() * 300),
+          Math.round(baseHigh * 0.35 + rng() * 120),
+          -Math.round(15 + rng() * 70)
+        ];
+      } else {
+        tickerRois = [
+          Math.round(baseHigh + rng() * 350),
+          Math.round(baseHigh * 0.55 + rng() * 180),
+          Math.round(baseHigh * 0.30 + rng() * 90)
+        ].sort((a, b) => b - a);
+      }
+      const callsHtml = tickers.map((tk, i) => {
+        const v = tickerRois[i];
+        const cls = v >= 0 ? 'mq-call-val gain' : 'mq-call-val loss';
+        const sign = v >= 0 ? '+' : '';
+        return (
+          '<div class="mq-call">' +
+            '<span class="mq-call-tk">' + tk + '</span>' +
+            '<span class="' + cls + '">' + sign + v + '%</span>' +
+          '</div>'
+        );
+      }).join('');
+
+      const chartHtml = makeChart(rng, roi);
+      const donutHtml = makeDonut(winRate);
+      const dateRange = dateWindow(rng);
+      const pctColor = donutColor(winRate);
+      const tint = CARD_TINTS[Math.floor(rng() * CARD_TINTS.length)];
+      // base lifted from #16161c → #1f1f29 so the card silhouette is
+      // visible against #15151c modal dialogs as well as the green
+      // marquee section.
+      card.style.background =
+        'linear-gradient(135deg, ' + tint + ' 0%, rgba(255,255,255,0) 60%), #1f1f29';
+
+      card.innerHTML =
+        '<div class="mq-top">' +
+          '<div>' +
+            '<div class="mq-id">' +
+              '<img class="mq-avatar" src="' + avatarSrc + '" alt="" ' + (onerr ? 'onerror="' + onerr.replace(/"/g, '&quot;') + '"' : '') + '>' +
+              '<div class="mq-meta"><b>' + name + '</b><span>' + handle + '</span></div>' +
+            '</div>' +
+            '<div class="mq-winrate">' +
+              donutHtml +
+              '<div class="mq-winrate-text">' +
+                '<div class="mq-winrate-pct" style="color:' + pctColor + '">' + winRate + '%</div>' +
+                '<div class="mq-winrate-lbl">Win Rate</div>' +
+                '<div class="mq-winrate-sub">' + winCalls + ' of ' + totalCalls + ' calls</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="mq-calls">' +
+            '<div class="mq-calls-head">Best Calls</div>' +
+            callsHtml +
+          '</div>' +
+        '</div>' +
+        '<div class="mq-chart">' + chartHtml + '</div>' +
+        '<div class="mq-foot">' +
+          '<span>' + totalCalls + ' signals · ' + dateRange + '</span>' +
+          '<span class="mq-foot-r">Not financial advice</span>' +
+        '</div>';
+    }
+
+    // Pass 1 — landing marquee.
+    cards.forEach((card) => {
+      const avatarImg = card.querySelector('.mq-avatar');
+      const nameB = card.querySelector('.mq-meta b');
+      const handleSpan = card.querySelector('.mq-meta span');
+      const vSpan = card.querySelector('.mq-v');
+      if (!avatarImg || !nameB || !handleSpan || !vSpan) return;
+      const name = nameB.textContent.trim();
+      const handle = handleSpan.textContent.trim().split('·')[0].trim();
+      const roi = parseFloat(vSpan.textContent.trim().replace(/[+%]/g, '')) || 0;
+      buildRichCard(card, {
+        name, handle, roi,
+        avatarSrc: avatarImg.getAttribute('src') || '',
+        onerr: avatarImg.getAttribute('onerror') || '',
+      });
+    });
+
+    // Pass 2 — results modal (post-connect). Reads the existing
+    // Account Score + Rank percentile to derive a plausible Best ROI
+    // for the chart; everything else is generated by buildRichCard.
+    document.querySelectorAll('.results-grid .card').forEach((card) => {
+      const avatarImg = card.querySelector('.avatar');
+      const nameEl = card.querySelector('.pc-name');
+      const handleEl = card.querySelector('.pc-handle');
+      if (!avatarImg || !nameEl || !handleEl) return;
+      const name = nameEl.textContent.trim();
+      const handle = handleEl.textContent.trim().split('·')[0].trim();
+      // derive ROI from Rank "Top N%" — better rank → bigger ROI.
+      const rankText = card.querySelector('.ring-text .v')?.textContent || '';
+      const rankPctMatch = rankText.match(/(\d+)/);
+      const rankPct = rankPctMatch ? parseInt(rankPctMatch[1], 10) : 50;
+      // Top 5% → ~+450%, Top 42% → ~+25%; exponential fall-off.
+      const roi = Math.round(20 + (50 - Math.min(50, rankPct)) * 9 + (rankPct < 10 ? 80 : 0));
+      // mark for CSS so .results-grid can give it the mq-card layout.
+      card.classList.add('mq-card');
+      buildRichCard(card, {
+        name, handle, roi,
+        avatarSrc: avatarImg.getAttribute('src') || '',
+        onerr: avatarImg.getAttribute('onerror') || '',
+      });
+    });
+  })();
+
+  /* ============================================================
      USE CASES PIN-SCROLL CONTROLLER  (3.0 round 13)
      #agents is 600vh tall; .agents-pin sticks at top:64px across that
      full range. As section's getBoundingClientRect().top moves from
@@ -9345,6 +10455,8 @@
     const items = section.querySelectorAll('.agents-tab-item');
     const buttons = section.querySelectorAll('.agents-tab-v');
     const cards = section.querySelectorAll('.agents-card');
+    const side = section.querySelector('.agents-side');
+    const head = section.querySelector('.agents-head');
     const N = cards.length;
     if (!track || !N) return;
 
@@ -9352,6 +10464,28 @@
 
     let lastIdx = -1;
     let raf = 0;
+
+    // 4.0 — align the FIRST tab's top with the active card's top.
+    // The active card sits at (stageH - cardH) / 2 from the stage top,
+    // so the side rail needs that same offset minus the heading block.
+    function syncSidePad() {
+      if (!side || isMobile()) {
+        if (side) side.style.removeProperty('--side-shift');
+        return;
+      }
+      const stage = track.parentElement;
+      const cardH = cards[0].offsetHeight;
+      const stageH = stage.offsetHeight;
+      const headH = head ? head.offsetHeight : 0;
+      const headMB = head ? parseFloat(getComputedStyle(head).marginBottom) || 0 : 0;
+      // First tab top (relative to side) = headH + headMarginBottom.
+      // Active card top (relative to stage) = (stageH - cardH) / 2.
+      // Sides + stage share the same vertical origin in the grid, so
+      // shift the side by the signed delta so the first tab's top
+      // matches the active card's top.
+      const shift = (stageH - cardH) / 2 - headH - headMB;
+      side.style.setProperty('--side-shift', Math.round(shift) + 'px');
+    }
 
     function update() {
       raf = 0;
@@ -9361,22 +10495,25 @@
       }
       const rect = section.getBoundingClientRect();
       const total = Math.max(1, section.offsetHeight - window.innerHeight);
-      const p = Math.max(0, Math.min(0.999999, -rect.top / total));
-      const idx = Math.min(N - 1, Math.floor(p * N));
+      const p = Math.max(0, Math.min(1, -rect.top / total));
+      // 4.0 round 6 — continuous map: at p=0 card[0] is centered, at
+      // p=1 card[N-1] is centered, linear in between. This makes the
+      // slice center for index i fall at p = i / (N-1) — see snap
+      // logic + tab clicks below; all three now use the same anchor
+      // so free-scroll stops AND the auto-snap leave the right card
+      // perfectly centered with the matching left tab.
+      const stage = track.parentElement;
+      const cardH = cards[0].offsetHeight;
+      const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
+      const stageH = stage.offsetHeight;
+      const tCont = p * (N - 1);                  // 0 .. N-1 continuous
+      const offset = (stageH - cardH) / 2 - tCont * (cardH + gap);
+      track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
+      const idx = Math.min(N - 1, Math.max(0, Math.round(tCont)));
       if (idx !== lastIdx) {
-        // Vertical-stack carousel — translateY in PIXELS so that the
-        // active card sits VERTICALLY CENTERED in the stage and the
-        // previous/next cards peek above/below (clipped by the pin).
-        // Measure on each switch so layout changes (resize, font load)
-        // don't desync the offset.
-        const stage = track.parentElement;
-        const cardH = cards[0].offsetHeight;
-        const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
-        const stageH = stage.offsetHeight;
-        const offset = (stageH - cardH) / 2 - idx * (cardH + gap);
-        track.style.transform = 'translateY(' + Math.round(offset) + 'px)';
         items.forEach((t, i) => t.classList.toggle('active', i === idx));
         lastIdx = idx;
+        syncSidePad();
       }
     }
 
@@ -9385,16 +10522,64 @@
       raf = requestAnimationFrame(update);
     }
 
-    window.addEventListener('scroll', schedule, { passive: true });
+    // 4.0 — free scroll within the pin range, then snap to the
+    // nearest tab 1 second after the user stops. Snapping is silenced
+    // during programmatic smooth-scroll so the animation doesn't
+    // re-trigger itself.
+    let snapTimer = 0;
+    let snapping = false;
+    let snapStop = 0;
+    function snapToNearest() {
+      if (isMobile()) return;
+      const rect = section.getBoundingClientRect();
+      const total = Math.max(1, section.offsetHeight - window.innerHeight);
+      const p = -rect.top / total;
+      // Only snap while the pin is engaged. Outside the pin range
+      // (above or past the section), leave the scroll alone.
+      if (p <= 0.001 || p >= 0.999) return;
+      // 4.0 round 6 — slice anchor matched to the continuous map in
+      // update(): index i corresponds to p = i / (N-1). Snapping here
+      // puts the right card exactly centered + left tab i active.
+      const denom = Math.max(1, N - 1);
+      const idx = Math.min(N - 1, Math.max(0, Math.round(p * denom)));
+      const anchorP = idx / denom;
+      const sectionTop = section.getBoundingClientRect().top + window.scrollY;
+      const target = Math.round(sectionTop + anchorP * total);
+      if (Math.abs(target - window.scrollY) < 2) return;
+      snapping = true;
+      snapStop = target;
+      window.scrollTo({ top: target, behavior: 'smooth' });
+    }
+    window.addEventListener('scroll', () => {
+      schedule();
+      // If we're mid-snap and reached (or passed close to) the target,
+      // release the lock; otherwise this is a fresh user scroll that
+      // should reset the debounce and override the snap.
+      if (snapping) {
+        if (Math.abs(window.scrollY - snapStop) < 4) {
+          snapping = false;
+        } else {
+          return; // don't restart timer while snap is animating
+        }
+      }
+      if (snapTimer) clearTimeout(snapTimer);
+      snapTimer = setTimeout(() => {
+        snapTimer = 0;
+        snapToNearest();
+      }, 1000);
+    }, { passive: true });
     window.addEventListener('resize', () => {
       // Force re-compute (stageH / cardH may have changed)
       lastIdx = -1;
+      syncSidePad();
       schedule();
     });
+    syncSidePad();
     schedule();
 
-    // Tab click → smooth scroll to the matching slice center.
-    // The click target is the title button; we use its index to seek.
+    // Tab click → smooth scroll so card[i] is centered. Anchor uses
+    // the same i / (N-1) mapping as update() / snapToNearest so all
+    // three entry points agree on where the "active" stop is.
     buttons.forEach((btn, i) => {
       btn.addEventListener('click', () => {
         if (isMobile()) {
@@ -9405,8 +10590,11 @@
         }
         const sectionTop = section.getBoundingClientRect().top + window.scrollY;
         const total = section.offsetHeight - window.innerHeight;
-        const sliceCenter = (i + 0.5) / N;
-        window.scrollTo({ top: sectionTop + sliceCenter * total, behavior: 'smooth' });
+        const denom = Math.max(1, N - 1);
+        const anchorP = i / denom;
+        snapping = true;
+        snapStop = Math.round(sectionTop + anchorP * total);
+        window.scrollTo({ top: snapStop, behavior: 'smooth' });
       });
     });
   })();
