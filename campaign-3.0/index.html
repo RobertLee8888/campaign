@@ -504,10 +504,13 @@
     top: var(--y, 50%);
     padding: 0.85em 1em;
     background: #fff;
-    /* 3.0 round 46.14 — 5% black hairline restored per user request.
-       Matches the canvas stroke; reads as quiet definition without
-       pulling focus from the H1. */
-    border: 1px solid rgba(0,0,0,0.05);
+    /* 3.0 round 46.15 — SOLID light grey (#e5e5ea, the --line token).
+       Replaces the previous translucent rgba(0,0,0,0.05). Reason:
+       an alpha stroke compounds with the GPU bilinear sampler's
+       edge artifact and reads unevenly on different sides; a solid
+       color overwrites the underlying sample, so the hairline is
+       perfectly uniform on every side. */
+    border: 1px solid #e5e5ea;
     border-radius: 12px;
     will-change: transform;
     animation: drift var(--dur, 145s) linear infinite;
@@ -7728,19 +7731,10 @@
       const lineH = Math.round(fs * 1.5);
       const h = padY + headH + gapHB + lines.length * lineH + padY;
 
-      // 3.0 round 46.13 — shadowPad back to 36 to give a proper
-      // canvas drop-shadow room to bloom. The bilinear-interp grey
-      // ring problem from round 46.12's investigation is solved by:
-      //   (a) drawing the canvas drop-shadow first (below) — so the
-      //       texels just OUTSIDE the card aren't (0,0,0, 0) but
-      //       (shadow.rgb, shadow.a). Bilinear interp between card
-      //       body (1,1,1, 1) and shadow halo now produces the
-      //       natural soft transition the user originally wanted,
-      //       not a hard grey line.
-      //   (b) premultipliedAlpha=true blend on the source plane
-      //       (round 46.10) — RT stores straight-alpha values so
-      //       mix() in the post shader composites cleanly.
-      const shadowPad = 52;
+      // 3.0 round 46.22 — shadowPad back to small (4 logical px just
+      // to give the border its slight 1px outset some room). No
+      // canvas shadow during this diagnostic round.
+      const shadowPad = 4;
       const cardCanvas = document.createElement('canvas');
       cardCanvas.width  = (w + shadowPad * 2) * DPR;
       cardCanvas.height = (h + shadowPad * 2) * DPR;
@@ -7772,26 +7766,65 @@
       //   2. Canvas stroke dropped entirely (was 0.05). Card edge
       //      is defined PURELY by the shadow halo now — no line
       //      work at all.
-      ctx.shadowColor   = 'rgba(20, 20, 30, 0.06)';
-      ctx.shadowBlur    = 44;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 4;
-      ctx.fillStyle = '#ffffff';
-      roundRect(ctx, 0, 0, w, h, 12);
-      ctx.fill();
-      // reset shadow before drawing border + avatar + text
+      // 3.0 round 46.16 — replace the canvas2D stroke() with a
+      // two-fill border technique. The previous stroke() was solid
+      // #e5e5ea (no alpha), but canvas2D anti-aliases the stroke
+      // edges against the surrounding pixels. With lineWidth=1 the
+      // stroke straddles the path boundary — its inner half is
+      // anti-aliased against the white card body (reads as a lighter
+      // grey there), its outer half is anti-aliased against the
+      // dark shadow halo (reads as a darker grey there). That gave
+      // the user the "uneven left/right vs top/bottom" feel.
+      //
+      // Two-fill solves it: draw a #e5e5ea rect slightly LARGER than
+      // the card, then draw the white card on top. The visible 1px
+      // ring is a strip of pure #e5e5ea pixels with no anti-aliasing
+      // touching it — uniform on every side, every pixel.
+      // The drop-shadow is drawn on the OUTER (#e5e5ea) fill so the
+      // shadow bleeds past the border layer too, like a normal css
+      // `border + box-shadow` does.
+      // 3.0 round 46.17 — shadow offsetY 4 → 0 to kill the residual
+      // visual asymmetry the user just flagged. With any positive
+      // offsetY, the BOTTOM edge accumulates more shadow halo than
+      // the TOP, which then reads as a "thicker" border on the
+      // bottom — exactly the unevenness the two-fill border fix was
+      // supposed to eliminate. Pure symmetric halo now: blur 44 in
+      // every direction, no offset bias.
+      // 3.0 round 46.22 — DIAGNOSTIC: drop canvas shadow entirely
+      // to isolate whether the perceived "dark line outside the
+      // border" is from shadow rendering or from something else
+      // (lens shader effects, neighboring cards, etc).
+      // If user says the problem persists after this round, it's
+      // not the shadow. If it goes away, we know shadow rendering
+      // is the cause and we can rebuild it with a different
+      // technique (e.g., a separate shadow plane behind the card
+      // mesh, rendered with a clean radial gradient).
       ctx.shadowColor   = 'rgba(0,0,0,0)';
       ctx.shadowBlur    = 0;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
-      // 3.0 round 46.14 — 5% black hairline back per user request.
-      // Now safe to add: the bilinear-interp grey ring fix from
-      // round 46.13 (shadow halo filling shadowPad) means the stroke
-      // is no longer competing with phantom grey lines from the
-      // sampler. This is pure intentional definition.
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      // 3.0 round 46.21 — back to 1px border + 12/13 radius. User
+      // pointed out (correctly) that thickening border + enlarging
+      // radius doesn't address the issue, because the dark line is
+      // ALWAYS OUTSIDE the border, not within it.
+      // 3.0 round 46.24 — radius 0 → 5 (compromise). Square was
+      // too harsh; rounded 12+ showed visible corner AA artifact.
+      // r=5 is a 5px arc per corner — only ~8 device pixels worth
+      // of curvature, so the AA mismatch with straight edges is
+      // confined to a tiny area and falls below the human visual
+      // detection threshold. Cards regain "soft tile" feel without
+      // the corner darkness issue.
+      ctx.fillStyle = '#e5e5ea';
+      roundRect(ctx, -1, -1, w + 2, h + 2, 6);
+      ctx.fill();
+      // reset shadow before drawing the inner white body + content
+      ctx.shadowColor   = 'rgba(0,0,0,0)';
+      ctx.shadowBlur    = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.fillStyle = '#ffffff';
+      roundRect(ctx, 0, 0, w, h, 5);
+      ctx.fill();
 
       // avatar circle + initials
       const avR = 17;
@@ -8130,9 +8163,16 @@
             vec3 neutralGrey = vec3(0.929, 0.929, 0.941); // #ededf0
             rgb = mix(rgb, neutralGrey, tintEdge * 0.50);
 
-            // -- film grain --
+            // -- film grain — radial falloff per user request
+            // (3.0 round 46.18): center clean, edges grainier. Use
+            // the same r² as the CRT vignette; smoothstep from 0.15
+            // to 1.0 gives a gentle ramp — barely any noise within
+            // ~40% of the radius, ramping to full uGrain at the
+            // corners. Keeps the H1 in the center crisp while the
+            // section corners get the old-TV texture. --
+            float grainMask = smoothstep(0.15, 1.0, r2);
             float grain = rand(gl_FragCoord.xy * 0.5 + vec2(uTime * 13.0, uTime * 17.0)) - 0.5;
-            rgb += vec3(grain) * uGrain;
+            rgb += vec3(grain) * uGrain * grainMask;
 
             gl_FragColor = vec4(rgb, 1.0);
           }
@@ -8176,8 +8216,15 @@
           const phase = (((t - m.t.d) % dur) + dur) % dur / dur;
           const xLeft = -w + phase * 2 * w;
           const yTop  = (m.t.y / 100) * h;
-          m.mesh.position.x = xLeft + m.t.w / 2;
-          m.mesh.position.y = h - yTop - m.t.h / 2;
+          // 3.0 round 46.19 — snap plane positions to integer device
+          // pixels so the texture-to-screen mapping is 1:1 without
+          // sub-pixel rasterization. Eliminates the side-to-side
+          // border thickness fluctuation that happens when the
+          // plane edge falls on a non-integer screen position and
+          // the GPU rasterizer distributes the edge over 2-3
+          // destination pixels asymmetrically.
+          m.mesh.position.x = Math.round((xLeft + m.t.w / 2) * DPR) / DPR;
+          m.mesh.position.y = Math.round((h - yTop - m.t.h / 2) * DPR) / DPR;
         }
 
         // (a) render scene → render target
