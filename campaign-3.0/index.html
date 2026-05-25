@@ -3513,11 +3513,24 @@
     .agents-tab-item.active { background: transparent; }  /* no active hint */
 
     /* Cover (cloned into tab-item by JS — see setupAgentsMobile).
-       Full-bleed: width 100vw, no border-radius, runs to viewport edges. */
+       True full-bleed: width: 100vw alone is NOT enough — the cover is
+       a child of .agents-tab-item which itself sits in a container
+       chain (.agents-tabs-v → .agents-side → .agents-stage). Each
+       container has its own x-offset (~18 px from viewport edge), so a
+       `width: 100vw` cover starts AT the parent's x and overflows the
+       right side. Use the desktop "bleed-out" trick (same as
+       .play-carousel margin: calc(50% - 50vw)) — negative margins
+       cancel the parent's x-offset and pull the cover back to x=0,
+       making it true edge-to-edge regardless of how nested the
+       container is. */
     .agents-tab-item .agents-card-cover {
+      position: relative;
       width: 100vw;
       max-width: 100vw;
-      margin: 0 0 18px;
+      margin-left:  calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
+      margin-top: 0;
+      margin-bottom: 18px;
       border-radius: 0;
       aspect-ratio: 3 / 2;
     }
@@ -4223,17 +4236,29 @@
      headline now needs its own typographic treatment (large, weighted,
      brand-teal accent on the verb cluster).
      ============================================================ */
+  /* 3.0 round 31 — width tightened to 540, dialog width capped via
+     #modal-cant-find .dialog override below. Headline + form sit
+     tighter; bigger margin between them. */
+  #modal-cant-find .dialog {
+    max-width: 540px;
+    padding: 48px 44px 40px;
+  }
   .cant-find-headline {
     margin: 0;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(24px, 2.6vw, 32px);
+    font-size: clamp(24px, 2.6vw, 30px);
     line-height: 1.25;
     letter-spacing: -0.018em;
     color: var(--text);
     max-width: 640px;
   }
   .cant-find-headline .alva { color: var(--alva); }
+  /* The cant-find form was glued to the headline. Push it down so the
+     CTA pair reads as a clear "next step" instead of an appendix. */
+  #modal-cant-find .search-form {
+    margin-top: 24px;
+  }
   .search-form {
     display: flex;
     gap: 10px;
@@ -4529,210 +4554,228 @@
      bordered tile, side-by-side. Collapses to single column on
      narrow widths.
      ============================================================ */
-  /* 3.0 round 25 — FinTwit Rewards modal (3-step wizard). Replaces
-     the round-21 .fk-* layout. Mirrors the reference implementation
-     at ~/Downloads/campaign-3.0.html. */
-  #modal-for-kols .reward-panel[hidden] { display: none !important; }
-  #modal-for-kols .reward-dialog {
-    max-width: 760px;
-    position: relative;
+  /* 3.0 round 26 — modal style reverted from the round-25 wizard back
+     to the .fk-* family. 4 states (input / result-on / result-tracked
+     / result-untracked) cycle in/out via the [hidden] attribute.
+     3.0 round 31 — max-width tightened (was inheriting the generic
+     .dialog width ~760) and inner gap pulled apart so the action
+     row sits visibly below the body copy. */
+  .fk-dialog {
+    max-width: 580px;
+    /* 3.0 round 33 — bottom padding cut 44 → 24 so the View-Full-
+       Leaderboard link sits with roughly equal breathing room above
+       (divider + padding-top 20) and below (24px dialog padding). */
+    padding: 52px 48px 24px;
+    /* 3.0 round 33 — dialog can smoothly resize between states; JS in
+       the for-kols modal sets explicit height + transitions it. */
+    transition: height .35s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  #modal-for-kols .reward-dialog > .close {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    z-index: 2;
-  }
-  #modal-for-kols .dialog-head { padding-right: 48px; }
-  #modal-for-kols .steps {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 28px;
-    border-top: 0;
-  }
-  #modal-for-kols .step {
+  .fk-state {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 14px;
-    padding: 22px 18px 20px;
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    border-bottom: 1px solid var(--line);
   }
-  #modal-for-kols .step .num {
+  .fk-state[hidden] { display: none; }
+  .fk-headline {
+    margin: 0;
     font-family: var(--font-display);
-    font-size: 32px;
-    font-weight: 900;
-    color: var(--alva);
-    line-height: 1;
-    letter-spacing: -0.02em;
-    text-transform: none;
-  }
-  #modal-for-kols .step .desc {
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text);
-  }
-  #modal-for-kols .reward-form {
-    margin-top: 22px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 10px;
-    align-items: center;
-  }
-  #modal-for-kols .reward-form input {
-    width: 100%;
-    min-height: 48px;
-    padding: 0 16px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font);
-    font-weight: 500;
-    font-size: 14px;
-    outline: none;
-  }
-  #modal-for-kols .reward-form input:focus {
-    border-color: rgba(73,163,166,0.55);
-    box-shadow: 0 0 0 4px rgba(73,163,166,0.13);
-  }
-  #modal-for-kols .reward-result {
-    display: none;
-    margin-top: 16px;
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    background: rgba(10,10,16,0.03);
-    font-size: 13px;
-    line-height: 1.5;
-  }
-  #modal-for-kols .reward-result.is-visible { display: block; }
-  #modal-for-kols .reward-result.is-eligible {
-    border-color: rgba(34,197,94,0.28);
-    background: rgba(34,197,94,0.08);
-    color: #166534;
-  }
-  #modal-for-kols .reward-result.is-error {
-    border-color: rgba(239,68,68,0.22);
-    background: rgba(239,68,68,0.07);
-    color: #991b1b;
-  }
-  #modal-for-kols .reward-result b {
-    display: block;
-    margin-bottom: 4px;
-    color: currentColor;
-    font-size: 14px;
-  }
-  #modal-for-kols .creator-share-card {
-    margin-top: 22px;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    background:
-      radial-gradient(circle at 16% 10%, rgba(73,163,166,0.22), transparent 34%),
-      linear-gradient(135deg, #ffffff 0%, #f5fbfb 48%, #eff7f7 100%);
-    box-shadow: 0 10px 28px rgba(10,10,16,0.06);
-  }
-  #modal-for-kols .creator-share-top {
-    padding: 22px;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 14px;
-    align-items: center;
-  }
-  #modal-for-kols .creator-share-top img {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: 1px solid rgba(10,10,16,0.08);
-    background: #fff;
-  }
-  #modal-for-kols .creator-share-name {
-    font-size: 20px;
     font-weight: 700;
-    line-height: 1.05;
+    font-size: clamp(26px, 2.8vw, 36px);
+    line-height: 1.18;
+    letter-spacing: -0.018em;
     color: var(--text);
+    max-width: 640px;
   }
-  #modal-for-kols .creator-share-handle {
-    margin-top: 4px;
-    font-family: var(--font);
-    font-weight: 500;
-    font-size: 12px;
-    color: var(--muted);
-  }
-  #modal-for-kols .creator-share-badge {
-    padding: 8px 11px;
-    border-radius: 999px;
-    background: rgba(73,163,166,0.13);
-    color: var(--alva);
-    font-family: var(--font);
-    font-weight: 600;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  #modal-for-kols .creator-share-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    border-top: 1px solid rgba(10,10,16,0.08);
-  }
-  #modal-for-kols .creator-share-stat {
-    padding: 16px 20px;
-    border-right: 1px solid rgba(10,10,16,0.08);
-  }
-  #modal-for-kols .creator-share-stat:last-child { border-right: 0; }
-  #modal-for-kols .creator-share-stat span {
-    display: block;
-    color: var(--muted);
-    font-family: var(--font);
-    font-weight: 500;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  #modal-for-kols .creator-share-stat b {
-    display: block;
-    margin-top: 6px;
-    font-size: 22px;
-    line-height: 1;
-    color: var(--text);
-    font-weight: 700;
-  }
-  #modal-for-kols .reward-share-actions {
+  .fk-headline .alva { color: var(--alva); }
+  /* 3.0 round 30 — form back to input + primary on the SAME row
+     (input flex 1, primary auto). View-Full-Leaderboard moves to a
+     dedicated row below the form (ghost pill), left-aligned.
+     3.0 round 31 — margin-top bumped 8 → 22 so the form sits visibly
+     under the headline rather than crowding it. */
+  .fk-form {
     margin-top: 22px;
     display: flex;
     gap: 10px;
+    align-items: center;
     flex-wrap: wrap;
   }
-  #modal-for-kols .reward-switch {
-    margin-top: 12px;
-    border: 0;
+  .fk-form input {
+    flex: 1 1 280px;
+    min-width: 240px;
+  }
+  .fk-form .btn-primary {
+    flex: 0 0 auto;
+  }
+  /* Secondary ghost pill — used by both the input panel ("View Full
+     Leaderboard") and the result panels' .fk-actions row. Same height
+     + radius as .btn-primary so primary/secondary read as a balanced
+     button pair. */
+  .fk-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 24px;
     background: transparent;
-    padding: 0;
+    border: 1px solid rgba(10, 10, 16, 0.18);
+    border-radius: 999px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s, transform .15s;
+  }
+  .fk-secondary:hover {
+    border-color: rgba(10, 10, 16, 0.32);
+    background: rgba(10, 10, 16, 0.03);
+    transform: translateY(-1px);
+  }
+  /* 3.0 round 32 — input state alt row: a divider line above + a
+     centred borderless link below. Visually splits "do the primary
+     action" (form row) from "alternative path" (View Full Leaderboard)
+     instead of squishing them as two stacked CTAs. */
+  .fk-alt-row {
+    align-self: stretch;
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: center;
+  }
+  /* Plain variant of the secondary — strips the ghost-pill border + bg
+     so the View-Leaderboard link reads as a quiet text action, not a
+     competing button. Hover keeps the simple color shift. */
+  .fk-secondary-plain {
+    border: 0 !important;
+    background: transparent !important;
+    padding: 6px 4px !important;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .fk-secondary-plain:hover {
+    color: var(--text);
+    background: transparent !important;
+    transform: none;
+  }
+  .fk-result-body {
+    margin: 0;
     color: var(--muted);
     font-family: var(--font);
-    font-weight: 500;
-    font-size: 12px;
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    cursor: pointer;
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 560px;
   }
-  #modal-for-kols .reward-switch:hover { color: var(--text); }
-  @media (max-width: 540px) {
-    #modal-for-kols .steps { grid-template-columns: 1fr; }
-    #modal-for-kols .reward-form { grid-template-columns: 1fr; }
-    #modal-for-kols .creator-share-top { grid-template-columns: auto 1fr; }
-    #modal-for-kols .creator-share-badge { grid-column: 1 / -1; justify-self: start; }
-    #modal-for-kols .creator-share-stats { grid-template-columns: 1fr; }
-    #modal-for-kols .creator-share-stat {
-      border-right: 0;
-      border-bottom: 1px solid rgba(10,10,16,0.08);
-    }
-    #modal-for-kols .creator-share-stat:last-child { border-bottom: 0; }
+  .fk-result-body strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .fk-actions {
+    /* 3.0 round 31 — bigger margin-top (was 4) so the action row
+       reads as a separate "next step" zone, not as another line of
+       the body paragraph.
+       3.0 round 32 — items now flex: 1 so primary + secondary each
+       grow to fill half the row (full row width split between them). */
+    margin-top: 18px;
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .fk-actions > .btn-primary,
+  .fk-actions > .fk-secondary {
+    flex: 1 1 0;
+    justify-content: center;
+    text-align: center;
+  }
+  /* 3.0 round 32 — Playbook card now fills the dialog width so it
+     reads as the section's main visual (no longer a narrow inset). */
+  .fk-card-wrap {
+    width: 100%;
+    margin: 4px 0 4px;
+  }
+  /* 3.0 round 33 — disable .card's grid-page hover effect when it
+     appears inside this modal. The card is a display-only artefact
+     here (not a clickable target), so the scale + lift would feel
+     interactive without offering any interaction. */
+  .fk-card-wrap .card:hover {
+    transform: none;
+    box-shadow:
+      0 12px 28px -10px rgba(20,20,30,0.12),
+      0 4px 10px -2px rgba(20,20,30,0.05);
+    z-index: auto;
+  }
+  .fk-eyebrow-good {
+    color: var(--alva);
+  }
+  @media (max-width: 760px) {
+    .fk-dialog { padding: 40px 28px 32px; }
+    .fk-headline { font-size: clamp(22px, 6vw, 28px); }
+  }
+
+  /* ===========================================================
+     DEMO HINT (round-28 temporary). Sibling of .dialog inside
+     #modal-for-kols; the parent modal becomes a flex column for
+     this modal id so the hint stacks directly under the dialog
+     with a tight 10px gap. Shares the modal's open/closed
+     lifecycle — no separate visibility logic needed.
+     Disposable: remove the .fk-demo-hint element and these rules
+     before shipping.
+     =========================================================== */
+  #modal-for-kols.modal {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .fk-demo-hint {
+    width: min(440px, 100%);
+    padding: 12px 16px 14px;
+    background: rgba(10, 10, 16, 0.92);
+    color: rgba(255,255,255,0.92);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 12px;
+    box-shadow: 0 14px 32px rgba(10,10,16,0.18);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    font-family: var(--font);
+    line-height: 1.45;
+    /* The modal's flex centering puts dialog + hint both centered
+       horizontally; this width matches the embedded .fk-card-wrap
+       width inside the dialog, so the hint reads as a companion
+       caption sitting just under the playbook card. */
+  }
+  .fk-demo-hint-head {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--alva-hi);
+  }
+  .fk-demo-hint-head b {
+    font-weight: 600;
+  }
+  .fk-demo-hint-head i {
+    font-size: 12px;
+  }
+  .fk-demo-hint-body {
+    margin-top: 6px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.86);
+  }
+  .fk-demo-hint-body code {
+    display: inline-block;
+    padding: 1px 6px;
+    margin: 0 1px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.10);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  @media (max-width: 760px) {
+    .fk-demo-hint { padding: 10px 12px 12px; }
+    .fk-demo-hint-body { font-size: 12px; }
   }
   #modal-for-kols .step {
     display: flex;
@@ -6263,7 +6306,7 @@
       <a class="nav-tab" href="#leaderboard" data-section="leaderboard"><i class="ph ph-trophy"></i><span>Leaderboard</span></a>
     </nav>
     <div class="nav-actions">
-      <button class="nav-cta-ghost" type="button" data-open="for-kols"><i class="ph-bold ph-megaphone"></i> FinTwit Rewards</button>
+      <button class="nav-cta-ghost" type="button" data-open="for-kols"><i class="ph-bold ph-megaphone"></i> For FinTwit Traders</button>
       <!-- Mobile-only hamburger toggle. Hidden by CSS on ≥761w (desktop
            shows the inline tabs + both CTAs). On mobile this becomes
            the entry point to a top drawer that holds the 3 section
@@ -6306,7 +6349,7 @@
     <div class="nav-drawer-sep" aria-hidden="true"></div>
     <button class="nav-drawer-action" type="button" data-open="for-kols">
       <i class="ph-bold ph-megaphone" aria-hidden="true"></i>
-      <span>FinTwit Rewards</span>
+      <span>For FinTwit Traders</span>
     </button>
   </div>
 </header>
@@ -6822,91 +6865,118 @@
   </div>
 </div>
 
-<!-- 3.0 round 25 — modal restructured to match the reference rewards
-     flow at ~/Downloads/campaign-3.0.html. Three sequential panels:
-       intro — pitch + 3-step explainer + Check eligibility CTA
-       check — handle input + result area (Not Eligible / proceed to card)
-       card  — share card with Best ROI · Rank · Reward + X share CTA
-     Demo eligibility table: handle "2" → eligible; everything else
-     comes back Not Eligible. -->
+<!-- 3.0 round 26 — Reverted the round-25 wizard back to input → 3-result
+     architecture per harryz: keep eyebrow "For FinTwit Traders" + big
+     headline + handle input + Check button + View Full Leaderboard
+     link, then route to one of three result panels. Demo uses simple
+     deterministic routing: input "1" → on leaderboard, "2" → tracked
+     but not on board, "3" → untracked. (Anything else lands on the
+     untracked panel.) Copy is placeholder pending the design team's
+     final pass. -->
 <div class="modal" id="modal-for-kols" aria-hidden="true">
-  <div class="dialog reward-dialog">
+  <div class="dialog fk-dialog">
     <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
 
-    <!-- STEP 1 — intro -->
-    <section class="reward-panel" data-reward-step="intro">
-      <div class="dialog-head">
-        <div>
-          <span class="eyebrow">FinTwit Rewards</span>
-          <h3>Share your Playbook Card. Earn Alva Credits.</h3>
-        </div>
-      </div>
-      <p>Eligible FinTwit Traders can share their audited Playbook Card on X and unlock FinTwit Rewards, including up to <b>$10,000 worth of Alva Credits</b>.</p>
-      <div class="steps">
-        <div class="step"><span class="num">01</span><span class="desc">Check whether your X handle is on the current reward list.</span></div>
-        <div class="step"><span class="num">02</span><span class="desc">If eligible, share your Playbook Card on X.</span></div>
-        <div class="step"><span class="num">03</span><span class="desc">We verify the public share and DM you on X with the next reward steps.</span></div>
-      </div>
-      <div class="notice">Rewards are not issued instantly in this demo. After you share, Alva will review the X post and contact eligible Traders directly.</div>
-      <div class="dialog-actions">
-        <button class="btn-primary" type="button" id="reward-start-btn">
-          <i class="ph-bold ph-arrow-right"></i> Check eligibility
-        </button>
-      </div>
-    </section>
-
-    <!-- STEP 2 — check eligibility -->
-    <section class="reward-panel" data-reward-step="check" hidden>
-      <div class="dialog-head">
-        <div>
-          <span class="eyebrow">Step 1 · Eligibility</span>
-          <h3>Enter your X handle.</h3>
-        </div>
-      </div>
-      <p>We'll check whether this handle is on the current Trader reward list.</p>
-      <form class="reward-form" id="for-kols-form" autocomplete="off">
-        <input type="text" name="handle" placeholder="Try 1 or 2" aria-label="Trader X handle" required />
-        <button type="submit" class="btn-primary">
-          <i class="ph-bold ph-magnifying-glass"></i> Check
-        </button>
+    <!-- STATE 1 — input -->
+    <div class="fk-state" data-fk-state="input">
+      <span class="eyebrow">For FinTwit Traders</span>
+      <h3 class="fk-headline">We backtested thousands of FinTwit accounts. The top XX get <span class="alva">$XXX in Claude Opus credits</span>.</h3>
+      <form class="bcard-form fk-form" id="for-kols-form">
+        <input type="text" name="handle" placeholder="@your-x-handle" aria-label="Your X handle" required />
+        <button type="submit" class="btn-primary">Check if I made the cut</button>
       </form>
-      <div class="reward-result" id="reward-result" role="status" aria-live="polite"></div>
-    </section>
+      <div class="fk-alt-row">
+        <a class="fk-secondary fk-secondary-plain" href="#leaderboard" data-fk-leaderboard>View Full Leaderboard →</a>
+      </div>
+    </div>
 
-    <!-- STEP 3 — eligible card + share -->
-    <section class="reward-panel" data-reward-step="card" hidden>
-      <div class="dialog-head">
-        <div>
-          <span class="eyebrow">Eligible</span>
-          <h3>You're eligible for FinTwit Rewards.</h3>
-        </div>
-      </div>
-      <p>Share your Playbook Card on X. After you post, the Alva team will manually verify the public share and DM you on X with next steps.</p>
-      <article class="creator-share-card" aria-label="Trader reward share card">
-        <div class="creator-share-top">
-          <img id="reward-card-avatar" src="" alt="">
-          <div>
-            <div class="creator-share-name" id="reward-card-name">Trader</div>
-            <div class="creator-share-handle" id="reward-card-handle">@trader</div>
+    <!-- STATE 2 — on leaderboard. 3.0 round 27 — card reuses the
+         exact .card / .card-inner / .pc-head / .pc-score / .pc-rank
+         markup from the #modal-results grid so the visual is
+         identical to the full-screen Playbook card the user has
+         already seen elsewhere on the page. Demo placeholder values;
+         change before ship. -->
+    <div class="fk-state" data-fk-state="result-on" hidden>
+      <span class="eyebrow fk-eyebrow-good"><i class="ph-bold ph-trophy"></i> Congratulations</span>
+      <h3 class="fk-headline">You made the <span class="alva">Alva FinTwit Alpha League</span>.</h3>
+      <p class="fk-result-body">Share your verified track record on X and we will be in touch to distribute to you the reward.</p>
+      <div class="fk-card-wrap">
+        <article class="card c-1">
+          <div class="card-inner">
+            <div class="pc-head">
+              <div class="pc-id">
+                <img class="avatar" src="https://ui-avatars.com/api/?name=You&background=49A3A6&color=fff&bold=true&size=128" alt="Your Playbook">
+                <div>
+                  <div class="pc-name" data-fk-card-name>Your Playbook</div>
+                  <div class="pc-handle" data-fk-card-handle>@you</div>
+                </div>
+              </div>
+            </div>
+            <div class="pc-score">
+              <div>
+                <div class="label">Account Score</div>
+                <div class="val">84</div>
+                <div class="type">Macro Regime</div>
+              </div>
+              <div class="pc-rank">
+                <svg viewBox="0 0 100 100"><circle class="ring-track" cx="50" cy="50" r="45" fill="none" stroke-width="4"></circle><circle class="ring-fill" cx="50" cy="50" r="45" fill="none" stroke-width="4" stroke-dasharray="283" stroke-dashoffset="269"></circle></svg>
+                <div class="ring-text"><span class="l">Rank</span><span class="v">Top 5%</span></div>
+              </div>
+            </div>
           </div>
-          <div class="creator-share-badge">Eligible</div>
-        </div>
-        <div class="creator-share-stats">
-          <div class="creator-share-stat"><span>Best ROI</span><b id="reward-card-roi">+0.0%</b></div>
-          <div class="creator-share-stat"><span>Rank</span><b id="reward-card-rank">Top 10%</b></div>
-          <div class="creator-share-stat"><span>Reward</span><b>$10K</b></div>
-        </div>
-      </article>
-      <div class="reward-share-actions">
-        <button class="btn-primary" type="button" id="reward-share-btn">
-          <i class="ph-bold ph-x-logo"></i> Share Playbook Card on X
-        </button>
+        </article>
       </div>
-      <button class="reward-switch" type="button" id="reward-check-another-btn">Check a different handle</button>
-      <div class="reward-result" id="reward-share-note" role="status" aria-live="polite"></div>
-      <div class="notice">Rewards are not issued instantly. Keep the post public until verification is complete.</div>
-    </section>
+      <div class="fk-actions">
+        <button type="button" class="btn-primary fk-share">
+          <i class="ph-bold ph-x-logo"></i> Share my Playbook Card
+        </button>
+        <button type="button" class="fk-secondary fk-reset">Check another handle</button>
+      </div>
+    </div>
+
+    <!-- STATE 3 — tracked but not on leaderboard -->
+    <div class="fk-state" data-fk-state="result-tracked" hidden>
+      <span class="eyebrow">You're indexed</span>
+      <h3 class="fk-headline">Your <span class="alva">Playbook</span> is live — keep posting.</h3>
+      <p class="fk-result-body">You didn't crack the league this round. Your full audited track record is published; rankings refresh every hour.</p>
+      <div class="fk-actions">
+        <button type="button" class="btn-primary fk-open-playbook">
+          <i class="ph-bold ph-arrow-up-right"></i> Open my Playbook
+        </button>
+        <a class="fk-secondary" href="#leaderboard" data-fk-leaderboard>View Full Leaderboard →</a>
+      </div>
+    </div>
+
+    <!-- STATE 4 — not yet indexed -->
+    <div class="fk-state" data-fk-state="result-untracked" hidden>
+      <span class="eyebrow">Not yet indexed</span>
+      <h3 class="fk-headline">We haven't backtested <span class="alva" data-fk-handle>@you</span> yet.</h3>
+      <p class="fk-result-body">Drop a request and we'll kick off your full audited backtest end-to-end. Public posts only, failed calls counted.</p>
+      <div class="fk-actions">
+        <button type="button" class="btn-primary fk-submit-index">
+          <i class="ph-bold ph-paper-plane-tilt"></i> Submit index request
+        </button>
+        <button type="button" class="fk-secondary fk-reset">Try another handle</button>
+      </div>
+    </div>
   </div>
+
+  <!-- 3.0 round 28 — DEMO HINT (temporary). Now lives INSIDE the
+       modal as a sibling of .dialog so it shares the modal's
+       open/closed lifecycle: appears only when the user opens the
+       For-FinTwit-Traders modal, disappears when closed. The
+       parent .modal is flex column for this modal id, so the hint
+       sits directly under the dialog with a small gap. Remove this
+       block before shipping. -->
+  <aside class="fk-demo-hint" role="note" aria-label="Demo logic hint">
+    <div class="fk-demo-hint-head">
+      <i class="ph-bold ph-flask"></i>
+      <b>Demo logic</b>
+    </div>
+    <div class="fk-demo-hint-body">
+      Type <code>1</code> · <code>2</code> · <code>3</code> and submit to preview the three result states (on-leaderboard / tracked / untracked).
+    </div>
+  </aside>
 </div>
 
 <!-- 3.0: Paste-handles modal — alternate entry to the scan flow for
@@ -8124,162 +8194,127 @@
     card.classList.add('bcard-dark');
   });
 
-  /* 3.0 round 25 — FinTwit Rewards claim flow (3-step wizard):
-       intro  → user reads the pitch + clicks "Check eligibility"
-       check  → user enters their handle; demo-eligibility table
-                says only "2" is eligible. Non-match shows
-                Not-Eligible result line; match advances to next step.
-       card   → eligible share card with avatar + name + handle +
-                Best ROI · Rank · Reward, plus "Share Playbook Card
-                on X" CTA and a "Check a different handle" reset.
-     Reset every time the modal re-opens unless the user is mid-flow
-     in an eligible state, in which case we keep the share card. */
+  /* 3.0 round 26 — modal JS reverted to input → 3-result routing.
+     Demo path: literal input "1" / "2" / "3" routes the user to
+     result-on / result-tracked / result-untracked respectively. Any
+     other input lands on result-untracked (the "we haven't seen you"
+     path) so QA can also enter their real handle and see a sensible
+     state. A separate floating .fk-demo-hint outside the modal
+     documents the routing. */
   (() => {
     const modal = document.getElementById('modal-for-kols');
     if (!modal) return;
-    const panels = modal.querySelectorAll('[data-reward-step]');
-    const startBtn = document.getElementById('reward-start-btn');
+    const dialog = modal.querySelector('.fk-dialog');
     const form = document.getElementById('for-kols-form');
-    const result = document.getElementById('reward-result');
-    const shareBtn = document.getElementById('reward-share-btn');
-    const shareNote = document.getElementById('reward-share-note');
-    const checkAnotherBtn = document.getElementById('reward-check-another-btn');
-    const input = form?.querySelector('input');
+    if (!dialog || !form) return;
 
-    // Demo eligibility table. Handle "2" is the only eligible. The
-    // single demo entry is enough to show the eligible UI path —
-    // everything else lands in the Not-Eligible result.
-    const eligibleTraders = {
-      '2': { name: 'Demo Trader 2', handle: '@2', roi: '+28.1%', rank: 'Top 18%', avatar: 'https://ui-avatars.com/api/?name=2&background=49A3A6&color=fff&bold=true&size=128' }
-    };
-    let selectedTrader = null;
-    let hasEligibleState = false;
-
-    function showStep(step) {
-      panels.forEach(panel => {
-        panel.hidden = panel.dataset.rewardStep !== step;
-      });
-    }
-    function cleanHandle(raw) {
-      const text = (raw || '').trim();
-      const match = text.match(/(?:x\.com|twitter\.com)\/([A-Za-z0-9_]+)/i);
-      return (match ? match[1] : text)
-        .replace(/^@+/, '')
-        .split(/[\s/?#]/)[0]
-        .toLowerCase();
-    }
-    function setResult(type, title, body) {
-      if (!result) return;
-      result.className = `reward-result is-visible ${type}`;
-      result.innerHTML = `<b>${title}</b>${body}`;
-    }
-    function clearShareNote() {
-      if (!shareNote) return;
-      shareNote.className = 'reward-result';
-      shareNote.innerHTML = '';
-    }
-    function resetCheckState(focusInput = false) {
-      selectedTrader = null;
-      hasEligibleState = false;
-      if (result) {
-        result.className = 'reward-result';
-        result.innerHTML = '';
-      }
-      clearShareNote();
-      if (input) {
-        input.disabled = false;
-        if (focusInput) input.focus();
-      }
-    }
-    function populateCard(trader) {
-      const avatar = document.getElementById('reward-card-avatar');
-      const name = document.getElementById('reward-card-name');
-      const handle = document.getElementById('reward-card-handle');
-      const roi = document.getElementById('reward-card-roi');
-      const rank = document.getElementById('reward-card-rank');
-      if (avatar) {
-        avatar.src = trader.avatar;
-        avatar.alt = trader.handle;
-        avatar.onerror = () => {
-          avatar.onerror = null;
-          avatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(trader.name)}&background=49A3A6&color=fff&bold=true&size=128`;
-        };
-      }
-      if (name) name.textContent = trader.name;
-      if (handle) handle.textContent = trader.handle;
-      if (roi) roi.textContent = trader.roi;
-      if (rank) rank.textContent = trader.rank;
-    }
-    function resetRewardFlow() {
-      showStep('intro');
-      resetCheckState(false);
-      if (form) form.reset();
-    }
-    function prepareRewardFlow() {
-      if (hasEligibleState && selectedTrader) {
-        populateCard(selectedTrader);
-        showStep('card');
+    /* 3.0 round 33 — animate the dialog's height between states so the
+       size change reads as a smooth transition, not an abrupt jump.
+       Process:
+         1) Measure the current height
+         2) Swap the [hidden] flags to the new state
+         3) Measure the new natural height (after layout settles)
+         4) Pin the height back to the old value, force reflow
+         5) Set the height to the new value — CSS transition on
+            .fk-dialog (height .35s) animates it
+         6) Drop the explicit height once the transition ends so the
+            dialog returns to auto-sizing on subsequent layout shifts */
+    let animTimer = 0;
+    function showState(name) {
+      const states = dialog.querySelectorAll('.fk-state');
+      const current = Array.from(states).find(el => !el.hidden);
+      const next = Array.from(states).find(el => el.dataset.fkState === name);
+      if (!next || current === next) {
+        states.forEach(el => { el.hidden = (el.dataset.fkState !== name); });
         return;
       }
-      resetRewardFlow();
+      const oldHeight = dialog.offsetHeight;
+      states.forEach(el => { el.hidden = (el.dataset.fkState !== name); });
+      // Drop any pinned height so we can measure the natural new height.
+      dialog.style.height = 'auto';
+      const newHeight = dialog.offsetHeight;
+      // Pin to old, force reflow, then transition to new.
+      dialog.style.height = oldHeight + 'px';
+      // eslint-disable-next-line no-unused-expressions
+      void dialog.offsetHeight;
+      dialog.style.height = newHeight + 'px';
+      clearTimeout(animTimer);
+      animTimer = setTimeout(() => {
+        dialog.style.height = '';
+      }, 380);
     }
-    window.resetCreatorRewardsFlow = resetRewardFlow;
-    window.prepareCreatorRewardsFlow = prepareRewardFlow;
 
-    startBtn?.addEventListener('click', () => {
-      showStep('check');
-      requestAnimationFrame(() => input?.focus());
-    });
-    checkAnotherBtn?.addEventListener('click', () => {
-      resetCheckState(true);
-      if (form) form.reset();
-      showStep('check');
-    });
-    form?.addEventListener('submit', e => {
+    // Strip a leading @ but keep the rest verbatim — we want the
+    // user-typed @handle to flow through to the result panels.
+    function normaliseHandle(raw) {
+      const cleaned = (raw || '').trim().replace(/^@+/, '').replace(/\s+/g, '');
+      return cleaned ? '@' + cleaned : '';
+    }
+
+    // 1/2/3 → fixed result states. Anything else falls through to
+    // the untracked panel. Keep the routing simple + visible — this
+    // is a demo wiring, not a real check.
+    function pickResultState(rawInput) {
+      const trimmed = (rawInput || '').trim().replace(/^@+/, '');
+      if (trimmed === '1') return 'result-on';
+      if (trimmed === '2') return 'result-tracked';
+      if (trimmed === '3') return 'result-untracked';
+      return 'result-untracked';
+    }
+
+    form.addEventListener('submit', e => {
       e.preventDefault();
-      const key = cleanHandle(input?.value);
-      if (!key) return;
-      hasEligibleState = false;
-      if (input) input.disabled = true;
-      setResult('', 'Checking reward list…', 'Matching your handle against the current eligible Trader list.');
-
-      setTimeout(() => {
-        const trader = eligibleTraders[key];
-        if (!trader) {
-          selectedTrader = null;
-          hasEligibleState = false;
-          if (input) {
-            input.disabled = false;
-            input.focus();
-          }
-          setResult('is-error', 'Not Eligible', 'This handle is not on the current reward list yet. Keep publishing strong market calls and check back in the next campaign.');
-          return;
-        }
-        selectedTrader = trader;
-        hasEligibleState = true;
-        if (input) input.disabled = false;
-        populateCard(trader);
-        clearShareNote();
-        showStep('card');
-      }, 650);
-    });
-    shareBtn?.addEventListener('click', () => {
-      if (!selectedTrader) return;
-      const text = `My Alva FinTwit Playbook Card is eligible for FinTwit Rewards.\n\n${selectedTrader.handle} · ${selectedTrader.roi} Best ROI · ${selectedTrader.rank}\n\nWho else should Alva track?`;
-      const url = 'https://alva.xyz/leaderboard';
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
-      if (shareNote) {
-        shareNote.className = 'reward-result is-visible is-eligible';
-        shareNote.innerHTML = '<b>X opened in a new tab.</b>After you publish the post, the Alva team will manually verify it and DM you on X. The reward is not issued instantly.';
-      }
+      const raw = form.querySelector('input').value;
+      if (!raw.trim()) return;
+      const handle = normaliseHandle(raw);
+      const state = pickResultState(raw);
+      // Untracked panel embeds the handle in its headline.
+      dialog.querySelectorAll('[data-fk-handle]').forEach(el => {
+        el.textContent = handle;
+      });
+      showState(state);
     });
 
-    // Reset to intro each time the modal opens — unless user has an
-    // active eligible state, in which case prepareRewardFlow lands
-    // them back on the share card.
+    dialog.querySelectorAll('.fk-reset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        form.querySelector('input').value = '';
+        showState('input');
+      });
+    });
+
+    dialog.querySelector('.fk-share')?.addEventListener('click', () => {
+      const handle = normaliseHandle(form.querySelector('input').value);
+      const text = encodeURIComponent(
+        `I made the Alva FinTwit Alpha League. Verified track record, every public call backtested. ${handle}`
+      );
+      const url = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent('https://alva.xyz/leaderboard')}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    });
+
+    dialog.querySelector('.fk-open-playbook')?.addEventListener('click', () => {
+      const handle = normaliseHandle(form.querySelector('input').value);
+      window.open(`https://alva.xyz/p/${handle.replace(/^@/, '')}`, '_blank', 'noopener,noreferrer');
+    });
+
+    dialog.querySelector('.fk-submit-index')?.addEventListener('click', () => {
+      const handle = normaliseHandle(form.querySelector('input').value);
+      const text = encodeURIComponent(`Please index and backtest ${handle} in the FinTwit Alpha League.`);
+      const url = `https://twitter.com/intent/tweet?text=${text}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    });
+
+    dialog.querySelectorAll('[data-fk-leaderboard]').forEach(a => {
+      a.addEventListener('click', () => {
+        const closeBtn = modal.querySelector('[data-close]');
+        if (closeBtn) closeBtn.click();
+      });
+    });
+
+    // Snap back to input every time the modal re-opens.
     const mo = new MutationObserver(() => {
       if (modal.classList.contains('open')) {
-        prepareRewardFlow();
+        form.querySelector('input').value = '';
+        showState('input');
       }
     });
     mo.observe(modal, { attributes: true, attributeFilter: ['class'] });
