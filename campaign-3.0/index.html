@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ALVA · The FinTwit Alpha League — backtested rankings</title>
-<meta name="description" content="Alva backtests every public call from FinTwit's most-followed creators and ranks them by real returns. Wins, misses, even deleted posts." />
+<meta name="description" content="Alva backtests every public call from FinTwit's most-followed Traders and ranks them by real returns. Wins, misses, even deleted posts." />
 <!-- 3.0 round 6 — Brand-wide swap to Delight (9 weights, locally hosted).
      Google Fonts links removed; Delight covers 100..900 so it replaces
      all three previous families (Inter / Space Grotesk / JetBrains Mono).
@@ -183,10 +183,23 @@
     padding: 0 32px;
     gap: 24px;
   }
-  .brand { display: inline-flex; align-items: center; }
+  /* 3.0 round 21 — gap between the Alva mark and the FINTWIT wordmark.
+     mark + wordmark = combined identity (Alva is the company, FinTwit
+     Alpha League is the campaign). 10px gap is small enough that the
+     two read as one composite logo, not two separate marks. */
+  .brand { display: inline-flex; align-items: center; gap: 10px; }
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+    display: block;
+    /* Subtle 1px radius rounding inherited from the SVG paths; no
+       additional border-radius needed. */
+  }
   /* 3.0 round 9 — old .brand-mark logo + 2-line .brand-text replaced
      by a single SVG wordmark. SVG handles the equal-width trick via
-     textLength + lengthAdjust internally. */
+     textLength + lengthAdjust internally.
+     3.0 round 21 — wordmark now sits to the right of the restored
+     Alva mark. */
   .brand-wordmark {
     width: 100px;
     height: 32px;
@@ -878,6 +891,9 @@
        (Previous tight padding made this section feel rushed
        relative to the hero above and the leaderboard below.) */
     padding: 120px 0 120px;
+    /* 3.0 round 23 — z-index:2 dropped along with the round-18 overlap
+       (see #agents comment). Sections are flush now, so this no longer
+       needs to "win" over an overlap zone. */
     /* 3.0 round 27 — S2 bg reverted from solid var(--alva) back to a
        semi-transparent brand-green wash (user: "改成有透明度的品牌绿").
        Solid alva felt heavy against the white S1/S3 neighbours. The
@@ -2750,6 +2766,10 @@
   #leaderboard {
     position: relative;
     isolation: isolate;
+    /* 3.0 round 23 — z-index:2 dropped along with the round-18 overlap
+       trick. Sections are flush; leaderboard no longer needs to "punch
+       through" #agents' bottom. The isolation:isolate above still
+       keeps the aurora ::before contained. */
     /* 3.0 round 4 — swapped backgrounds with #agents (Use Cases): the
        Leaderboard now wears the teal wash + radial gradients that used
        to live on #agents, and Use Cases takes the pure white that used
@@ -2791,6 +2811,11 @@
        2) Animate filter via hue-rotate — colors continuously cycle
           0→360deg over 14s, making the ring visibly shift through
           the rainbow. */
+  /* 3.0 round 23 — aurora ::before RESTORED. Round 22 I had wrongly
+     attributed the user-reported "leaderboard 顶部色带" to the aurora
+     and stripped it; user corrected: the band was actually from the
+     round-18 negative-margin overlap (now reverted, see #agents above).
+     Aurora was always a deliberate design element — kept. */
   #leaderboard::before {
     content: '';
     position: absolute;
@@ -2823,27 +2848,14 @@
     z-index: 0;
     pointer-events: none;
     background:
-      /* Cone-shaped halo: 上窄下宽. Each row of blobs is positioned
-         progressively farther from horizontal center as you descend,
-         and gets larger + more saturated. Top row hugs the center
-         (35%/65% — only a couple px past the card edge); bottom row
-         is at -5%/105% (significantly past the card width + extending
-         past the section boundary downward). */
-      /* Row 1 — TOP, narrowest, faintest. Blobs sit near center so
-         they barely peek out past the card. */
       radial-gradient(280px 200px at 38% 14%, rgba(255,158,200,0.22) 0%, transparent 70%),
       radial-gradient(280px 200px at 62% 14%, rgba(212,178,255,0.22) 0%, transparent 70%),
-      /* Row 2 — upper-mid, slightly wider */
       radial-gradient(360px 260px at 22% 36%, rgba(255,196,158,0.32) 0%, transparent 70%),
       radial-gradient(360px 260px at 78% 36%, rgba(160,200,255,0.32) 0%, transparent 70%),
-      /* Row 3 — middle, hugging card edge */
       radial-gradient(440px 320px at  8% 58%, rgba(170,240,220,0.45) 0%, transparent 70%),
       radial-gradient(440px 320px at 92% 58%, rgba(255,158,200,0.45) 0%, transparent 70%),
-      /* Row 4 — lower-mid, breaking past card edge */
       radial-gradient(540px 380px at -2% 80%, rgba(212,178,255,0.55) 0%, transparent 70%),
       radial-gradient(540px 380px at 102% 80%, rgba(255,226,170,0.55) 0%, transparent 70%),
-      /* Row 5 — BOTTOM, widest, strongest. Blobs extend WELL past
-         the card on the sides AND past the section bottom. */
       radial-gradient(680px 460px at -8% 105%, rgba(255,196,158,0.60) 0%, transparent 72%),
       radial-gradient(680px 460px at 108% 105%, rgba(170,240,220,0.60) 0%, transparent 72%),
       radial-gradient(600px 420px at 50% 112%, rgba(160,200,255,0.55) 0%, transparent 72%);
@@ -2851,10 +2863,6 @@
     animation: lbHueRotate 18s linear infinite;
     will-change: filter;
   }
-  /* Rotates the conic's hue continuously — every 14s the entire
-     rainbow shifts one full cycle, so the visible peek colors are
-     constantly changing (this is what makes it READ as colors
-     changing, not the previous transform translate). */
   @keyframes lbHueRotate {
     0%   { filter: blur(30px) hue-rotate(0deg);   }
     100% { filter: blur(30px) hue-rotate(360deg); }
@@ -3127,11 +3135,443 @@
      green sections read as a paired pair within the cadence. */
   /* 3.0 round 4 — swapped backgrounds with #leaderboard. Use Cases
      now sits on pure white (var(--bg-soft)); the teal wash + radial
-     gradients moved to the Leaderboard rule below. */
+     gradients moved to the Leaderboard rule below.
+     3.0 round 13 — overflow flipped to visible so the position:sticky
+     pin child below works correctly (overflow:hidden on the ancestor
+     of a sticky element breaks the sticky behavior). */
+  /* 3.0 round 23 — REVERT the round-18/19 negative-margin overlap
+     trick. User flagged: the "leaderboard 顶部色带" I had blamed on
+     the aurora was actually caused by THIS overlap. With margin-bottom
+     -150 + z-index:2 on #leaderboard, leaderboard's bg renders 150px
+     EARLIER than its physical box starts (inside the bottom of
+     #agents), producing the visible horizontal step the user sees
+     above the leaderboard card. Same story at the top boundary.
+     The reveal-neighbour-section effect the user originally wanted is
+     already covered by the round-21 pin-fills-viewport architecture
+     (top:0 / height:100vh) — pin scrolls in/out naturally and
+     neighbours appear at the boundaries without needing a margin
+     overlap. So: sections flush, no negative margin, no z-index trick,
+     no isolation. #agents bg kept as flat 8% alva so the "below pin"
+     area (during exit) doesn't show body-grey. */
   #agents {
     position: relative;
+    background: rgba(73,163,166,0.08);
+  }
+
+  /* ============================================================
+     USE CASES PIN-SCROLL  (3.0 round 13)
+     The section is 600vh tall; the sticky child pins at top:64px so
+     vertical scroll across the section's range converts to horizontal
+     card advance. When the section is fully inside the viewport the
+     page appears to stop scrolling — instead the cards inside cycle
+     1..5 — then the page releases and resumes to the next section.
+     ============================================================ */
+  .agents-pin-section {
+    /* 3.0 round 21 — section height 180vh → 200vh now that pin is
+       100vh full-viewport. Scroll lock range = 200vh - 100vh = 100vh,
+       split across 5 cards → 20vh per card slice. */
+    height: 200vh;
+    padding: 0;
+    /* Transparent so previous/next sections show through whenever the
+       section's vertical area extends past the pin. */
+    background: transparent;
+  }
+  /* 3.0 round 21 — pin is now a TRUE full-viewport stage. User noted
+     "上下的灰色块体验很差，能看到前一个section还在出场，但灰块已经在了":
+     with the old top:140 / height: calc(100vh-280), the section had a
+     140px transparent gap above and below the pin, and during entry
+     the previous section was still scrolling out while #agents' flat
+     bg was already visible in that gap — reading as a grey block.
+     Fix: pin top:0 + height:100vh so the pin fills the entire viewport
+     once it engages. No transparent gap above or below within the pin
+     range. The handoff between neighbour and pin happens at the
+     section edge: as audit-yours scrolls up, its bottom slides over
+     the pin until audit-yours fully exits viewport, then the pin
+     fills the screen. Inner padding-top bumped 88 → 96 to keep the
+     content well clear of the fixed 64px nav.
+     The negative-margin section overlap (-150) still applies, so the
+     z-index layering still produces real-neighbour-bleed at the
+     entry/exit boundaries — but it now layers OVER the pin's top
+     instead of next to a transparent gap. */
+  .agents-pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100%;
     overflow: hidden;
     background: var(--bg-soft);
+  }
+  .agents-pin-inner {
+    width: 100%;
+    max-width: 1320px;
+    height: 100%;
+    margin: 0 auto;
+    /* 3.0 round 21 — padding-top raised to clear the 64px fixed nav
+       PLUS give the H2 visual breathing room. Bottom padding kept at
+       56 for the cards' base margin. Horizontal 16 matches the
+       section-wrap. */
+    padding: 96px 16px 56px;
+    display: block;
+  }
+  /* 2-col grid: left sidebar (heading + tabs) + right card stage.
+     3.0 round 15 — left rail widened 380 → 480 (heading at display-l
+     wraps cleanly here, tabs in card style have room). Border between
+     columns removed since each tab is now its own card. */
+  .agents-stage {
+    height: 100%;
+    display: grid;
+    /* 3.0 round 24 — gap tightened 72 → 44 to bring the right card
+       column closer to the left tab rail. The left column kept at
+       480 width; right column gets the remainder + a smaller stage
+       gap = more room for the (now larger) cards. */
+    grid-template-columns: 480px 1fr;
+    gap: 44px;
+  }
+  .agents-side {
+    display: flex;
+    flex-direction: column;
+    /* 3.0 round 17 — content vertically centered in the side rail
+       so heading + tabs sit as a single block, equal top/bottom
+       breathing room (instead of glued to the top). */
+    justify-content: center;
+    height: 100%;
+    min-height: 0;
+  }
+  .agents-head {
+    /* 3.0 round 17 — gap to tabs grown 32 → 56 so the tabs feel
+       like a distinct group, not an extension of the subtitle. */
+    margin-bottom: 56px;
+    flex-shrink: 0;
+  }
+  /* TS token: display-l — canonical for all section H2s (S2/S3/S4) */
+  .agents-head h2 {
+    margin: 0 0 18px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(28px, 3.2vw, 44px);
+    line-height: 1.15;
+    letter-spacing: -0.018em;
+    color: var(--text);
+  }
+  .agents-head h2 .alva { color: var(--alva); }
+  /* TS token: lead — canonical for all section subtitles */
+  .agents-head p {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font);
+    font-weight: 400;
+    font-size: clamp(16px, 1.4vw, 19px);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+  }
+  .agents-tabs-v {
+    display: flex;
+    flex-direction: column;
+    /* 3.0 round 20 — small gap (8px) between the now-card-wrapped tab
+       items. Tight enough to read as a single stacked list, loose
+       enough that each card's border doesn't merge with the next. */
+    gap: 8px;
+    padding: 0;
+    /* 3.0 round 17 — no flex:1 (would force the tab list to stretch);
+       takes natural height so .agents-side can vertically center. */
+    flex-shrink: 0;
+  }
+  /* 3.0 round 20 — user noted "左侧tab还是得包一层底色，现在都混在一起了".
+     Round 19 stripped chrome entirely; result was that 5 plain-text
+     tab titles + the H2 sub above all read as one undifferentiated
+     text block. Fix: wrap each .agents-tab-item in a soft card. NOT
+     the previous grey pill — instead, the section bg is a teal wash,
+     so we use a pure white card with a 1px line on top, gentle radius,
+     and generous internal padding. Cards stack tight (small gap) so
+     they read as a vertical list, not floating pills.
+     Active card: keeps the same white bg (no color invert) but the
+     title turns brand teal AND the detail (subtitle + CTA) reveals
+     beneath the title, inside the same card. So switching active
+     tab = the same card "expands" while neighbouring cards stay
+     compact. */
+  /* 3.0 round 22 — tab item style retuned per user: inactive becomes
+     gray-bg with NO border; active becomes white-bg (no border) so the
+     visual hierarchy is "neutral grey wash" → "lifted white card". The
+     bg contrast alone carries the active/inactive signal — no
+     competing border weight needed.
+       inactive: rgba(10,10,16,0.04) — soft grey wash
+       active:   var(--bg-soft) (pure white) — pops against the grey */
+  .agents-tab-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: rgba(10, 10, 16, 0.04);
+    border: 0;
+    border-radius: 14px;
+    padding: 14px 22px;
+    transition: background .2s;
+  }
+  .agents-tab-item:hover {
+    background: rgba(10, 10, 16, 0.07);
+  }
+  .agents-tab-v {
+    position: relative;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    font-family: var(--font);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color .2s;
+    white-space: normal;
+  }
+  .agents-tab-v:hover {
+    color: var(--text);
+  }
+  /* Active title: brand-teal. Card bg stays white; the bg distinction
+     comes from the EXPANDED detail block beneath the title. */
+  .agents-tab-item.active .agents-tab-v {
+    color: var(--alva);
+    font-weight: 600;
+  }
+  /* 3.0 round 24 — active card: brand-teal tint only, no shadow.
+     User flagged shadow as unwanted; the bg-color difference between
+     neutral grey (inactive) and brand teal (active) already carries
+     enough hierarchy. Cleaner, flatter look. */
+  .agents-tab-item.active {
+    background: rgba(73, 163, 166, 0.10);
+  }
+  /* Detail block (subtitle + CTA) — collapsed by default, expanded when
+     parent .agents-tab-item is .active. max-height animation gives a
+     gentle expand/collapse without layout-jank when the active tab
+     changes during scroll-lock progression. */
+  .agents-tab-detail {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: max-height .35s ease, opacity .25s ease, transform .25s ease, padding .3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .agents-tab-item.active .agents-tab-detail {
+    max-height: 280px;
+    opacity: 1;
+    transform: translateY(0);
+    padding: 12px 0 4px;
+  }
+  .agents-tab-detail p {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font);
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 440px;
+  }
+  .agents-tab-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    padding: 12px 24px;
+    border-radius: 999px;
+    background: var(--text);
+    color: #fff;
+    text-decoration: none;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    transition: background .15s, transform .15s;
+  }
+  .agents-tab-cta:hover { background: var(--alva); transform: translateY(-1px); }
+
+  /* Right column window — vertical-stack carousel.
+     3.0 round 14 — stage overflow flipped to visible so adjacent
+     cards bleed BEYOND the stage box. The pin's own overflow:hidden
+     (top: just-below-nav, bottom: section.bottom) is what does the
+     final clip — so the prev/next cards get cut by the SECTION
+     edges, not by a tighter inner container. */
+  .agents-cards-stage {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: visible;
+  }
+  .agents-track {
+    display: flex;
+    flex-direction: column;
+    /* 3.0 round 24 — gap pulled in 80 → 32 so adjacent cards sit
+       close, reading as a tight vertical reel. */
+    gap: 32px;
+    /* Track is taller than stage; JS sets translateY in PIXELS to
+       center the active card within stage (so card[0] starts
+       vertically centered, not flush with top). */
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+  .agents-card {
+    flex: 0 0 auto;
+    /* 3.0 round 24 — card proportionally scaled up. max-width 620 →
+       760 so the cover fills more of the right column and reads as
+       the section's hero element. 3:2 aspect ratio preserved (cover
+       inside still uses aspect-ratio: 3/2). Right-aligned via
+       margin-left:auto so the card's right edge still matches the
+       leaderboard's right edge. */
+    width: 100%;
+    max-width: 760px;
+    margin: 0 0 0 auto;
+    display: block;
+    padding-right: 0;
+  }
+  .agents-card-cover {
+    /* 3:2 banner — matches the original card cover ratio so the cover
+       reads as a wide product hero, not a tall poster. */
+    aspect-ratio: 3 / 2;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    position: relative;
+    color: #fff;
+    overflow: hidden;
+  }
+  .agents-card-cover::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.18) 1px, transparent 1.5px);
+    background-size: 18px 18px;
+    opacity: 0.45;
+  }
+  .agents-card-cover i {
+    position: relative;
+    z-index: 1;
+    font-size: 104px;
+    filter: drop-shadow(0 10px 28px rgba(0,0,0,0.22));
+  }
+  .agents-card-cover[data-variant="teal"]   { background: linear-gradient(135deg, #49A3A6 0%, #5cb9bc 60%, #2f7a7d 100%); }
+  .agents-card-cover[data-variant="dark"]   { background: linear-gradient(135deg, #1a1a1e 0%, #0a0a10 65%, #000 100%); }
+  .agents-card-cover[data-variant="warm"]   { background: linear-gradient(135deg, #ff8a4c 0%, #ff6f3a 55%, #c84c1f 100%); }
+  .agents-card-cover[data-variant="purple"] { background: linear-gradient(135deg, #b388ff 0%, #8a5cf2 60%, #5b2bb8 100%); }
+
+  /* (3.0 round 19 — .agents-card-body / .agents-card-cta removed; the
+     subtitle + CTA now live in the left column under each tab title,
+     not in the right-column card. The card is just the visual cover.) */
+
+  /* Mobile fallback — pin doesn't make sense on narrow screens; the
+     section collapses to a static stack. 3.0 round 19 — since each tab
+     now carries its own detail (subtitle + CTA), and the right-column
+     cards only carry the visual cover, mobile shows ALL tab items as
+     "open" (every detail visible) and all card covers stacked beneath.
+     Reading order: tab title + subtitle + CTA list on top, card covers
+     after — the cover is then a visual recap of each use case. */
+  @media (max-width: 900px) {
+    /* ====== AGENTS / USE CASES SECTION — mobile rebuild ======
+       Per user feedback (2026-05-25): "第三个 section 在移动端不要 tab,
+       改成图+文+按钮 直接纵向往下排. 而且这个 section 左右要撑满."
+
+       Strategy:
+       1. Defeat the pin-scroll (already done in earlier rounds)
+       2. Drop the tab affordance entirely — no left-rail title list, no
+          active-state highlight. Each entry becomes a self-contained
+          mini-card: cover (full-bleed) → title → body → CTA, stacked.
+       3. Section bleeds edge-to-edge horizontally. Section head + body
+          text keep their own 18 px inner padding for readability;
+          covers run flush with viewport edges.
+       4. The covers themselves live in `.agents-cards-stage` in the
+          DOM. We CLONE each cover into its matching `.agents-tab-item`
+          via JS (see setupAgentsMobile) on mount, so the cover sits
+          on top of its description. Original covers stay in the stage
+          for desktop; the stage itself is hidden on mobile. */
+
+    .agents-pin-section { height: auto; padding: 48px 0; }
+    .agents-pin { position: static; height: auto; overflow: visible; }
+    /* Section bleeds full-width — no LR padding on the inner wrap.
+       Section head + tab-item text re-add 18 px LR padding so reading
+       columns still feel inset. */
+    .agents-pin-inner { padding: 0; gap: 0; }
+    .agents-stage { grid-template-columns: 1fr; gap: 0; }
+    .agents-side { padding: 0; height: auto; }
+    .agents-head { padding: 0 18px; margin-bottom: 28px; }
+
+    /* Tabs container becomes a plain vertical stack of cards. */
+    .agents-tabs-v {
+      flex-direction: column;
+      gap: 36px;                         /* breathing between cards */
+    }
+    /* Each tab-item is now a "use case card", NOT a tab.
+       Layout: cover (full-bleed) → title → body → CTA, all stacked. */
+    .agents-tab-item {
+      background: transparent;            /* strip the desktop pill bg */
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .agents-tab-item:hover { background: transparent; }   /* no hover hint */
+    .agents-tab-item.active { background: transparent; }  /* no active hint */
+
+    /* Cover (cloned into tab-item by JS — see setupAgentsMobile).
+       Full-bleed: width 100vw, no border-radius, runs to viewport edges. */
+    .agents-tab-item .agents-card-cover {
+      width: 100vw;
+      max-width: 100vw;
+      margin: 0 0 18px;
+      border-radius: 0;
+      aspect-ratio: 3 / 2;
+    }
+    .agents-tab-item .agents-card-cover i {
+      font-size: 96px;                    /* match desktop cover icon */
+    }
+
+    /* Title — now an H3-style heading, no tab affordance. Uniform color
+       across all items (no active-state teal tint). */
+    .agents-tab-v {
+      font-size: 22px;
+      font-weight: 600;
+      line-height: 1.25;
+      color: var(--text);
+      padding: 0 18px;
+      margin: 0 0 10px;
+      cursor: default;                    /* no click hint */
+    }
+    .agents-tab-v:hover { color: var(--text); }
+    .agents-tab-item.active .agents-tab-v { color: var(--text); }
+
+    /* Body — force visible (no max-height/opacity animation), readable
+       body floor. */
+    .agents-tab-detail {
+      max-height: none;
+      opacity: 1;
+      transform: none;
+      padding: 0 18px;
+      gap: 16px;
+    }
+    .agents-tab-detail p {
+      font-size: 16px;
+      line-height: 1.55;
+      max-width: none;
+    }
+    /* CTA pill — full WCAG / Apple HIG touch target. */
+    .agents-tab-cta {
+      padding: 14px 22px;
+      min-height: 44px;
+      font-size: 14px;
+      align-self: flex-start;
+    }
+
+    /* Hide the original cards-stage (covers are cloned into tab-items). */
+    .agents-cards-stage { display: none; }
+
+    /* Track / card defensive resets in case the stage ever shows. */
+    .agents-track {
+      transform: none !important;
+      flex-direction: column;
+      height: auto;
+      gap: 16px;
+    }
+    .agents-card { flex: 0 0 auto; height: auto; padding-right: 0; }
   }
   /* (3.0 round 43 — S4 background animation removed entirely, see
      companion comment on the S2 stage section. Section bg now relies
@@ -3778,7 +4218,22 @@
      Reuses .modal/.dialog chrome; adds .search-form pill input + pill
      submit row. Submit flips data-state="sent" which hides the form
      and shows the confirmation block.
+     3.0 round 21 — .cant-find-headline rule below: the cant-find modal
+     stripped its eyebrow + paragraph + trust line per harryz, so the
+     headline now needs its own typographic treatment (large, weighted,
+     brand-teal accent on the verb cluster).
      ============================================================ */
+  .cant-find-headline {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(24px, 2.6vw, 32px);
+    line-height: 1.25;
+    letter-spacing: -0.018em;
+    color: var(--text);
+    max-width: 640px;
+  }
+  .cant-find-headline .alva { color: var(--alva); }
   .search-form {
     display: flex;
     gap: 10px;
@@ -3898,22 +4353,23 @@
 
   /* ============================================================
      ALVA ATTRIBUTION BADGE  (persistent bottom-right, light card)
-     Cross-site nudge: "this is powered by Alva — see more playbooks"
+     Cross-site nudge: "Powered by Alva — Your AI Investing Agent".
+     3.0 round 21 — simplified: 2 lines tight. Line 1 reads as a
+     single phrase "Powered by [logo] Alva" with the mark inline.
+     Line 2 is the product tagline. No more separate logo-stacked-
+     above-text layout.
      ============================================================ */
   .alva-badge {
     position: fixed;
     right: 20px;
     bottom: 20px;
     z-index: 45;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 16px;
-    width: 168px;          /* squarer card — fixed width */
-    background: rgba(255,255,255,0.92);
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 18px;
+    background: rgba(255,255,255,0.94);
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: 0 10px 28px rgba(10,10,16,0.08);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -3922,38 +4378,44 @@
     transition: transform .15s ease, box-shadow .15s ease;
   }
   .alva-badge:hover {
-    transform: translateY(-2px) scale(1.02);
+    transform: translateY(-2px);
     box-shadow: 0 22px 44px rgba(10,10,16,0.18);
   }
-  .alva-badge-mark {
-    width: 32px; height: 32px;
-    display: grid; place-items: center;
-    flex-shrink: 0;
-  }
-  .alva-badge-mark svg { width: 32px; height: 32px; display: block; }
-  .alva-badge-mark .lg-bg { fill: var(--alva); }
-  .alva-badge-mark .lg-fg { fill: var(--text); }
   .alva-badge-text {
     display: flex;
     flex-direction: column;
     line-height: 1.3;
+    gap: 2px;
   }
-  /* TS token: btn-s family */
-  .alva-badge-text b {
+  .alva-badge-line1 {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-family: var(--font);
     font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-    letter-spacing: 0;
-  }
-  /* TS token: tag (10px small variant) */
-  .alva-badge-text span {
-    margin-top: 4px;
-    font-family: var(--font-mono);
-    font-size: 10px;
     font-weight: 400;
     color: var(--muted);
-    letter-spacing: 0.06em;
+    line-height: 1;
+  }
+  .alva-badge-line1 b {
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .alva-badge-mark-inline {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .alva-badge-mark-inline .lg-bg { fill: var(--alva); }
+  .alva-badge-mark-inline .lg-fg { fill: var(--text); }
+  .alva-badge-line2 {
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0;
   }
 
   /* ============================================================
@@ -4067,6 +4529,92 @@
      bordered tile, side-by-side. Collapses to single column on
      narrow widths.
      ============================================================ */
+  /* 3.0 round 21 — For-FinTwit-Traders modal rewritten (see HTML
+     comment in #modal-for-kols). The .steps grid below was the
+     original 3-step explainer; the modal no longer uses it, but the
+     rules are left as legacy fallbacks (#modal-for-kols .steps is
+     now an empty selector for this DOM). New layout drives off the
+     .fk-* class family. */
+  .fk-dialog {
+    /* Dialog with breathing room around a single column of content. */
+    padding: 56px 56px 48px;
+  }
+  .fk-state {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .fk-state[hidden] { display: none; }
+  /* Big single-stack headline — the offer/reward IS the hook. */
+  .fk-headline {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(26px, 2.8vw, 36px);
+    line-height: 1.18;
+    letter-spacing: -0.018em;
+    color: var(--text);
+    max-width: 640px;
+  }
+  .fk-headline .alva { color: var(--alva); }
+  .fk-form {
+    margin-top: 8px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .fk-form input {
+    flex: 1 1 280px;
+    min-width: 240px;
+  }
+  .fk-form .btn-primary {
+    flex: 0 0 auto;
+  }
+  .fk-secondary {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+    background: transparent;
+    border: 0;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color .15s;
+  }
+  .fk-secondary:hover { color: var(--text); }
+  .fk-result-body {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 560px;
+  }
+  .fk-result-body strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .fk-actions {
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  /* Eyebrow accent when the result is "Congratulations" — brand-teal
+     so it reads as a win, not a neutral label. */
+  .fk-eyebrow-good {
+    color: var(--alva);
+  }
+  @media (max-width: 760px) {
+    .fk-dialog { padding: 40px 28px 32px; }
+    .fk-headline { font-size: clamp(22px, 6vw, 28px); }
+  }
   #modal-for-kols .steps {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -4959,7 +5507,7 @@
     .nav-tabs { display: none; }
     .nav-cta-ghost { display: none; }
 
-    /* Primary "Test any FinTwit creator" CTA stays inline — it's the
+    /* Primary "Test any FinTwit Trader" CTA stays inline — it's the
        single most important action on the page and a sticky bottom
        bar reinforces it elsewhere. Touch target floor pulled up to
        Apple HIG (44 CSS px) / WCAG 2.5.8. */
@@ -5047,7 +5595,32 @@
     }
     .float-tweet.tier-near { width: 220px !important; font-size: 12px !important; }
     .float-tweet.tier-far  { width: 164px !important; font-size: 10px !important; }
-    .float-tweet:nth-child(n+5) { display: none; }
+    /* Hero float-tweet visibility on mobile.
+       PREVIOUS rule was `:nth-child(n+5) { display: none }` — kept the
+       first 4 cards (HTML order 1-4). But those 4 are all in the upper
+       half of the section (y = 32 / 18 / 4 / 38 %), leaving the bottom
+       half of the viewport blank — user reported "下面一半屏幕都是白色,
+       看不到后面飘的卡片".
+       Fix: hide-all + handpick 7 cards whose --y values cover the full
+       vertical range (4 % → 92 %) without crowding the H1 zone
+       (~30-55 % is where the headline + sub sit). Card y-distribution:
+         #3  y=4%   top edge
+         #2  y=18%  upper third
+         #4  y=38%  H1 left flank
+         #7  y=56%  below sub
+         #15 y=68%  mid-low
+         #11 y=78%  lower third
+         #8  y=92%  bottom edge */
+    .opening-bg .float-tweet { display: none !important; }
+    .opening-bg .float-tweet:nth-child(2),
+    .opening-bg .float-tweet:nth-child(3),
+    .opening-bg .float-tweet:nth-child(4),
+    .opening-bg .float-tweet:nth-child(7),
+    .opening-bg .float-tweet:nth-child(8),
+    .opening-bg .float-tweet:nth-child(11),
+    .opening-bg .float-tweet:nth-child(15) {
+      display: block !important;
+    }
     /* (The WebGL lens canvas init is skipped on phones in JS, so this
        rule is just a belt-and-braces hide.) */
     .lens-canvas { display: none !important; }
@@ -5542,7 +6115,13 @@
          forces both lines to identical width; FINTWIT (naturally
          shorter) gets stretched proportionally to match ALPHA LEAGUE
          on the second line. -->
-    <a class="brand" href="#top" aria-label="FinTwit Alpha League">
+    <a class="brand" href="#top" aria-label="Alva — FinTwit Alpha League">
+      <!-- 3.0 round 21 — Alva brand mark restored to the left of the
+           FINTWIT / ALPHA LEAGUE wordmark, per harryz: "左上角最好还是
+           要放Alva logo". The mark + wordmark together read as a
+           combined identity: Alva logo (visual brand) + FinTwit Alpha
+           League (campaign sub-brand). -->
+      <img class="brand-mark" src="./logo.svg" alt="" aria-hidden="true">
       <svg class="brand-wordmark"
            viewBox="0 0 100 32"
            xmlns="http://www.w3.org/2000/svg"
@@ -5572,11 +6151,11 @@
       <a class="nav-tab" href="#leaderboard" data-section="leaderboard"><i class="ph ph-trophy"></i><span>Leaderboard</span></a>
     </nav>
     <div class="nav-actions">
-      <button class="nav-cta-ghost" type="button" data-open="for-kols"><i class="ph-bold ph-megaphone"></i> For FinTwit creators</button>
+      <button class="nav-cta-ghost" type="button" data-open="for-kols"><i class="ph-bold ph-megaphone"></i> For FinTwit Traders</button>
       <!-- Mobile-only hamburger toggle. Hidden by CSS on ≥761w (desktop
            shows the inline tabs + both CTAs). On mobile this becomes
            the entry point to a top drawer that holds the 3 section
-           tabs + the "For FinTwit creators" ghost action — nothing in
+           tabs + the "For FinTwit Traders" ghost action — nothing in
            the nav gets deleted, just relocated for the narrow canvas.
            Reference patterns: GitHub mobile, Linear iOS, Vercel mobile. -->
       <button class="nav-menu-toggle" type="button"
@@ -5615,7 +6194,7 @@
     <div class="nav-drawer-sep" aria-hidden="true"></div>
     <button class="nav-drawer-action" type="button" data-open="for-kols">
       <i class="ph-bold ph-megaphone" aria-hidden="true"></i>
-      <span>For FinTwit creators</span>
+      <span>For FinTwit Traders</span>
     </button>
   </div>
 </header>
@@ -5776,7 +6355,7 @@
       </div>
     </div>
 
-    <div class="card-marquee" aria-label="FinTwit creator scorecards ticker">
+    <div class="card-marquee" aria-label="FinTwit Trader scorecards ticker">
       <!-- Row 1 — drifts left -->
       <div class="marquee-row" data-dir="left">
         <div class="marquee-track">
@@ -5830,61 +6409,105 @@
   </section>
 
 
-  <!-- ============================================================ SECTION · USE CASES  (3.0 round 3 — moved above leaderboard)
-       "What can you do with our Playbooks?" — 3 main use cases (01-03)
-       + 2 derived plays. Sits between the Playbooks marquee (S2) and
-       the Leaderboard (S3) so the page flow matches the nav order:
-       Playbooks → Use Cases → Leaderboard.
+  <!-- ============================================================ SECTION · USE CASES  (3.0 round 13 — pin-scroll redesign)
+       "What can you do with our Playbooks?"
+       Layout: section is ~6 viewport-heights tall. Inside, a sticky
+       container pins to the viewport top while the user scrolls
+       through the section's full height; vertical scroll progress is
+       converted into a horizontal card advance — when the section is
+       fully visible, the page appears to "stop" and the cards inside
+       cycle one by one; once all 5 cards have been seen, the sticky
+       releases and the page resumes scrolling to Section 4.
+       Left rail: vertical tabs (each tab text = card title). Right:
+       horizontal track of 5 stacked cards, each filling the right
+       column; adjacent cards bleed off the section edges (clipped).
+       Tabs are clickable too — click jumps to the matching scroll
+       position so users who don't want to scroll can still navigate.
        ============================================================ -->
-  <section class="section section-playbook" id="agents">
-    <div class="section-wrap">
-      <div class="section-head">
-        <h2>What can you do with <span class="alva">our Playbooks?</span></h2>
-        <p>Powered by verified track records, not hype, not noise.</p>
-      </div>
+  <section class="section agents-pin-section" id="agents">
+    <div class="agents-pin">
+      <div class="agents-pin-inner">
+        <div class="agents-stage">
+          <!-- Left column: section heading + tabs stacked. Heading is
+               above the tab list so the whole left rail reads as a
+               single sidebar; the right card column is uninterrupted
+               by any header above it (full-bleed top to bottom). -->
+          <aside class="agents-side">
+            <div class="agents-head">
+              <h2>What can you do with <span class="alva">our Playbooks?</span></h2>
+              <p>Powered by verified track records, not hype, not noise.</p>
+            </div>
+            <!-- 3.0 round 19 — tabs no longer carry their own pill-bg
+                 chrome; each tab is a plain left-aligned title, and the
+                 active tab also expands to show its subtitle + CTA
+                 inline beneath the title. The right column now carries
+                 just the visual cover, nothing else. Layout: list of
+                 .agents-tab-item; each wraps a .agents-tab-v title
+                 (button) + a .agents-tab-detail body which is only
+                 visible when the parent item has .active. -->
+            <nav class="agents-tabs-v" role="tablist" aria-label="Playbook use cases">
+              <div class="agents-tab-item active" data-idx="0">
+                <button class="agents-tab-v" type="button" role="tab" data-idx="0">Backtest win rates</button>
+                <div class="agents-tab-detail">
+                  <p>Stop guessing who's good. See exactly which calls made money, and which didn't.</p>
+                  <a class="agents-tab-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+                </div>
+              </div>
+              <div class="agents-tab-item" data-idx="1">
+                <button class="agents-tab-v" type="button" role="tab" data-idx="1">Simulate your ROI</button>
+                <div class="agents-tab-detail">
+                  <p>What if you'd followed every call? Now you can actually find out your ROI.</p>
+                  <a class="agents-tab-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+                </div>
+              </div>
+              <div class="agents-tab-item" data-idx="2">
+                <button class="agents-tab-v" type="button" role="tab" data-idx="2">Signals &amp; alerts</button>
+                <div class="agents-tab-detail">
+                  <p>Cut through the noise. Hundreds of tweets a day, condensed — and pinged the moment a tracked account posts a call worth acting on.</p>
+                  <a class="agents-tab-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+                </div>
+              </div>
+              <div class="agents-tab-item" data-idx="3">
+                <button class="agents-tab-v" type="button" role="tab" data-idx="3">Bull or Bear, by Asset</button>
+                <div class="agents-tab-detail">
+                  <p>See the bulls, the bears, and the debates between them — on the tickers everyone is trading.</p>
+                  <a class="agents-tab-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+                </div>
+              </div>
+              <div class="agents-tab-item" data-idx="4">
+                <button class="agents-tab-v" type="button" role="tab" data-idx="4">Stress-test your Trade</button>
+                <div class="agents-tab-detail">
+                  <p>Enter any idea before you trade. See what top FinTwit accounts have said about it — then let Alva check it against historical base rates and risk flags.</p>
+                  <a class="agents-tab-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
+                </div>
+              </div>
+            </nav>
+          </aside>
 
-      <!-- Row 2 — 5 tabs, each anchors to the matching card below.
-           3 main use cases (01–03) + 2 derived use cases (Bull/Bear, Stress-test).
-           Round-3 merge: old 03 "Digest signals" + 04 "Get alerts" collapsed
-           into a single signals-&-alerts card. -->
-      <div class="play-tabs" role="tablist" aria-label="Playbook use cases">
-        <button class="play-tab active" type="button" role="tab" data-target="play-bull-bear">Backtest win rates</button>
-        <button class="play-tab" type="button" role="tab" data-target="play-critique">Simulate ROI</button>
-        <button class="play-tab" type="button" role="tab" data-target="play-mix">Signals &amp; alerts</button>
-        <button class="play-tab" type="button" role="tab" data-target="play-screen">Bull or Bear</button>
-        <button class="play-tab" type="button" role="tab" data-target="play-watchlist">Stress-test</button>
-      </div>
-
-      <!-- Row 3 — 5 cards, horizontal scroll/snap, no card chrome.
-           Cards 1-3 are the three main use cases, numbered 01-03.
-           Cards 4-5 are the two derived plays (Bull/Bear, Stress-test). -->
-      <div class="play-carousel">
-        <div class="play-track" id="play-track">
-          <article class="play-card" id="play-bull-bear">
-            <div class="play-cover" data-variant="teal"><i class="ph ph-chart-bar"></i></div>
-            <p>Stop guessing who's good. See exactly which calls made money, and which didn't.</p>
-            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
-          </article>
-          <article class="play-card" id="play-critique">
-            <div class="play-cover" data-variant="dark"><i class="ph ph-chart-line-up"></i></div>
-            <p>What if you'd followed every call? Now you can actually find out your ROI.</p>
-            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
-          </article>
-          <article class="play-card" id="play-mix">
-            <div class="play-cover" data-variant="warm"><i class="ph ph-bell-simple-ringing"></i></div>
-            <p>Cut through the noise. Hundreds of tweets a day, condensed — and pinged the moment a tracked account posts a call worth acting on.</p>
-            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
-          </article>
-          <article class="play-card" id="play-screen">
-            <div class="play-cover" data-variant="teal"><i class="ph ph-scales"></i></div>
-            <p>See the bulls, the bears, and the debates between them — on the tickers everyone is trading.</p>
-            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
-          </article>
-          <article class="play-card" id="play-watchlist">
-            <div class="play-cover" data-variant="dark"><i class="ph ph-shield-warning"></i></div>
-            <p>Enter any idea before you trade. See what top FinTwit accounts have said about it — then let Alva check it against historical base rates and risk flags.</p>
-            <a class="play-cta" href="https://alva.ai/explore" target="_blank" rel="noreferrer">Open playbook <i class="ph-bold ph-arrow-up-right"></i></a>
-          </article>
+          <!-- Right column: a single-card-wide window onto a 5-card
+               vertical-stack track. JS sets transform: translateY(...)
+               based on scroll progress. 3.0 round 19 — cards now hold
+               ONLY the visual cover; subtitle + CTA moved to the left
+               column under the active tab. -->
+          <div class="agents-cards-stage">
+            <div class="agents-track" id="agents-track">
+              <article class="agents-card">
+                <div class="agents-card-cover" data-variant="teal"><i class="ph ph-chart-bar"></i></div>
+              </article>
+              <article class="agents-card">
+                <div class="agents-card-cover" data-variant="dark"><i class="ph ph-chart-line-up"></i></div>
+              </article>
+              <article class="agents-card">
+                <div class="agents-card-cover" data-variant="warm"><i class="ph ph-bell-simple-ringing"></i></div>
+              </article>
+              <article class="agents-card">
+                <div class="agents-card-cover" data-variant="teal"><i class="ph ph-scales"></i></div>
+              </article>
+              <article class="agents-card">
+                <div class="agents-card-cover" data-variant="dark"><i class="ph ph-shield-warning"></i></div>
+              </article>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -5922,7 +6545,7 @@
         </div>
         <div class="lb-header">
           <span class="idx">#</span>
-          <span class="who">Creator</span>
+          <span class="who">Trader</span>
           <span>Best ROI</span>
           <span class="hide-sm">Median</span>
           <span class="hide-sm">Win</span>
@@ -5940,7 +6563,7 @@
 <footer class="f">
   <div class="f-inner">
     <div class="f-disclaimer">
-      Based on public posts and reconstructed historical signals. Not financial advice. Alva does not recommend trading on any single creator's calls.
+      Based on public posts and reconstructed historical signals. Not financial advice. Alva does not recommend trading on any single Trader's calls.
     </div>
     <div>
       <a href="#" data-open="methodology">Methodology</a>
@@ -5961,24 +6584,30 @@
      in published studies: 15-25 %. -->
 <div class="sticky-cta-bar" id="stickyCta" aria-hidden="true" hidden>
   <button class="sc-cta" type="button" data-open="connect">
-    <i class="ph-bold ph-x-logo"></i> Test any FinTwit creator
+    <i class="ph-bold ph-x-logo"></i> Test any FinTwit Trader
   </button>
   <button class="sc-close" type="button" aria-label="Hide CTA bar">
     <i class="ph ph-x"></i>
   </button>
 </div>
 
-<!-- ============================================================ ALVA ATTRIBUTION BADGE (persistent bottom-right) ============================================================ -->
-<a class="alva-badge" href="https://alva.xyz" target="_blank" rel="noreferrer" aria-label="Powered by Alva — see more playbooks">
-  <span class="alva-badge-mark">
-    <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-label="ALVA">
-      <path class="lg-bg" fill-rule="evenodd" clip-rule="evenodd" d="M34.4684 0.397058C38.1369 -0.132341 41.8624 -0.132364 45.5309 0.397058C45.8246 0.439446 46.1194 0.486373 46.7086 0.580652C46.9049 0.612064 47.0035 0.628453 47.0914 0.648035C48.2192 0.899298 49.1009 1.77999 49.3522 2.9078C49.3717 2.99576 49.3872 3.09432 49.4186 3.29061C49.5129 3.8799 49.5598 4.17464 49.6022 4.46835C50.1316 8.13701 50.1316 11.8632 49.6022 15.5318C49.5598 15.8255 49.5128 16.1204 49.4186 16.7096C49.3871 16.906 49.3718 17.0044 49.3522 17.0924C49.1009 18.2202 48.2192 19.1009 47.0914 19.3521C47.0035 19.3717 46.9049 19.3871 46.7086 19.4185C46.1193 19.5128 45.8246 19.5607 45.5309 19.6031C43.6966 19.8678 41.8481 19.9996 39.9996 19.9996C28.9548 20.0001 20.0013 28.9538 20.0006 39.9986H19.9996C19.9997 41.8476 19.8679 43.6971 19.6031 45.5318C19.5608 45.8255 19.5128 46.1203 19.4186 46.7096C19.3871 46.906 19.3718 47.0043 19.3522 47.0924C19.1009 48.2202 18.2202 49.1009 17.0924 49.3521C17.0044 49.3717 16.906 49.3871 16.7096 49.4185C16.1203 49.5128 15.8255 49.5607 15.5318 49.6031C11.8632 50.1326 8.13701 50.1326 4.46837 49.6031C4.17464 49.5607 3.88002 49.5128 3.29064 49.4185C3.0942 49.3871 2.99583 49.3717 2.90783 49.3521C1.78005 49.1009 0.899342 48.2201 0.64806 47.0924C0.628444 47.0043 0.612121 46.9061 0.580677 46.7096C0.486402 46.1203 0.439464 45.8255 0.397083 45.5318C-0.132361 41.8632 -0.132361 38.137 0.397083 34.4683C0.439471 34.1746 0.486392 33.8799 0.580677 33.2906C0.612101 33.0942 0.628467 32.9958 0.64806 32.9078C0.899321 31.78 1.78002 30.8993 2.90783 30.648C2.99585 30.6284 3.09415 30.6121 3.29064 30.5807C3.87992 30.4864 4.17468 30.4394 4.46837 30.3971C6.30257 30.1324 8.15117 29.9996 9.99962 29.9996V29.9976C20.8724 29.9974 29.7188 21.322 29.9928 10.5152L29.9996 9.99862C29.9997 8.15047 30.1314 6.30225 30.3961 4.46835C30.4385 4.1746 30.4864 3.87999 30.5807 3.29061C30.6121 3.09428 30.6275 2.99577 30.6471 2.9078C30.8983 1.7801 31.7792 0.899397 32.9068 0.648035C32.9949 0.628428 33.0933 0.612069 33.2897 0.580652C33.8791 0.486335 34.1746 0.439454 34.4684 0.397058Z" />
-      <path class="lg-fg" fill-rule="evenodd" clip-rule="evenodd" d="M45.5312 30.3971C41.8626 29.8677 38.1372 29.8677 34.4687 30.3971C34.1749 30.4395 33.8794 30.4864 33.29 30.5807C33.0936 30.6121 32.9952 30.6275 32.9071 30.6471C31.7795 30.8984 30.8988 31.7793 30.6474 32.9069C30.6278 32.9949 30.6124 33.0941 30.581 33.2906C30.4867 33.8799 30.4388 34.1747 30.3964 34.4684C29.867 38.1368 29.867 41.8624 30.3964 45.5309C30.4388 45.8246 30.4867 46.1201 30.581 46.7096C30.6124 46.9059 30.6278 47.0044 30.6474 47.0924C30.8987 48.2201 31.7795 49.1009 32.9071 49.3522C32.9952 49.3718 33.0936 49.3872 33.29 49.4186C33.8794 49.5129 34.1749 49.5607 34.4687 49.6031C38.1371 50.1325 41.8627 50.1326 45.5312 49.6031C45.8249 49.5608 46.1196 49.5129 46.7089 49.4186C46.9052 49.3872 47.0038 49.3717 47.0917 49.3522C48.2195 49.1009 49.1012 48.2202 49.3525 47.0924C49.3721 47.0044 49.3874 46.906 49.4189 46.7096C49.5132 46.1201 49.5601 45.8246 49.6025 45.5309C50.1319 41.8624 50.1319 38.1369 49.6025 34.4684C49.5601 34.1747 49.5131 33.8799 49.4189 33.2906C49.3874 33.0941 49.3721 32.9949 49.3525 32.9069C49.1011 31.7792 48.2194 30.8983 47.0917 30.6471C47.0038 30.6275 46.9051 30.6121 46.7089 30.5807C46.1196 30.4864 45.8249 30.4395 45.5312 30.3971ZM15.5322 0.397086C11.8635 -0.132362 8.13731 -0.132362 4.46867 0.397086C4.17498 0.439473 3.88023 0.486393 3.29094 0.580679C3.09461 0.612093 2.9961 0.627503 2.90813 0.647086C1.78049 0.898312 0.899769 1.77928 0.648361 2.90685C0.628742 2.99491 0.612434 3.09405 0.580978 3.29064C0.486706 3.87984 0.43977 4.17467 0.397385 4.46837C-0.132023 8.13688 -0.132004 11.8624 0.397385 15.5309C0.439781 15.8246 0.48666 16.1201 0.580978 16.7096C0.6124 16.906 0.628754 17.0044 0.648361 17.0924C0.899708 18.2201 1.78042 19.1009 2.90813 19.3522C2.99611 19.3718 3.09457 19.3871 3.29094 19.4186C3.88032 19.5129 4.17493 19.5607 4.46867 19.6031C8.13731 20.1326 11.8635 20.1326 15.5322 19.6031C15.8258 19.5608 16.1207 19.5128 16.7099 19.4186C16.9063 19.3871 17.0047 19.3718 17.0927 19.3522C18.2204 19.1009 19.1011 18.2201 19.3525 17.0924C19.3721 17.0044 19.3875 16.9059 19.4189 16.7096C19.5132 16.1201 19.561 15.8246 19.6034 15.5309C20.1328 11.8624 20.1328 8.13685 19.6034 4.46837C19.5611 4.17466 19.5131 3.8799 19.4189 3.29064C19.3874 3.09405 19.3721 2.99491 19.3525 2.90685C19.1011 1.77924 18.2204 0.898318 17.0927 0.647086C17.0047 0.627474 16.9063 0.612111 16.7099 0.580679C16.1207 0.486415 15.8258 0.439463 15.5322 0.397086Z" />
-    </svg>
-  </span>
+<!-- ============================================================ ALVA ATTRIBUTION BADGE (persistent bottom-right)
+     3.0 round 21 — simplified per harryz 5/25 16:46 brief: logo no
+     longer on its own row. Line 1 = "Powered by [logo] Alva" with
+     the mark inline between the words. Line 2 = product tagline
+     "Your AI Investing Agent". Card layout becomes a single horizontal
+     content stream (smaller, tighter, less chrome). ============================================================ -->
+<a class="alva-badge" href="https://alva.xyz" target="_blank" rel="noreferrer" aria-label="Powered by Alva — Your AI Investing Agent">
   <span class="alva-badge-text">
-    <b>Powered by Alva</b>
-    <span>Discover more playbooks →</span>
+    <span class="alva-badge-line1">
+      <span>Powered by</span>
+      <svg class="alva-badge-mark-inline" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <path class="lg-bg" fill-rule="evenodd" clip-rule="evenodd" d="M34.4684 0.397058C38.1369 -0.132341 41.8624 -0.132364 45.5309 0.397058C45.8246 0.439446 46.1194 0.486373 46.7086 0.580652C46.9049 0.612064 47.0035 0.628453 47.0914 0.648035C48.2192 0.899298 49.1009 1.77999 49.3522 2.9078C49.3717 2.99576 49.3872 3.09432 49.4186 3.29061C49.5129 3.8799 49.5598 4.17464 49.6022 4.46835C50.1316 8.13701 50.1316 11.8632 49.6022 15.5318C49.5598 15.8255 49.5128 16.1204 49.4186 16.7096C49.3871 16.906 49.3718 17.0044 49.3522 17.0924C49.1009 18.2202 48.2192 19.1009 47.0914 19.3521C47.0035 19.3717 46.9049 19.3871 46.7086 19.4185C46.1193 19.5128 45.8246 19.5607 45.5309 19.6031C43.6966 19.8678 41.8481 19.9996 39.9996 19.9996C28.9548 20.0001 20.0013 28.9538 20.0006 39.9986H19.9996C19.9997 41.8476 19.8679 43.6971 19.6031 45.5318C19.5608 45.8255 19.5128 46.1203 19.4186 46.7096C19.3871 46.906 19.3718 47.0043 19.3522 47.0924C19.1009 48.2202 18.2202 49.1009 17.0924 49.3521C17.0044 49.3717 16.906 49.3871 16.7096 49.4185C16.1203 49.5128 15.8255 49.5607 15.5318 49.6031C11.8632 50.1326 8.13701 50.1326 4.46837 49.6031C4.17464 49.5607 3.88002 49.5128 3.29064 49.4185C3.0942 49.3871 2.99583 49.3717 2.90783 49.3521C1.78005 49.1009 0.899342 48.2201 0.64806 47.0924C0.628444 47.0043 0.612121 46.9061 0.580677 46.7096C0.486402 46.1203 0.439464 45.8255 0.397083 45.5318C-0.132361 41.8632 -0.132361 38.137 0.397083 34.4683C0.439471 34.1746 0.486392 33.8799 0.580677 33.2906C0.612101 33.0942 0.628467 32.9958 0.64806 32.9078C0.899321 31.78 1.78002 30.8993 2.90783 30.648C2.99585 30.6284 3.09415 30.6121 3.29064 30.5807C3.87992 30.4864 4.17468 30.4394 4.46837 30.3971C6.30257 30.1324 8.15117 29.9996 9.99962 29.9996V29.9976C20.8724 29.9974 29.7188 21.322 29.9928 10.5152L29.9996 9.99862C29.9997 8.15047 30.1314 6.30225 30.3961 4.46835C30.4385 4.1746 30.4864 3.87999 30.5807 3.29061C30.6121 3.09428 30.6275 2.99577 30.6471 2.9078C30.8983 1.7801 31.7792 0.899397 32.9068 0.648035C32.9949 0.628428 33.0933 0.612069 33.2897 0.580652C33.8791 0.486335 34.1746 0.439454 34.4684 0.397058Z" />
+        <path class="lg-fg" fill-rule="evenodd" clip-rule="evenodd" d="M45.5312 30.3971C41.8626 29.8677 38.1372 29.8677 34.4687 30.3971C34.1749 30.4395 33.8794 30.4864 33.29 30.5807C33.0936 30.6121 32.9952 30.6275 32.9071 30.6471C31.7795 30.8984 30.8988 31.7793 30.6474 32.9069C30.6278 32.9949 30.6124 33.0941 30.581 33.2906C30.4867 33.8799 30.4388 34.1747 30.3964 34.4684C29.867 38.1368 29.867 41.8624 30.3964 45.5309C30.4388 45.8246 30.4867 46.1201 30.581 46.7096C30.6124 46.9059 30.6278 47.0044 30.6474 47.0924C30.8987 48.2201 31.7795 49.1009 32.9071 49.3522C32.9952 49.3718 33.0936 49.3872 33.29 49.4186C33.8794 49.5129 34.1749 49.5607 34.4687 49.6031C38.1371 50.1325 41.8627 50.1326 45.5312 49.6031C45.8249 49.5608 46.1196 49.5129 46.7089 49.4186C46.9052 49.3872 47.0038 49.3717 47.0917 49.3522C48.2195 49.1009 49.1012 48.2202 49.3525 47.0924C49.3721 47.0044 49.3874 46.906 49.4189 46.7096C49.5132 46.1201 49.5601 45.8246 49.6025 45.5309C50.1319 41.8624 50.1319 38.1369 49.6025 34.4684C49.5601 34.1747 49.5131 33.8799 49.4189 33.2906C49.3874 33.0941 49.3721 32.9949 49.3525 32.9069C49.1011 31.7792 48.2194 30.8983 47.0917 30.6471C47.0038 30.6275 46.9051 30.6121 46.7089 30.5807C46.1196 30.4864 45.8249 30.4395 45.5312 30.3971ZM15.5322 0.397086C11.8635 -0.132362 8.13731 -0.132362 4.46867 0.397086C4.17498 0.439473 3.88023 0.486393 3.29094 0.580679C3.09461 0.612093 2.9961 0.627503 2.90813 0.647086C1.78049 0.898312 0.899769 1.77928 0.648361 2.90685C0.628742 2.99491 0.612434 3.09405 0.580978 3.29064C0.486706 3.87984 0.43977 4.17467 0.397385 4.46837C-0.132023 8.13688 -0.132004 11.8624 0.397385 15.5309C0.439781 15.8246 0.48666 16.1201 0.580978 16.7096C0.6124 16.906 0.628754 17.0044 0.648361 17.0924C0.899708 18.2201 1.78042 19.1009 2.90813 19.3522C2.99611 19.3718 3.09457 19.3871 3.29094 19.4186C3.88032 19.5129 4.17493 19.5607 4.46867 19.6031C8.13731 20.1326 11.8635 20.1326 15.5322 19.6031C15.8258 19.5608 16.1207 19.5128 16.7099 19.4186C16.9063 19.3871 17.0047 19.3718 17.0927 19.3522C18.2204 19.1009 19.1011 18.2201 19.3525 17.0924C19.3721 17.0044 19.3875 16.9059 19.4189 16.7096C19.5132 16.1201 19.561 15.8246 19.6034 15.5309C20.1328 11.8624 20.1328 8.13685 19.6034 4.46837C19.5611 4.17466 19.5131 3.8799 19.4189 3.29064C19.3874 3.09405 19.3721 2.99491 19.3525 2.90685C19.1011 1.77924 18.2204 0.898318 17.0927 0.647086C17.0047 0.627474 16.9063 0.612111 16.7099 0.580679C16.1207 0.486415 15.8258 0.439463 15.5322 0.397086Z" />
+      </svg>
+      <b>Alva</b>
+    </span>
+    <span class="alva-badge-line2">Your AI Investing Agent</span>
   </span>
 </a>
 
@@ -5994,23 +6623,20 @@
      anchor tweet as the quoted URL, open it in a new tab, and close
      the dialog. The user only has to click Post on X.
      ============================================================ -->
+<!-- 3.0 round 21 — modal simplified per harryz: "截图这里文字太多、
+     太啰嗦了，我觉得只需要一个大标题 + 一个 Call to Action". Eyebrow,
+     description paragraph and trust-line foot all removed. The
+     headline now carries the full pitch on its own. -->
 <div class="modal" id="modal-cant-find" aria-hidden="true">
   <div class="dialog search-dialog">
     <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
-    <div class="dialog-head">
-      <div>
-        <span class="eyebrow"><i class="ph-bold ph-x-logo" style="margin-right:6px; color: var(--alva);"></i> Request via X</span>
-        <h3>Can't find the account you want backtested?</h3>
-      </div>
-    </div>
-    <p>Drop the @handle below. We'll open X with a quote-tweet to <strong>@alva</strong> already drafted — just hit Post. We'll see it, run the backtest, and DM you when the Playbook is live.</p>
+    <h3 class="cant-find-headline">Can't find your favorite FinTwit account? Drop a reply with the handle so we can help you <span class="alva">index and backtest</span>.</h3>
     <form class="search-form" id="cant-find-form" autocomplete="off">
       <input type="text" name="handle" placeholder="@account-handle" aria-label="Account handle to request" required />
       <button type="submit" class="btn-primary">
-        <i class="ph-bold ph-x-logo"></i> Quote-tweet to @alva
+        <i class="ph-bold ph-x-logo"></i> Reply on X
       </button>
     </form>
-    <div class="search-foot"><i class="ph-fill ph-check-circle"></i> Opens X in a new tab · You stay in control of the post</div>
   </div>
 </div>
 
@@ -6026,19 +6652,19 @@
     <div class="dialog-head">
       <div>
         <span class="eyebrow"><i class="ph-bold ph-magnifying-glass" style="margin-right:6px; color: var(--alva);"></i> Backtest one handle</span>
-        <h3>Backtest any FinTwit creator.</h3>
+        <h3>Backtest any FinTwit Trader.</h3>
       </div>
     </div>
     <p>Drop an X handle. We'll run their public call history end-to-end and surface the audited Playbook — best ROI, win rate, median return.</p>
     <form class="search-form" id="search-form" autocomplete="off">
-      <input type="text" name="handle" placeholder="@creator-handle" aria-label="Creator X handle" required />
+      <input type="text" name="handle" placeholder="@trader-handle" aria-label="Trader X handle" required />
       <button type="submit" class="btn-primary">
         <i class="ph-bold ph-magnifying-glass"></i> Backtest
       </button>
     </form>
     <div class="search-foot"><i class="ph-fill ph-check-circle"></i> Public posts only · Private preview</div>
     <div class="search-success" role="status" aria-live="polite">
-      On it — backtesting <strong id="search-handle">@creator</strong>. The audited Playbook usually takes a few minutes. We'll DM you on X the moment it's live.
+      On it — backtesting <strong id="search-handle">@trader</strong>. The audited Playbook usually takes a few minutes. We'll DM you on X the moment it's live.
     </div>
   </div>
 </div>
@@ -6060,7 +6686,7 @@
     <div class="connect-stage connect-auth">
       <div class="connect-x-mark"><i class="ph-bold ph-x-logo"></i></div>
       <h3 class="connect-title">Continue with X to scan your follows</h3>
-      <p class="connect-sub">We read your follow list and match it against the FinTwit creators we've already audited. Nothing else is requested, nothing is stored.</p>
+      <p class="connect-sub">We read your follow list and match it against the FinTwit Traders we've already audited. Nothing else is requested, nothing is stored.</p>
       <div class="connect-perms">
         <span><i class="ph-fill ph-check-circle"></i> Reading list only</span>
         <span><i class="ph-fill ph-check-circle"></i> No personal score is generated</span>
@@ -6084,32 +6710,80 @@
   </div>
 </div>
 
-<!-- 3.0: This is now the direct entry point from the nav "For FinTwit
-     creators" button — no scroll to bottom + Contact us. The modal
-     collects the creator's handle inline so onboarding starts with
-     one click instead of an email round-trip. -->
+<!-- 3.0 round 21 — For FinTwit Traders modal rewritten per harryz
+     5/25 16:46 brief. Removes the 3-step explainer + private-preview
+     copy in favor of a single one-line hook + handle input. Headline
+     drives the offer (top XX get $XXX in Claude Opus credits) so
+     submission is an immediate self-test ("did I make the cut?")
+     rather than a private onboarding flow.
+
+     The modal cycles between 4 states:
+       input         — initial; eyebrow + headline + handle field +
+                       "Check if I made the cut" CTA + View Full
+                       Leaderboard link
+       result-on     — handle is on the leaderboard. Congratulatory
+                       headline + Share my Playbook CTA (opens an X
+                       quote-tweet intent like the cant-find modal).
+       result-tracked — handle is tracked but not on the leaderboard.
+                        Routes the user to their Playbook page +
+                        Leaderboard link.
+       result-untracked — handle never seen. Submit-index-request CTA.
+
+     For the demo, JS hashes the entered handle into one of the three
+     result buckets so the experience is deterministic per input. -->
 <div class="modal" id="modal-for-kols" aria-hidden="true">
-  <div class="dialog">
-    <div class="dialog-head">
-      <div>
-        <span class="eyebrow">For FinTwit creators</span>
-        <h3>Are you a <span style="color: var(--alva);">FinTwit creator</span> on X?</h3>
+  <div class="dialog fk-dialog">
+    <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
+
+    <!-- STATE 1 — input -->
+    <div class="fk-state" data-fk-state="input">
+      <span class="eyebrow">For FinTwit Traders</span>
+      <h3 class="fk-headline">We backtested thousands of FinTwit accounts. The top 50 get <span class="alva">$5,000 in Claude Opus credits</span>.</h3>
+      <form class="bcard-form fk-form" id="for-kols-form">
+        <input type="text" name="handle" placeholder="@your-x-handle" aria-label="Your X handle" required />
+        <button type="submit" class="btn-primary">Check if I made the cut</button>
+      </form>
+      <a class="fk-secondary" href="#leaderboard" data-fk-leaderboard>View Full Leaderboard →</a>
+    </div>
+
+    <!-- STATE 2 — found on leaderboard -->
+    <div class="fk-state" data-fk-state="result-on" hidden>
+      <span class="eyebrow fk-eyebrow-good"><i class="ph-bold ph-trophy"></i> Congratulations</span>
+      <h3 class="fk-headline">You made the <span class="alva">Alva FinTwit Alpha League</span>.</h3>
+      <p class="fk-result-body">Share your verified track record on X and we'll be in touch to distribute your <strong>$5,000 in Claude Opus credits</strong>.</p>
+      <div class="fk-actions">
+        <button type="button" class="btn-primary fk-share">
+          <i class="ph-bold ph-x-logo"></i> Share my Playbook
+        </button>
+        <button type="button" class="fk-secondary fk-reset">Check another handle</button>
       </div>
-      <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
     </div>
-    <p>Real signal stands up to audit. We backtested every public call from FinTwit's most-followed creators — and we'd like to do the same for yours. Drop your X handle and we'll kick off your private backtest.</p>
-    <div class="steps">
-      <div class="step"><span class="num">01</span><span class="desc">Submit your X handle below. We'll backtest the full call history end-to-end.</span></div>
-      <div class="step"><span class="num">02</span><span class="desc">You preview the Playbook privately before anything goes live.</span></div>
-      <div class="step"><span class="num">03</span><span class="desc">Approve to publish, or opt out — no public footprint either way.</span></div>
+
+    <!-- STATE 3 — tracked but not on leaderboard -->
+    <div class="fk-state" data-fk-state="result-tracked" hidden>
+      <span class="eyebrow">You're indexed</span>
+      <h3 class="fk-headline">Your <span class="alva">Playbook</span> is live — keep posting.</h3>
+      <p class="fk-result-body">You didn't crack the top 50 this round. Your full audited track record is published; rankings refresh every hour.</p>
+      <div class="fk-actions">
+        <button type="button" class="btn-primary fk-open-playbook">
+          <i class="ph-bold ph-arrow-up-right"></i> Open my Playbook
+        </button>
+        <a class="fk-secondary" href="#leaderboard" data-fk-leaderboard>View Full Leaderboard →</a>
+      </div>
     </div>
-    <div class="notice">Private preview · Opt-out anytime · Failed calls counted. We do not score posts in isolation, only the full account history.</div>
-    <form class="bcard-form for-kols-form" id="for-kols-form" style="margin-top:18px;">
-      <input type="text" name="handle" placeholder="@your-x-handle" aria-label="Your X handle" required />
-      <button type="submit" class="btn-primary">
-        <i class="ph-bold ph-paper-plane-tilt"></i> Start my private backtest
-      </button>
-    </form>
+
+    <!-- STATE 4 — not yet indexed -->
+    <div class="fk-state" data-fk-state="result-untracked" hidden>
+      <span class="eyebrow">Not yet indexed</span>
+      <h3 class="fk-headline">We haven't backtested <span class="alva" data-fk-handle>@you</span> yet.</h3>
+      <p class="fk-result-body">Drop a request and we'll kick off your full audited backtest end-to-end. Public posts only, failed calls counted.</p>
+      <div class="fk-actions">
+        <button type="button" class="btn-primary fk-submit-index">
+          <i class="ph-bold ph-paper-plane-tilt"></i> Submit index request
+        </button>
+        <button type="button" class="fk-secondary fk-reset">Try another handle</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -6129,7 +6803,7 @@
     <form class="bcard-form for-kols-form" id="paste-handles-form" style="margin-top:18px; flex-direction:column; align-items:stretch; gap:12px;">
       <textarea name="handles" rows="5" placeholder="@yardeni&#10;@CathieDWood&#10;@SemiAnalysis_" aria-label="@handles to test" style="width:100%; padding:14px 16px; border-radius:14px; border:1px solid var(--line); background:var(--bg); font-family:var(--font-mono); font-size:16px; resize:vertical; color:var(--text);" required></textarea>
       <button type="submit" class="btn-primary" style="align-self:flex-start;">
-        <i class="ph-bold ph-magnifying-glass"></i> Check these creators
+        <i class="ph-bold ph-magnifying-glass"></i> Check these Traders
       </button>
     </form>
   </div>
@@ -6139,7 +6813,7 @@
   <div class="dialog">
     <div class="dialog-head">
       <div>
-        <h3>How we rank FinTwit creators.</h3>
+        <h3>How we rank FinTwit Traders.</h3>
       </div>
       <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
     </div>
@@ -6150,7 +6824,7 @@
       <div class="step"><span class="num">03 Backtest</span><span class="desc">Equal-weight, no leverage, failed calls counted, deleted posts recovered from archive data.</span></div>
       <div class="step"><span class="num">04 Rank</span><span class="desc">The full call history is aggregated into 5 objective metrics: <b>Best ROI · Median ROI · Win Rate · Quality · Risk</b>. No subjective scoring.</span></div>
     </div>
-    <div class="notice">If a creator deletes a failed call, the ranking does not change — archive data preserves it.</div>
+    <div class="notice">If a Trader deletes a failed call, the ranking does not change — archive data preserves it.</div>
     <div class="dialog-actions">
       <a href="#" class="btn-primary">Read the full paper <i class="ph-bold ph-arrow-up-right"></i></a>
     </div>
@@ -6182,7 +6856,7 @@
       <i class="ph-fill ph-shield-check"></i>
       <span><b>Privately connected via X</b> — reading list only · no personal score is generated · disconnect anytime</span>
     </div>
-    <p class="dialog-lead">We only rank FinTwit creators already in our index. The 23 cards below are everyone you follow who's been audited — ranked by Best ROI. If someone you follow isn't here, request a backtest at the bottom and we'll ping you when their Playbook is ready.</p>
+    <p class="dialog-lead">We only rank FinTwit Traders already in our index. The 23 cards below are everyone you follow who's been audited — ranked by Best ROI. If someone you follow isn't here, request a backtest at the bottom and we'll ping you when their Playbook is ready.</p>
 
     <div class="results-grid">
       <article class="card c-1">
@@ -6479,12 +7153,12 @@
     <section class="results-request">
       <article class="bcard bcard-dark">
         <div class="bcard-body">
-          <h3>Don't see a creator you follow?</h3>
+          <h3>Don't see a Trader you follow?</h3>
           <p>Drop a handle. We'll backtest them and ping you when the Playbook is ready.</p>
         </div>
         <div class="bcard-foot">
           <form class="bcard-form" id="results-request-form">
-            <input type="text" placeholder="@handle or x.com/handle" aria-label="Request FinTwit creator handle" />
+            <input type="text" placeholder="@handle or x.com/handle" aria-label="Request FinTwit Trader handle" />
             <button type="submit">Submit <i class="ph-bold ph-arrow-right"></i></button>
           </form>
           <div class="bcard-trust">7-day backtest · You'll be notified</div>
@@ -6521,7 +7195,7 @@
         <a class="cd-more" id="cd-more" href="#">
           <span class="cd-more-text">
             <span class="cd-more-eyebrow">Open full Playbook</span>
-            <span class="cd-more-name"><b id="cd-more-name">this creator</b>'s audited calls + ranking breakdown</span>
+            <span class="cd-more-name"><b id="cd-more-name">this Trader</b>'s audited calls + ranking breakdown</span>
           </span>
           <i class="ph-bold ph-arrow-up-right cd-more-arrow"></i>
         </a>
@@ -6893,7 +7567,7 @@
         if (progressFill) progressFill.style.width = '100%';
       });
       // Status text marches through the simulated stages
-      const t1 = setTimeout(() => { if (statusEl) statusEl.textContent = 'Matching 86 ranked FinTwit creators against your follows…'; }, 900);
+      const t1 = setTimeout(() => { if (statusEl) statusEl.textContent = 'Matching 86 ranked FinTwit Traders against your follows…'; }, 900);
       const t2 = setTimeout(() => { if (statusEl) statusEl.textContent = 'Compiling your audited Playbooks…'; }, 1700);
       const t3 = setTimeout(() => {
         closeModal(modal);
@@ -6985,7 +7659,7 @@
         const name =
           sourceCardEl.querySelector('.pc-name')?.textContent?.trim() ||
           sourceCardEl.querySelector('.mq-meta b')?.textContent?.trim();
-        nameSlot.textContent = name || 'this creator';
+        nameSlot.textContent = name || 'this Trader';
       }
 
       // Card-wrap, cd-more, and share-method animations are all reset
@@ -7328,25 +8002,105 @@
     card.classList.add('bcard-dark');
   });
 
-  /* 3.0: For-FinTwit-creators onboarding form — direct from nav button,
-     no email round-trip. Replaces the in-modal contents with a confirmation
-     once submitted. */
-  document.getElementById('for-kols-form')?.addEventListener('submit', e => {
-    e.preventDefault();
-    const handle = e.target.querySelector('input').value.trim();
-    if (!handle) return;
-    const dialog = e.target.closest('.dialog');
-    dialog.innerHTML = `
-      <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
-      <div class="dialog-head">
-        <div>
-          <span class="eyebrow"><i class="ph-bold ph-check-circle" style="margin-right:6px; color: var(--alva);"></i> Received</span>
-          <h3>Your backtest is queued.</h3>
-        </div>
-      </div>
-      <p>We'll backtest <b>${handle.replace(/</g,'&lt;')}</b>'s full call history end-to-end and email you a private preview within 7 days. Nothing publishes without your approval.</p>
-    `;
-  });
+  /* 3.0 round 21 — For-FinTwit-Traders modal: handle a deterministic
+     state cycle (input → one of three result states). The result is
+     decided by a tiny FNV-1a hash of the cleaned handle so the same
+     handle always lands in the same bucket — feels real to QA, not
+     random. Real backend would replace `pickResultState(handle)`
+     with a fetch against the leaderboard index. */
+  (() => {
+    const modal = document.getElementById('modal-for-kols');
+    if (!modal) return;
+    const dialog = modal.querySelector('.fk-dialog');
+    const form = document.getElementById('for-kols-form');
+    if (!dialog || !form) return;
+
+    function showState(name) {
+      dialog.querySelectorAll('.fk-state').forEach(el => {
+        el.hidden = (el.dataset.fkState !== name);
+      });
+    }
+
+    function normaliseHandle(raw) {
+      const cleaned = (raw || '').trim().replace(/^@+/, '').replace(/\s+/g, '');
+      return cleaned ? '@' + cleaned : '';
+    }
+
+    // FNV-1a 32-bit → 3 buckets. Deterministic.
+    function pickResultState(handle) {
+      let h = 0x811c9dc5;
+      for (let i = 0; i < handle.length; i++) {
+        h = h ^ handle.charCodeAt(i);
+        h = (h * 0x01000193) >>> 0;
+      }
+      const bucket = h % 3;
+      return ['result-on', 'result-tracked', 'result-untracked'][bucket];
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const handle = normaliseHandle(form.querySelector('input').value);
+      if (!handle) return;
+      const state = pickResultState(handle);
+      // Fill in handle placeholders that the untracked-state needs.
+      dialog.querySelectorAll('[data-fk-handle]').forEach(el => {
+        el.textContent = handle;
+      });
+      showState(state);
+    });
+
+    // Reset → back to the input state, clear the field.
+    dialog.querySelectorAll('.fk-reset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        form.querySelector('input').value = '';
+        showState('input');
+      });
+    });
+
+    // Share (state result-on) → X quote-tweet intent.
+    dialog.querySelector('.fk-share')?.addEventListener('click', () => {
+      const handle = normaliseHandle(form.querySelector('input').value);
+      const text = encodeURIComponent(
+        `Just made the Alva FinTwit Alpha League. Verified track record, every public call backtested. ${handle}`
+      );
+      const url = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent('https://alva.xyz/leaderboard')}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    });
+
+    // Open Playbook (state result-tracked) → demo route.
+    dialog.querySelector('.fk-open-playbook')?.addEventListener('click', () => {
+      const handle = normaliseHandle(form.querySelector('input').value);
+      window.open(`https://alva.xyz/p/${handle.replace(/^@/, '')}`, '_blank', 'noopener,noreferrer');
+    });
+
+    // Submit index request (state result-untracked) → demo confirm.
+    dialog.querySelector('.fk-submit-index')?.addEventListener('click', () => {
+      const handle = normaliseHandle(form.querySelector('input').value);
+      const text = encodeURIComponent(`Please index and backtest ${handle} in the FinTwit Alpha League.`);
+      const url = `https://twitter.com/intent/tweet?text=${text}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    });
+
+    // View Full Leaderboard link → close modal + jump to #leaderboard.
+    dialog.querySelectorAll('[data-fk-leaderboard]').forEach(a => {
+      a.addEventListener('click', () => {
+        // Trigger the modal's standard close mechanism by emulating a
+        // data-close click (parent script wires data-close to closeModal).
+        const closeBtn = modal.querySelector('[data-close]');
+        if (closeBtn) closeBtn.click();
+      });
+    });
+
+    // Whenever the modal is (re)opened, snap back to the input state.
+    // The shared modal-open dispatch path adds .open on the modal — we
+    // listen via MutationObserver on `class` for resilience.
+    const mo = new MutationObserver(() => {
+      if (modal.classList.contains('open')) {
+        showState('input');
+      }
+    });
+    mo.observe(modal, { attributes: true, attributeFilter: ['class'] });
+  })();
 
   /* 3.0 round 7: Backtest-one-creator card (Section · Get started).
      On submit, normalize the handle and flip the card to a confirmation
@@ -7469,7 +8223,7 @@
           <h3>Matching against the Alpha League…</h3>
         </div>
       </div>
-      <p>Cross-referencing your list against 86 ranked FinTwit creators. We'll open the results in a moment.</p>
+      <p>Cross-referencing your list against 86 ranked FinTwit Traders. We'll open the results in a moment.</p>
     `;
     setTimeout(() => {
       const modal = document.getElementById('modal-paste-handles');
@@ -7480,7 +8234,7 @@
 
   /* ============================================================
      HERO @HANDLE TYPEWRITER  (Opening section)
-     Types real FinTwit creator handles into `You follow ___ on X.`
+     Types real FinTwit Trader handles into `You follow ___ on X.`
      character-by-character, holds, then deletes them — repeats.
        · TYPE_MS — interval between typed chars
        · DELETE_MS — interval between deleted chars (slightly faster)
@@ -7787,10 +8541,11 @@
       const lineH = Math.round(fs * 1.5);
       const h = padY + headH + gapHB + lines.length * lineH + padY;
 
-      // 3.0 round 46.22 — shadowPad back to small (4 logical px just
-      // to give the border its slight 1px outset some room). No
-      // canvas shadow during this diagnostic round.
-      const shadowPad = 4;
+      // 3.0 round 46.25 — shadowPad = 24 to give the offscreen-blur
+      // halo room to bloom past the card edge before the bitmap
+      // clips (blur radius is 10 * DPR; effective spread ~3σ ≈ 30
+      // device pixels = ~15 logical → 24 logical is safe slack).
+      const shadowPad = 24;
       const cardCanvas = document.createElement('canvas');
       cardCanvas.width  = (w + shadowPad * 2) * DPR;
       cardCanvas.height = (h + shadowPad * 2) * DPR;
@@ -7846,38 +8601,41 @@
       // bottom — exactly the unevenness the two-fill border fix was
       // supposed to eliminate. Pure symmetric halo now: blur 44 in
       // every direction, no offset bias.
-      // 3.0 round 46.22 — DIAGNOSTIC: drop canvas shadow entirely
-      // to isolate whether the perceived "dark line outside the
-      // border" is from shadow rendering or from something else
-      // (lens shader effects, neighboring cards, etc).
-      // If user says the problem persists after this round, it's
-      // not the shadow. If it goes away, we know shadow rendering
-      // is the cause and we can rebuild it with a different
-      // technique (e.g., a separate shadow plane behind the card
-      // mesh, rendered with a clean radial gradient).
-      ctx.shadowColor   = 'rgba(0,0,0,0)';
-      ctx.shadowBlur    = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
-      // 3.0 round 46.21 — back to 1px border + 12/13 radius. User
-      // pointed out (correctly) that thickening border + enlarging
-      // radius doesn't address the issue, because the dark line is
-      // ALWAYS OUTSIDE the border, not within it.
-      // 3.0 round 46.24 — radius 0 → 5 (compromise). Square was
-      // too harsh; rounded 12+ showed visible corner AA artifact.
-      // r=5 is a 5px arc per corner — only ~8 device pixels worth
-      // of curvature, so the AA mismatch with straight edges is
-      // confined to a tiny area and falls below the human visual
-      // detection threshold. Cards regain "soft tile" feel without
-      // the corner darkness issue.
+      // 3.0 round 46.25 — shadow returns via OFFSCREEN BLUR, not
+      // canvas2D's shadow API.
+      // Why: canvas2D's shadowColor + shadowBlur, when its output
+      // is uploaded to a WebGL texture and sampled through the
+      // post-processing chain, produced asymmetric darkness on the
+      // long card axis (verified by pixel probe in round 46.22).
+      // No parameter tuning resolved it. We rebuild the shadow as
+      // an offscreen render of the border shape blurred via CSS
+      // filter — a different code path that doesn't hit the same
+      // canvas2D-shadow quirk.
+      // Steps:
+      //   1. Draw the border shape into a temp canvas
+      //   2. ctx.filter = 'blur(Npx)', drawImage that temp canvas
+      //      onto the main canvas at reduced alpha → soft halo
+      //   3. Reset filter, draw the SHARP border + white card on top
+      // The halo color matches the border (#e5e5ea), so the bilinear
+      // sampler never produces dark intermediates across the
+      // halo→card boundary.
+      // 3.0 round 46.27 — halo drawn DIRECTLY in main ctx with
+      // filter:blur applied to fill. Previous approach (drawing
+      // sharp rect to offscreen canvas + blurred drawImage) showed
+      // unexplained asymmetry via pixel probe. Drawing directly
+      // means no intermediate texture sampling that could introduce
+      // edge bias. The fill itself gets gaussian-blurred by the
+      // browser's filter pipeline.
+      ctx.save();
+      ctx.filter = 'blur(10px)';
+      ctx.fillStyle = '#c8c8cd';
+      roundRect(ctx, -1, -1, w + 2, h + 2, 6);
+      ctx.fill();
+      ctx.restore();
+      // Sharp border + white card on top, in the regular ctx state
       ctx.fillStyle = '#e5e5ea';
       roundRect(ctx, -1, -1, w + 2, h + 2, 6);
       ctx.fill();
-      // reset shadow before drawing the inner white body + content
-      ctx.shadowColor   = 'rgba(0,0,0,0)';
-      ctx.shadowBlur    = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
       ctx.fillStyle = '#ffffff';
       roundRect(ctx, 0, 0, w, h, 5);
       ctx.fill();
@@ -8483,6 +9241,50 @@
      closest to the track's scroll-center. Cheap math, no library.
      Skip on desktop where the carousel is replaced by a grid.
      ============================================================ */
+  /* ============================================================
+     AGENTS / USE CASES — mobile cover injection
+     ============================================================
+     The desktop pin-scroll has the 5 covers in a separate right-
+     column .agents-cards-stage. On mobile we want each cover to
+     sit ON TOP OF its matching tab-item (cover + title + body +
+     CTA stacked as a self-contained card).
+
+     We clone each .agents-card-cover into the matching .agents-
+     tab-item (the original stays in .agents-cards-stage for
+     desktop; the stage itself is hidden on mobile via CSS).
+
+     Re-runs on viewport resize so a desktop→mobile→desktop drag
+     keeps the right cover-placement for each width without orphan
+     clones. Idempotent — checks for a `.mobile-clone` marker so it
+     never injects twice. */
+  (function setupAgentsMobile() {
+    const MQ = '(max-width: 900px)';
+    function sync() {
+      const isMobile = window.matchMedia(MQ).matches;
+      const tabs = document.querySelectorAll('.agents-tab-item');
+      const cards = document.querySelectorAll('.agents-cards-stage .agents-card');
+      if (!tabs.length) return;
+      tabs.forEach((tab, i) => {
+        const existing = tab.querySelector('.agents-card-cover.mobile-clone');
+        if (isMobile) {
+          if (existing) return;                          // already injected
+          const srcCover = cards[i]?.querySelector('.agents-card-cover');
+          if (!srcCover) return;
+          const clone = srcCover.cloneNode(true);
+          clone.classList.add('mobile-clone');
+          // Strip any data-attrs / ids that the desktop pin-scroll
+          // JS might re-query (avoid duplicate-id selectors).
+          clone.removeAttribute('id');
+          tab.insertBefore(clone, tab.firstChild);
+        } else if (existing) {
+          existing.remove();                             // restore desktop
+        }
+      });
+    }
+    sync();
+    window.matchMedia(MQ).addEventListener?.('change', sync);
+  })();
+
   (function setupPlayDots() {
     const isMobile = window.matchMedia('(max-width: 760px)').matches;
     if (!isMobile) return;
@@ -8521,6 +9323,92 @@
       });
     };
     track.addEventListener('scroll', onScroll, { passive: true });
+  })();
+
+  /* ============================================================
+     USE CASES PIN-SCROLL CONTROLLER  (3.0 round 13)
+     #agents is 600vh tall; .agents-pin sticks at top:64px across that
+     full range. As section's getBoundingClientRect().top moves from
+     0 (sticky engages) to -(sectionH - viewportH) (sticky releases),
+     we map that progress to a card index 0..(N-1) and translateX the
+     .agents-track to show the active card.
+     Mobile: disabled (CSS collapses to static stack).
+     ============================================================ */
+  (() => {
+    const section = document.getElementById('agents');
+    if (!section) return;
+    const track = document.getElementById('agents-track');
+    // 3.0 round 19 — tabs restructured: each tab is now a .agents-tab-item
+    // wrapper containing a title button + a detail block (subtitle + CTA).
+    // Active state is now toggled on the WRAPPER so CSS can drive both
+    // title color and detail visibility from a single class.
+    const items = section.querySelectorAll('.agents-tab-item');
+    const buttons = section.querySelectorAll('.agents-tab-v');
+    const cards = section.querySelectorAll('.agents-card');
+    const N = cards.length;
+    if (!track || !N) return;
+
+    const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+
+    let lastIdx = -1;
+    let raf = 0;
+
+    function update() {
+      raf = 0;
+      if (isMobile()) {
+        track.style.transform = '';
+        return;
+      }
+      const rect = section.getBoundingClientRect();
+      const total = Math.max(1, section.offsetHeight - window.innerHeight);
+      const p = Math.max(0, Math.min(0.999999, -rect.top / total));
+      const idx = Math.min(N - 1, Math.floor(p * N));
+      if (idx !== lastIdx) {
+        // Vertical-stack carousel — translateY in PIXELS so that the
+        // active card sits VERTICALLY CENTERED in the stage and the
+        // previous/next cards peek above/below (clipped by the pin).
+        // Measure on each switch so layout changes (resize, font load)
+        // don't desync the offset.
+        const stage = track.parentElement;
+        const cardH = cards[0].offsetHeight;
+        const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
+        const stageH = stage.offsetHeight;
+        const offset = (stageH - cardH) / 2 - idx * (cardH + gap);
+        track.style.transform = 'translateY(' + Math.round(offset) + 'px)';
+        items.forEach((t, i) => t.classList.toggle('active', i === idx));
+        lastIdx = idx;
+      }
+    }
+
+    function schedule() {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', () => {
+      // Force re-compute (stageH / cardH may have changed)
+      lastIdx = -1;
+      schedule();
+    });
+    schedule();
+
+    // Tab click → smooth scroll to the matching slice center.
+    // The click target is the title button; we use its index to seek.
+    buttons.forEach((btn, i) => {
+      btn.addEventListener('click', () => {
+        if (isMobile()) {
+          // On mobile the cards are all visible in a stack; scroll to
+          // the matching card directly.
+          cards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        const sectionTop = section.getBoundingClientRect().top + window.scrollY;
+        const total = section.offsetHeight - window.innerHeight;
+        const sliceCenter = (i + 0.5) / N;
+        window.scrollTo({ top: sectionTop + sliceCenter * total, behavior: 'smooth' });
+      });
+    });
   })();
 
 </script>
