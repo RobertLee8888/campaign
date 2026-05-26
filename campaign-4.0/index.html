@@ -165,16 +165,15 @@
      NAV  (faithful to audit.html)
      ============================================================ */
   .nav {
-    /* FIXED (not sticky) so the nav doesn't occupy 64px of layout space.
-       Combined with the transparent background + backdrop blur, this lets
-       the opening section start at viewport y=0 and provide its own bg
-       behind the nav — no more pale page-bg strip at the top while the
-       opening below it is teal-tinted. */
     position: fixed; top: 0; left: 0; right: 0; z-index: 30;
-    background: transparent;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--line);
+    /* 4.1 — slight dark tint added so nav tabs read clearly when the
+       page bg behind them is bright (used to wash out on the teal
+       sections + the H1 iridescence band). Still blurs the content
+       below for that soft-glass effect. */
+    background: rgba(10, 10, 14, 0.55);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
   .nav-inner {
     max-width: 1440px; margin: 0 auto;
@@ -201,8 +200,10 @@
      3.0 round 21 — wordmark now sits to the right of the restored
      Alva mark. */
   .brand-wordmark {
-    width: 100px;
-    height: 32px;
+    /* 4.2 — pulled down a touch so the wordmark no longer towers over
+       the 28px brand-mark sitting next to it. */
+    width: 84px;
+    height: 26px;
     display: block;
     color: var(--text);
   }
@@ -249,10 +250,13 @@
     display: inline-flex; align-items: center; gap: 7px;
     padding: 0 12px;
     height: 100%;
-    color: var(--muted);
+    /* 4.2 — default white, active alva. Removed the previous muted →
+       white hover ramp in favor of the simpler two-state pattern.
+       4.3 — weight pulled to 400 per feedback. */
+    color: var(--text);
     font-family: var(--font);
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 400;
     background: transparent;
     border: 0;
     cursor: pointer;
@@ -262,11 +266,9 @@
   }
   .nav-tab i { font-size: 13px; color: inherit; transition: color .2s; }
   .nav-tab span { line-height: 1; }
-  .nav-tab:hover { color: var(--text); }
+  .nav-tab:hover { color: var(--alva); }
   .nav-tab:hover i { color: inherit; }
-  /* Active state uses color/underline (not weight) — keep w500 to stay
-     in btn-s family. Icon inherits the same color as the text. */
-  .nav-tab.active { color: var(--text); }
+  .nav-tab.active { color: var(--alva); }
   .nav-tab.active i { color: inherit; }
   /* The moving indicator — now a thin teal underline that slides along
      the bottom of the tabs row. Width = active tab width, X = active tab
@@ -538,10 +540,9 @@
     top: var(--y, 50%);
     padding: 0.85em 1em;
     background: var(--bg-soft);
-    /* 4.0 round 8 — border bumped slightly so the card silhouette
-       reads on dark dialogs (results modal) where bg-soft was
-       blending into the modal slab. */
-    border: 1px solid rgba(255, 255, 255, 0.09);
+    /* 4.3 — border removed per feedback. The deep box-shadow + corner
+       gradient bg already make the card silhouette read. */
+    border: 0;
     border-radius: 12px;
     will-change: transform;
     animation: drift var(--dur, 145s) linear infinite;
@@ -601,20 +602,22 @@
   .float-tweet .ft-name {
     font-size: 1em;
     font-weight: 500;
-    color: #2a2a30;
+    /* 4.1 — was #2a2a30 (dark grey, invisible on dark cards). Light
+       enough to read but still ambient. */
+    color: #e4e4ea;
     line-height: 1.2;
   }
   .float-tweet .ft-handle {
     font-family: var(--font-mono);
     font-size: 0.82em;
-    color: var(--muted-2);
+    color: #9a9aa6;
     letter-spacing: 0.02em;
     margin-top: 0.12em;
   }
   .float-tweet p {
     font-size: 1em;
     line-height: 1.5;
-    color: var(--muted);
+    color: #b6b6c0;
     margin: 0;
   }
   @keyframes drift {
@@ -634,18 +637,22 @@
     position: relative;
     z-index: 5;
     text-align: center;
-    max-width: 880px;
-    padding: 0 24px;
+    max-width: 1400px;
+    /* 4.3 round 2 — top padding eased 12vh → 6vh because the bigger
+       H1 was being clipped on its bottom edge on shorter laptop
+       viewports (overflow: hidden on .opening was cutting descenders
+       once content overflowed the centered grid cell). */
+    padding: 6vh 32px 0;
   }
-  /* TS token: display-xl — Hero H1 (3.0 round 9 — liquid effect
-     reverted per user; H1 is now just solid brand teal). */
+  /* TS token: display-xl — Hero H1. */
   .opening h1 {
     font-family: var(--font-display);
-    font-weight: 500;
-    font-size: clamp(40px, 4.6vw, 60px);
-    line-height: 0.88;
-    letter-spacing: -0.02em;
-    margin: 0 0 28px;
+    /* 4.3 — weight pulled from 500 → 400 (regular) per feedback. */
+    font-weight: 400;
+    font-size: clamp(56px, 8.4vw, 112px);
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    margin: 0 0 32px;
     color: var(--alva);
   }
   /* Each clause is its own block — tighten the per-line line-height
@@ -656,8 +663,11 @@
   .opening h1 .line-handle,
   .opening h1 .line-2 {
     display: block;
-    line-height: 0.95;
+    /* 4.3 round 2 — bumped 0.95 → 1.05 so descenders ('y' in
+       "money?") aren't clipped by the line box at the bigger font. */
+    line-height: 1.05;
     min-height: 0;
+    white-space: nowrap;
   }
   .opening h1 .line-2 {
     margin-top: 0;
@@ -954,8 +964,13 @@
        fade zones to 8% fade zones (~100px instead of ~375px each
        side). Mask window stays 1250px at the same position so the
        solid hold still aligns to the headline column. */
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    /* 4.3 round 2 — mask is now mostly transparent per feedback. A
+       very subtle dark tint + light blur dims the marquee cards
+       behind just enough to keep the H2 readable, while letting the
+       cards mostly show through. */
+    background-color: rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     /* 3.0 round 35 — LEFT fade-in distance lengthened per user
        ("前面的遮罩左侧再加点渐变距离"). Outer transparent stop moved
        22% → 10% so the fade-in zone is now 10% → 30% (20% wide,
@@ -963,24 +978,29 @@
        30% so the text bg coverage is unchanged. Right side stops
        are untouched — asymmetric on purpose; user only asked about
        the left side. */
+    /* 4.3 — switched from a fixed 1250px mask window with a
+       viewport-math position to a percentage-based one so the solid
+       hold always covers the widened headline column (h1 max-width
+       760 + 16px left padding). No more left-edge clipping on
+       laptop widths. */
     -webkit-mask-image: linear-gradient(to right,
       transparent 0%,
-      transparent 10%,
-      #000        30%,
-      #000        70%,
-      transparent 78%,
+      transparent 1%,
+      #000        6%,
+      #000        56%,
+      transparent 70%,
       transparent 100%);
             mask-image: linear-gradient(to right,
       transparent 0%,
-      transparent 10%,
-      #000        30%,
-      #000        70%,
-      transparent 78%,
+      transparent 1%,
+      #000        6%,
+      #000        56%,
+      transparent 70%,
       transparent 100%);
-    -webkit-mask-size: 1250px 100%;
-            mask-size: 1250px 100%;
-    -webkit-mask-position: calc(max(0px, (100vw - 1320px) / 2) - 359px) center;
-            mask-position: calc(max(0px, (100vw - 1320px) / 2) - 359px) center;
+    -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+    -webkit-mask-position: 0 center;
+            mask-position: 0 center;
     -webkit-mask-repeat: no-repeat;
             mask-repeat: no-repeat;
   }
@@ -990,53 +1010,53 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    -webkit-mask-size: 1250px 100%;
-            mask-size: 1250px 100%;
-    -webkit-mask-position: calc(max(0px, (100vw - 1320px) / 2) - 359px) center;
-            mask-position: calc(max(0px, (100vw - 1320px) / 2) - 359px) center;
+    -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+    -webkit-mask-position: 0 center;
+            mask-position: 0 center;
     -webkit-mask-repeat: no-repeat;
             mask-repeat: no-repeat;
   }
-  /* Layer 2 — 60px blur, hold 32-68% with extended LEFT fade. */
+  /* Layer 2 — was 60px blur; now disabled because Layer 1 paints a
+     solid black band already. Kept for the mask cascade only. */
   .stage-marquee .stage-headline-overlay::before {
-    backdrop-filter: blur(60px);
-    -webkit-backdrop-filter: blur(60px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     /* 3.0 round 35 — same LEFT-fade extension as Layer 1.
        Outer transparent stop 24% → 12% (fade 12% → 32%, 20% wide). */
+    /* 4.3 — rebased on percentage-of-overlay-width like Layer 1. */
     -webkit-mask-image: linear-gradient(to right,
       transparent 0%,
-      transparent 12%,
-      #000        32%,
-      #000        68%,
-      transparent 76%,
+      transparent 2%,
+      #000        8%,
+      #000        54%,
+      transparent 66%,
       transparent 100%);
             mask-image: linear-gradient(to right,
       transparent 0%,
-      transparent 12%,
-      #000        32%,
-      #000        68%,
-      transparent 76%,
+      transparent 2%,
+      #000        8%,
+      #000        54%,
+      transparent 66%,
       transparent 100%);
   }
-  /* Layer 3 — 120px blur, hold 36-64% with extended LEFT fade. */
+  /* Layer 3 — was 120px blur; disabled alongside Layer 2. */
   .stage-marquee .stage-headline-overlay::after {
-    backdrop-filter: blur(120px);
-    -webkit-backdrop-filter: blur(120px);
-    /* 3.0 round 35 — same LEFT-fade extension. Outer transparent
-       stop 30% → 18% (fade 18% → 36%, 18% wide). */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     -webkit-mask-image: linear-gradient(to right,
       transparent 0%,
-      transparent 18%,
-      #000        36%,
-      #000        64%,
-      transparent 70%,
+      transparent 3%,
+      #000        10%,
+      #000        52%,
+      transparent 62%,
       transparent 100%);
             mask-image: linear-gradient(to right,
       transparent 0%,
-      transparent 18%,
-      #000        36%,
-      #000        64%,
-      transparent 70%,
+      transparent 3%,
+      #000        10%,
+      #000        52%,
+      transparent 62%,
       transparent 100%);
   }
   .stage-marquee .stage-headline-inner {
@@ -1052,10 +1072,12 @@
   }
   .stage-marquee .stage-headline-inner h1 {
     display: inline-block;
-    max-width: 540px;
-    /* 16px left padding mirrors .section-wrap's `padding: 0 16px`, so the
-       first letter of the headline lines up with the leaderboard
-       heading directly below. */
+    /* 4.3 — max-width widened (540 → 760) because the bigger H2
+       (clamp 36-60) makes the longest line "We built live playbooks"
+       overflow the old box, which on certain laptop widths shifted
+       the inline-block left-edge into the headline-overlay's left
+       fade region — visually clipping the first 1-2 letters. */
+    max-width: 760px;
     padding-left: 16px;
     padding-right: 24px;
     pointer-events: auto;
@@ -1111,7 +1133,8 @@
      .btn-ghost:hover rule would set color:#fff and erase the text on
      a white pill, that's the regression the user hit. */
   .stage-actions .btn-ghost {
-    background: var(--bg-soft);
+    /* 4.3 — bg removed per feedback; the pill is outline-only now. */
+    background: transparent;
     /* 3.0 round 36 — border darkened from rgba(10,10,16,0.10) →
        rgba(10,10,16,0.55) so the outline is clearly visible against
        the mint section wash (user: "第二个黑边明显一点"). */
@@ -1119,8 +1142,7 @@
     color: var(--text);
   }
   .stage-actions .btn-ghost:hover {
-    background: var(--bg-soft);
-    /* Hover bumps the same darker border closer to full ink. */
+    background: rgba(255,255,255,0.05);
     border-color: rgba(255, 255, 255,0.80);
     color: var(--text);
   }
@@ -1138,9 +1160,10 @@
   .stage-marquee .stage-title {
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(28px, 3.2vw, 44px);
-    line-height: 1.15;
-    letter-spacing: -0.018em;
+    /* 4.1 — matches the other section H2 tier. */
+    font-size: clamp(36px, 4.4vw, 60px);
+    line-height: 1.08;
+    letter-spacing: -0.022em;
     margin: 0;
     color: var(--text);
   }
@@ -1203,23 +1226,18 @@
     gap: 14px;
     padding: 26px 22px 22px;
     background: var(--bg-soft);
-    /* 3.0 round 36 — border recolored from neutral --line(#e5e5ea) to a
-       mint-tinted alva (rgba(73,163,166,0.28)) so it stops reading as
-       a dirty grey strip on the green section bg. Same darkness, just
-       hue-shifted into the brand color family. Pairs with the
-       round-35 mint shadow tweak. */
-    border: 1px solid rgba(73,163,166,0.28);
+    /* 4.3 — border removed entirely per feedback. Card silhouette
+       comes from the corner gradient + noise overlay alone. */
+    border: 0;
     border-radius: 8px;
     width: 260px;
     height: 220px;
     /* margin-right replaces flex gap so the duplicate set starts on
        an exact card boundary and -50% loops seamlessly. */
     margin-right: 20px;
-    /* 4.0 — shadow deepened to a saturated dark teal so the cards
-       lift visibly off the brand-green section. */
-    box-shadow:
-      0 10px 28px rgba(8, 40, 40, 0.55),
-      0 2px 6px rgba(8, 40, 40, 0.45);
+    /* 4.3 — shadow removed per feedback. Card identity comes from the
+       corner-gradient + noise overlay alone now. */
+    box-shadow: none;
     cursor: pointer;
     transition: transform .2s cubic-bezier(.22,1,.36,1),
                 box-shadow .2s ease,
@@ -1230,16 +1248,16 @@
        off paint/style; will-change pre-promotes to a composite layer
        so the hover transform/shadow swap is GPU-only. */
     will-change: transform;
-    contain: layout style paint;
+    /* 4.4 round 2 — `paint` removed from contain so the hover CTA can
+       paint outside the card box. layout/style containment still
+       walls off most repaint cost. */
+    contain: layout style;
     transform: translateZ(0);
   }
   .mq-card:hover {
     transform: translate3d(0, -4px, 0);
-    /* 4.0 — hover lifts the card with a deeper, darker green halo. */
-    box-shadow:
-      0 18px 40px rgba(6, 36, 36, 0.7),
-      0 4px 10px rgba(6, 36, 36, 0.55);
-    border-color: rgba(73,163,166,0.5);
+    /* 4.3 — no shadow on hover either; the lift transform is enough. */
+    box-shadow: none;
   }
   .mq-avatar {
     width: 56px; height: 56px;
@@ -1320,14 +1338,22 @@
      by widening the card; the inner DOM is rebuilt by JS at load.
      ============================================================ */
   .mq-card {
-    width: 420px;
-    height: 320px;
-    padding: 18px 20px 16px;
+    /* 4.1 — card uses the Open Graph aspect (1200/630 ≈ 1.905). Width
+       fixed for the marquee; the .results-grid override below lets the
+       modal card flex with the grid cell via aspect-ratio. */
+    width: 540px;
+    height: 283px;
+    padding: 14px 18px 12px;
     gap: 0;
     align-items: stretch;
     text-align: left;
     margin-right: 24px;
-    overflow: hidden;
+    /* 4.4 round 2 — overflow now visible so the hover CTA row can grow
+       below the card boundary. The background gradient + noise grain
+       stay bounded because they're painted into the card's own box
+       (the gradient is the card's background and the noise ::before
+       uses inset:0 + border-radius:inherit). */
+    overflow: visible;
     position: relative;
     isolation: isolate;
   }
@@ -1338,9 +1364,96 @@
      gradient is set inline via JS so each card picks its own hue. */
   .mq-card .mq-bg,
   .mq-card .mq-bg-veil { display: none; }
+  /* 4.3 — film-grain noise overlay sits on top of the corner gradient
+     and base color, giving the card surface a slightly rough texture
+     so the gradient doesn't read as a smooth plastic wash. */
+  .mq-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* 4.4 round 2 — z-index 3 so the noise sits ABOVE the content
+       row (.mq-top/.mq-chart/.mq-foot at z:1) instead of being hidden
+       behind it. The previous z:1 with later DOM order meant content
+       painted over the noise across most of the card surface, which is
+       why the grain looked invisible. screen-blended white speckles on
+       top of light text only brighten it slightly — readability holds. */
+    z-index: 3;
+    pointer-events: none;
+    /* 4.4 — noise grain made unambiguous. Previous mix-blend-mode of
+       soft-light got washed out on the dark base + corner gradient;
+       now the noise lays on top as a straight semi-transparent
+       overlay with a contrast boost via feComponentTransfer so the
+       speckles are clearly visible. z-index raised to 1 so it sits
+       above the inline background-image gradient (the corner wash
+       was visually winning over the previous z-index:0 grain). */
+    background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='1.4' intercept='-0.3'/%3E%3C/feComponentTransfer%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 240px 240px;
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    border-radius: inherit;
+  }
   .mq-card > .mq-top,
   .mq-card > .mq-chart,
   .mq-card > .mq-foot { position: relative; z-index: 1; }
+
+  /* 4.4 round 2 — hover CTA row. Grows directly below the card on
+     hover: left = "{Name}'s Playbook", right = arrow-up-right icon
+     signalling an external destination. Hidden by default and
+     animated in/out. Lives inside the card so each one binds to its
+     own :hover; positioned absolute so it doesn't reserve layout
+     space and doesn't shift the marquee row. */
+  .mq-cta {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 8px);
+    height: 44px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-radius: 8px;
+    background: rgba(73, 163, 166, 0.14);
+    border: 1px solid rgba(73, 163, 166, 0.45);
+    color: #d6f1f2;
+    text-decoration: none;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
+    transition: opacity .18s ease, transform .22s cubic-bezier(.22,1,.36,1), background-color .18s ease, border-color .18s ease;
+    z-index: 4;
+  }
+  .mq-card:hover .mq-cta {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .mq-cta:hover {
+    background: rgba(73, 163, 166, 0.22);
+    border-color: rgba(73, 163, 166, 0.7);
+    color: #fff;
+  }
+  .mq-cta-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .mq-cta-icon {
+    font-size: 16px;
+    color: var(--alva);
+    flex-shrink: 0;
+    transition: transform .22s cubic-bezier(.22,1,.36,1);
+  }
+  .mq-cta:hover .mq-cta-icon {
+    transform: translate(2px, -2px);
+    color: #fff;
+  }
   .mq-card .mq-top {
     display: grid;
     grid-template-columns: 1.05fr 1fr;
@@ -1352,41 +1465,44 @@
     display: flex; align-items: center; gap: 10px;
     min-width: 0;
   }
-  .mq-card .mq-avatar { width: 40px; height: 40px; }
+  .mq-card .mq-avatar { width: 36px; height: 36px; }
   .mq-card .mq-meta { align-items: flex-start; text-align: left; }
-  .mq-card .mq-meta b { max-width: 100%; font-size: 15px; }
+  .mq-card .mq-meta b { max-width: 100%; font-size: 14px; }
   .mq-card .mq-winrate {
-    margin-top: 14px;
+    /* 4.3 round 2 — winrate row stretches to align its bottom with
+       the three best-calls cards on the right. The donut + text scale
+       up accordingly. */
+    margin-top: 10px;
     display: grid;
-    grid-template-columns: 64px 1fr;
-    column-gap: 12px;
+    grid-template-columns: 72px 1fr;
+    column-gap: 14px;
     align-items: center;
   }
   .mq-card .mq-winrate .mq-donut {
-    width: 64px; height: 64px;
+    width: 72px; height: 72px;
     display: block;
   }
-  .mq-card .mq-winrate-text { line-height: 1.1; }
+  .mq-card .mq-winrate-text { line-height: 1.05; }
   .mq-card .mq-winrate-pct {
     font-family: var(--font-mono);
-    font-size: 28px;
+    font-size: 30px;
     font-weight: 500;
     color: var(--alva);
     letter-spacing: -0.01em;
   }
   .mq-card .mq-winrate-lbl {
     font-family: var(--font);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--text);
-    margin-top: 2px;
+    margin-top: 4px;
   }
   .mq-card .mq-winrate-sub {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 11px;
     color: var(--muted);
     letter-spacing: 0.04em;
-    margin-top: 2px;
+    margin-top: 3px;
   }
   .mq-card .mq-calls {
     display: flex;
@@ -1425,11 +1541,14 @@
   .mq-card .mq-call-val.gain { color: var(--gain); }
   .mq-card .mq-call-val.loss { color: var(--loss); }
   .mq-card .mq-chart {
-    /* 4.0 round 3 — chart anchored just above the footer, tall enough
-       to fill the empty mid-card gap that previous rounds left behind. */
+    /* 4.1 — chart container aspect-ratio matches makeChart viewBox
+       (440/100) so circles + dots draw round under
+       preserveAspectRatio="none". Container width = card width minus
+       horizontal padding; height auto from the aspect. */
     margin-top: auto;
     width: 100%;
-    height: 124px;
+    aspect-ratio: 440 / 100;
+    height: auto;
     display: block;
     position: relative;
   }
@@ -1446,10 +1565,13 @@
   }
   .mq-card .mq-foot .mq-foot-r { text-align: right; opacity: 0.7; }
   @media (max-width: 760px) {
-    .mq-card { width: 320px; height: 280px; padding: 14px 14px 12px; }
-    .mq-card .mq-winrate { grid-template-columns: 52px 1fr; column-gap: 10px; }
-    .mq-card .mq-winrate .mq-donut { width: 52px; height: 52px; }
-    .mq-card .mq-winrate-pct { font-size: 22px; }
+    /* 4.1 — mobile mq-card keeps OG aspect (380 / 199 ≈ 1.91). */
+    .mq-card { width: 380px; height: 199px; padding: 12px 14px; }
+    .mq-card .mq-avatar { width: 32px; height: 32px; }
+    .mq-card .mq-meta b { font-size: 13px; }
+    .mq-card .mq-winrate { margin-top: 8px; grid-template-columns: 42px 1fr; column-gap: 8px; }
+    .mq-card .mq-winrate .mq-donut { width: 42px; height: 42px; }
+    .mq-card .mq-winrate-pct { font-size: 18px; }
     .mq-card .mq-call-val { font-size: 12px; }
   }
 
@@ -2014,14 +2136,15 @@
     margin-bottom: 12px;
   }
   /* TS token: display-l — canonical for all section H2.
-     Use Cases, Leaderboard, and any future sections all cascade here. */
+     4.1 — bumped a tier (28/3.2vw/44 → 36/4.4vw/60) so every section
+     title carries more presence and reads closer to the hero. */
   .section-head h2 {
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(28px, 3.2vw, 44px);
-    line-height: 1.15;
-    letter-spacing: -0.018em;
-    margin: 0 0 18px;
+    font-size: clamp(36px, 4.4vw, 60px);
+    line-height: 1.08;
+    letter-spacing: -0.022em;
+    margin: 0 0 22px;
     color: var(--text);
   }
   .section-head h2 .alva { color: var(--alva); }
@@ -3386,22 +3509,27 @@
     transform: translateY(var(--side-shift, 0px));
   }
   .agents-head {
-    /* 4.0 — gap retuned (was 12, too tight) → 28; still much tighter
-       than the 3.0 default of 56. */
-    margin-bottom: 28px;
+    /* 4.1 — extra room below the heading (was 28 → 40) so the bigger
+       H2 isn't crowded by the tab list directly underneath. */
+    margin-bottom: 40px;
     flex-shrink: 0;
   }
   /* TS token: display-l — canonical for all section H2s (S2/S3/S4) */
   .agents-head h2 {
-    margin: 0 0 18px;
+    margin: 0 0 22px;
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(28px, 3.2vw, 44px);
-    line-height: 1.15;
-    letter-spacing: -0.018em;
+    /* 4.1 — bumped to match other section H2s. */
+    font-size: clamp(36px, 4.4vw, 60px);
+    line-height: 1.08;
+    letter-spacing: -0.022em;
     color: var(--text);
   }
-  .agents-head h2 .alva { color: var(--alva); }
+  /* 4.1 — Use Cases H2 accent dropped (was alva). Harry called out
+     "lots of green text in the use cases section feels messy"; the
+     section already has alva on the active tab title + CTA, which is
+     enough brand accent. H2 stays solid text color. */
+  .agents-head h2 .alva { color: inherit; }
   /* TS token: lead — canonical for all section subtitles */
   .agents-head p {
     margin: 0;
@@ -3448,14 +3576,15 @@
     display: flex;
     flex-direction: column;
     gap: 0;
-    background: rgba(255, 255, 255, 0.04);
-    border: 0;
+    /* 4.3 — outline-only style per feedback: no fill, white border. */
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 14px;
     padding: 14px 22px;
-    transition: background .2s;
+    transition: border-color .2s, background .2s;
   }
   .agents-tab-item:hover {
-    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.45);
   }
   .agents-tab-v {
     position: relative;
@@ -3486,7 +3615,9 @@
      neutral grey (inactive) and brand teal (active) already carries
      enough hierarchy. Cleaner, flatter look. */
   .agents-tab-item.active {
-    background: rgba(73, 163, 166, 0.10);
+    /* 4.3 — outline-only active state: brighter border, no fill. */
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.65);
   }
   /* Detail block (subtitle + CTA) — collapsed by default, expanded when
      parent .agents-tab-item is .active. max-height animation gives a
@@ -3524,15 +3655,21 @@
     align-self: flex-start;
     padding: 12px 24px;
     border-radius: 999px;
-    background: var(--alva);
-    color: #fff;
+    /* 4.3 — outline-only pill so it matches the surrounding tab cards. */
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.45);
     text-decoration: none;
     font-family: var(--font);
     font-size: 14px;
     font-weight: 500;
-    transition: background .15s, transform .15s;
+    transition: background .15s, border-color .15s, transform .15s;
   }
-  .agents-tab-cta:hover { background: var(--alva); transform: translateY(-1px); }
+  .agents-tab-cta:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: var(--text);
+    transform: translateY(-1px);
+  }
 
   /* Right column window — vertical-stack carousel.
      3.0 round 14 — stage overflow flipped to visible so adjacent
@@ -3564,7 +3701,7 @@
   }
   /* Restore an eased motion only during programmatic snap so the
      "after 1s idle → align to nearest tab" animation reads soft. */
-  .agents-track.snapping { transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+  .agents-track.snapping { transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
   .agents-card {
     flex: 0 0 auto;
     /* 3.0 round 24 — card proportionally scaled up. max-width 620 →
@@ -4700,13 +4837,31 @@
      now an empty selector for this DOM). New layout drives off the
      .fk-* class family. */
   .fk-dialog {
-    /* Dialog with breathing room around a single column of content. */
+    /* 4.4 — widened so the preview card (max 540) fits + breathing
+       room. Padding bumped a touch for a more polished feel. */
+    width: min(640px, 100%);
     padding: 56px 56px 48px;
   }
   .fk-state {
     display: flex;
     flex-direction: column;
     gap: 18px;
+  }
+  /* 4.4 — playbook preview wrap inside result-on. The mq-card has a
+     fixed 540×283 in the marquee; in the modal it flexes via
+     aspect-ratio so it stays OG-shaped at any dialog width. */
+  .fk-card-wrap {
+    margin: 8px 0 4px;
+    display: flex;
+    justify-content: center;
+  }
+  .fk-card-wrap .mq-card.fk-preview-card {
+    width: 100%;
+    max-width: 540px;
+    height: auto;
+    aspect-ratio: 1.905 / 1;
+    margin: 0;
+    flex-shrink: 1;
   }
   .fk-state[hidden] { display: none; }
   /* Big single-stack headline — the offer/reward IS the hook. */
@@ -4778,6 +4933,45 @@
   @media (max-width: 760px) {
     .fk-dialog { padding: 40px 28px 32px; }
     .fk-headline { font-size: clamp(22px, 6vw, 28px); }
+  }
+  /* 4.4 — demo hint stacks under the dialog. Override the modal's
+     default centering for this modal only so the dialog + hint flow
+     vertically. */
+  #modal-for-kols.modal { flex-direction: column; gap: 14px; }
+  .fk-demo-hint {
+    align-self: center;
+    width: min(640px, calc(100% - 48px));
+    padding: 12px 18px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 12px;
+    font-family: var(--font);
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .fk-demo-hint-head {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--text);
+    margin-bottom: 4px;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .fk-demo-hint-head b { font-weight: 500; }
+  .fk-demo-hint-head i { color: var(--alva); font-size: 14px; }
+  .fk-demo-hint-body code {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.10);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin: 0 1px;
+    font-family: var(--font);
+    color: var(--text);
+    font-size: 11px;
+  }
+  @media (max-width: 760px) {
+    .fk-demo-hint { width: calc(100% - 36px); padding: 10px 14px; }
   }
   #modal-for-kols .steps {
     display: grid;
@@ -5080,9 +5274,12 @@
     perspective-origin: 50% 0%;
   }
   /* When a results card is upgraded to the mq-card rich layout, drop the
-     marquee-only width / margin so it fills its grid cell cleanly. */
+     marquee-only fixed dimensions so the card stretches to fill its
+     grid cell at the OG aspect ratio. */
   .results-grid .card.mq-card {
     width: 100%;
+    height: auto;
+    aspect-ratio: 1.905 / 1;
     margin-right: 0;
   }
   /* Inline request — same bcard treatment as the homepage closer, but
@@ -5732,6 +5929,10 @@
     }
     .opening h1 .line-handle { margin-top: 0.24em; }
     .opening h1 .line-2      { margin-top: 0.22em; }
+    /* mobile: allow the headline to wrap so a 390-wide viewport can
+       still fit "Which FinTwit account" / "actually makes money?". */
+    .opening h1 .line-1,
+    .opening h1 .line-2 { white-space: normal; }
     .handle-roller {
       text-shadow:
         0 0  8px #ffffff,
@@ -6280,31 +6481,16 @@
   /* ============================================================
      campaign-4.0 dark-mode section accents
      ============================================================ */
-  /* Section 2 — KOL marquee on brand green */
-  .stage.stage-marquee { background: var(--alva); }
-  .stage.stage-marquee .alva { color: #ffffff; }
+  /* Section 2 — 4.3 — solid black per feedback. */
+  .stage.stage-marquee {
+    background: #000000;
+  }
+  .stage.stage-marquee .alva { color: var(--alva); }
   .stage-marquee .stage-headline-overlay,
   .stage-marquee .stage-title,
-  .stage-marquee .stage-title-sub { color: #ffffff; }
-  /* CTAs sitting on the green field — invert to white pill + alva ink */
-  .stage-marquee .btn-primary {
-    background: #ffffff;
-    color: var(--alva);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
-  }
-  .stage-marquee .btn-primary:hover {
-    background: #f5f5f7;
-    box-shadow: 0 22px 44px rgba(0, 0, 0, 0.28);
-  }
-  .stage-marquee .btn-ghost {
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.55);
-  }
-  .stage-marquee .btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.10);
-    border-color: #ffffff;
-    color: #ffffff;
-  }
+  .stage-marquee .stage-title-sub { color: var(--text); }
+  /* CTAs revert to default (alva pill + white) which now reads against
+     the dark slab; no need for the white-on-green inversion anymore. */
 
   /* Section 3 — use-cases on a distinct dark-gray slab, with a
      full-bleed Silk shader behind the pinned content (reactbits.dev). */
@@ -6343,7 +6529,10 @@
     pointer-events: none;
     display: block;
     mix-blend-mode: screen;
-    opacity: 0.7;
+    /* 4.3 round 2 — bumped from 0.32 → 0.5; previous value was so
+       dim the rays read as a dirty smudge instead of a deliberate
+       glow. */
+    opacity: 0.5;
   }
   /* Hero H1 — iridescence via pure CSS gradient animation. Replaces
      the earlier WebGL+toDataURL pipeline that caused choppy color
@@ -7077,7 +7266,14 @@
     <div class="fk-state" data-fk-state="result-on" hidden>
       <span class="eyebrow fk-eyebrow-good"><i class="ph-bold ph-trophy"></i> Congratulations</span>
       <h3 class="fk-headline">You made the <span class="alva">Alva FinTwit Alpha League</span>.</h3>
-      <p class="fk-result-body">Share your verified track record on X and we'll be in touch to distribute your <strong>$5,000 in Claude Opus credits</strong>.</p>
+      <p class="fk-result-body">Share your verified track record on X — we'll be in touch to distribute your <strong>$5,000 in Claude Opus credits</strong>.</p>
+      <!-- 4.4 — playbook preview card. Populated at runtime by the
+           fk modal controller via window._buildRichCard so the user
+           sees their own card laid out exactly like the marquee /
+           results cards on the page. -->
+      <div class="fk-card-wrap">
+        <article class="mq-card fk-preview-card" data-fk-card></article>
+      </div>
       <div class="fk-actions">
         <button type="button" class="btn-primary fk-share">
           <i class="ph-bold ph-x-logo"></i> Share my Playbook
@@ -7112,6 +7308,19 @@
       </div>
     </div>
   </div>
+
+  <!-- 4.4 — demo hint (temporary; strip before ship). Lives outside
+       the .dialog as a sibling so it inherits the modal's open/closed
+       lifecycle but renders as a separate chip below the dialog. -->
+  <aside class="fk-demo-hint" role="note" aria-label="Demo logic hint">
+    <div class="fk-demo-hint-head">
+      <i class="ph-bold ph-flask"></i>
+      <b>Demo logic</b>
+    </div>
+    <div class="fk-demo-hint-body">
+      Type <code>1</code> · <code>2</code> · <code>3</code> and submit to preview the three result states (on-leaderboard / tracked / untracked). Any other handle is hashed to a random one.
+    </div>
+  </aside>
 </div>
 
 <!-- 3.0: Paste-handles modal — alternate entry to the scan flow for
@@ -8348,13 +8557,38 @@
       });
     }
 
+    // 4.4 — populate the playbook preview card in result-on state.
+    // Reuses window._buildRichCard so the visual matches the marquee.
+    function populatePreview(handle) {
+      const card = dialog.querySelector('[data-fk-card]');
+      if (!card || typeof window._buildRichCard !== 'function') return;
+      const cleanHandle = handle.replace(/^@/, '');
+      // pretty name = capitalize the handle (best-effort)
+      const name = cleanHandle.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'You';
+      const avatarSrc = 'https://unavatar.io/twitter/' + cleanHandle;
+      const onerr = 'this.onerror=null;this.src=\'https://ui-avatars.com/api/?name=' +
+        encodeURIComponent(name.slice(0,2)) + '&background=49A3A6&color=fff&bold=true&size=128\'';
+      // Result-on state means the user is on the leaderboard → strong ROI.
+      // Hash the handle to pick a deterministic but plausibly high value.
+      let h = 0;
+      for (let i = 0; i < handle.length; i++) h = (h * 31 + handle.charCodeAt(i)) | 0;
+      const roi = 120 + (Math.abs(h) % 380); // 120..499
+      window._buildRichCard(card, { name, handle, roi, avatarSrc, onerr });
+    }
+
     function normaliseHandle(raw) {
       const cleaned = (raw || '').trim().replace(/^@+/, '').replace(/\s+/g, '');
       return cleaned ? '@' + cleaned : '';
     }
 
-    // FNV-1a 32-bit → 3 buckets. Deterministic.
+    // 4.4 — demo shortcut: '1' / '2' / '3' always route to a specific
+    // result state so the hint at the bottom stays accurate. Any other
+    // handle falls back to the FNV-1a hash for deterministic-but-mixed
+    // routing in real demos.
     function pickResultState(handle) {
+      if (handle === '@1') return 'result-on';
+      if (handle === '@2') return 'result-tracked';
+      if (handle === '@3') return 'result-untracked';
       let h = 0x811c9dc5;
       for (let i = 0; i < handle.length; i++) {
         h = h ^ handle.charCodeAt(i);
@@ -8369,10 +8603,10 @@
       const handle = normaliseHandle(form.querySelector('input').value);
       if (!handle) return;
       const state = pickResultState(handle);
-      // Fill in handle placeholders that the untracked-state needs.
       dialog.querySelectorAll('[data-fk-handle]').forEach(el => {
         el.textContent = handle;
       });
+      if (state === 'result-on') populatePreview(handle);
       showState(state);
     });
 
@@ -8855,7 +9089,7 @@
       // measure wrapped body lines
       const measureCanvas = document.createElement('canvas');
       const mctx = measureCanvas.getContext('2d');
-      mctx.font = `400 ${fs}px Inter, system-ui, sans-serif`;
+      mctx.font = `400 ${fs}px Delight, system-ui, sans-serif`;
       const words = t.body.split(/\s+/);
       const lines = [];
       let cur = '';
@@ -8979,7 +9213,7 @@
       ctx.arc(padX + avR, padY + avR, avR, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#ffffff';
-      ctx.font = `700 13px Inter, system-ui, sans-serif`;
+      ctx.font = `700 13px Delight, system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(t.initials, padX + avR, padY + avR);
@@ -8988,15 +9222,15 @@
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       ctx.fillStyle = '#f5f5f7';
-      ctx.font = `500 ${fs}px Inter, system-ui, sans-serif`;
+      ctx.font = `500 ${fs}px Delight, system-ui, sans-serif`;
       ctx.fillText(t.name, padX + avR * 2 + 10, padY + 1);
       ctx.fillStyle = '#a1a1aa';
-      ctx.font = `500 ${Math.round(fs * 0.82)}px "JetBrains Mono", ui-monospace, monospace`;
+      ctx.font = `500 ${Math.round(fs * 0.82)}px Delight, ui-monospace, monospace`;
       ctx.fillText(t.handle, padX + avR * 2 + 10, padY + 1 + Math.round(fs * 1.45));
 
       // body text
       ctx.fillStyle = '#c5c5cd';
-      ctx.font = `400 ${fs}px Inter, system-ui, sans-serif`;
+      ctx.font = `400 ${fs}px Delight, system-ui, sans-serif`;
       let yy = padY + headH + gapHB;
       for (const line of lines) {
         ctx.fillText(line, padX, yy);
@@ -10130,7 +10364,7 @@
       const uniforms = {
         uTime:        { value: 0 },
         uResolution:  { value: new THREE.Vector2(1, 1) },
-        uIntensity:   { value: 2.0 },
+        uIntensity:   { value: 1.4 },
         uSpeed:       { value: 0.5 },
         uDistort:     { value: 0.0 },
         uOffset:      { value: new THREE.Vector2(0, 0) },
@@ -10200,7 +10434,10 @@
     // deterministically by the per-card rng.
     function makeChart(rng, finalPct) {
       const N = 44;
-      const W = 380, H = 86, PAD_X = 4, PAD_Y = 14;
+      // 4.1 — viewBox aspect matches the chart container CSS aspect
+      // (440/100 = 4.4) so the SVG can use preserveAspectRatio="none"
+      // without flattening the circles into ellipses.
+      const W = 440, H = 100, PAD_X = 4, PAD_Y = 16;
       const personality = Math.floor(rng() * 4); // 0=rally 1=volatile 2=recovery 3=drift
       const noise = [0.10, 0.32, 0.22, 0.06][personality];
       const pts = [];
@@ -10248,26 +10485,47 @@
       const labelDx = anchor === 'end' ? -8 : (anchor === 'start' ? 8 : 0);
       const peakLabel = (peakVal >= 0 ? '+' : '') + peakVal.toFixed(peakVal >= 100 || peakVal <= -100 ? 0 : 1) + '%';
       const labelColor = finalPct >= 0 ? '#22c55e' : '#ef4444';
-      // place the two-line annotation either above (default) or below
-      // the peak point depending on available vertical room. The two
-      // tspans share an x anchor and use explicit dy for spacing so
-      // they never overlap regardless of where peakY lands.
-      const placeAbove = peakY > 26;
-      const labelY = placeAbove ? (peakY - 22) : (peakY + 14);
+      const placeAbove = peakY > 36;
+      const labelY = placeAbove ? (peakY - 32) : (peakY + 12);
+      // 4.3 — annotation gets a rounded "chip" backdrop so BEST ROI +
+      // value read cleanly against the noisy chart fill. Dimensions
+      // approximated from the longest line (the value text).
+      const valueChars = peakLabel.length;
+      const chipW = Math.max(56, valueChars * 8 + 18);
+      const chipH = 30;
+      const chipX = anchor === 'end'
+        ? peakX + labelDx - chipW
+        : anchor === 'start'
+          ? peakX + labelDx
+          : peakX + labelDx - chipW / 2;
+      const chipY = labelY - 13;
+      const textX = anchor === 'middle' ? (chipX + chipW / 2)
+                  : anchor === 'end' ? (chipX + chipW - 9)
+                  : (chipX + 9);
+      const textAnchor = anchor === 'middle' ? 'middle' : (anchor === 'end' ? 'end' : 'start');
       return (
         '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+          '<defs>' +
+            '<filter id="bdblur-' + Math.round(peakX) + '-' + Math.round(peakY) + '" x="-20%" y="-20%" width="140%" height="140%">' +
+              '<feGaussianBlur stdDeviation="2"/>' +
+            '</filter>' +
+          '</defs>' +
           '<path d="M 0 ' + zeroY + ' L ' + W + ' ' + zeroY + '" stroke="rgba(255,255,255,0.10)" stroke-width="1" fill="none" stroke-dasharray="2 3"/>' +
           '<path d="' + fillPath + '" fill="' + fill + '"/>' +
           '<path d="' + d + '" stroke="' + stroke + '" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>' +
           // peak marker
           '<circle cx="' + peakX.toFixed(1) + '" cy="' + peakY.toFixed(1) + '" r="6" fill="' + stroke + '" opacity="0.18"/>' +
           '<circle cx="' + peakX.toFixed(1) + '" cy="' + peakY.toFixed(1) + '" r="3.2" fill="' + stroke + '"/>' +
-          // "BEST ROI" two-line annotation — single <text> with two
-          // <tspan>s so dy guarantees vertical separation.
-          '<text x="' + (peakX + labelDx).toFixed(1) + '" y="' + labelY.toFixed(1) + '" ' +
-            'text-anchor="' + anchor + '" font-family="var(--font-mono)">' +
-            '<tspan font-size="8" fill="rgba(255,255,255,0.65)" letter-spacing="0.14em">BEST ROI</tspan>' +
-            '<tspan x="' + (peakX + labelDx).toFixed(1) + '" dy="13" font-size="13" font-weight="600" ' +
+          // chip backdrop (rounded translucent dark rect) so the text
+          // sits on a clean field instead of the busy chart fill.
+          '<rect x="' + chipX.toFixed(1) + '" y="' + chipY.toFixed(1) + '" ' +
+                'width="' + chipW + '" height="' + chipH + '" rx="6" ry="6" ' +
+                'fill="rgba(8,10,14,0.78)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>' +
+          // text inside the chip
+          '<text x="' + textX.toFixed(1) + '" y="' + (chipY + 11) + '" ' +
+            'text-anchor="' + textAnchor + '" font-family="Delight, ui-monospace, monospace">' +
+            '<tspan font-size="8" fill="rgba(255,255,255,0.75)" letter-spacing="0.14em">BEST ROI</tspan>' +
+            '<tspan x="' + textX.toFixed(1) + '" dy="13" font-size="13" font-weight="600" ' +
               'fill="' + labelColor + '" letter-spacing="-0.01em">' + peakLabel + '</tspan>' +
           '</text>' +
           // end dot
@@ -10396,7 +10654,15 @@
         '<div class="mq-foot">' +
           '<span>' + totalCalls + ' signals · ' + dateRange + '</span>' +
           '<span class="mq-foot-r">Not financial advice</span>' +
-        '</div>';
+        '</div>' +
+        // 4.4 round 2 — hover CTA. Single row that grows below the
+        // card on :hover. Left: "{Name}'s Playbook" · Right: external
+        // arrow icon. target=_blank + rel=noopener — it leads to an
+        // external playbook detail page.
+        '<a class="mq-cta" href="https://alva.xyz/p/' + encodeURIComponent(handle.replace(/^@/, '')) + '" target="_blank" rel="noopener noreferrer" aria-label="Open ' + name + '\'s playbook in a new tab">' +
+          '<span class="mq-cta-name">' + name + '’s Playbook</span>' +
+          '<i class="ph-bold ph-arrow-up-right mq-cta-icon" aria-hidden="true"></i>' +
+        '</a>';
     }
 
     // Pass 1 — landing marquee.
@@ -10440,6 +10706,10 @@
         onerr: avatarImg.getAttribute('onerror') || '',
       });
     });
+
+    // 4.4 — expose buildRichCard so other modules (for-kols modal)
+    // can render the same playbook layout for a user-entered handle.
+    window._buildRichCard = buildRichCard;
   })();
 
   /* ============================================================
@@ -10490,7 +10760,16 @@
       // Sides + stage share the same vertical origin in the grid, so
       // shift the side by the signed delta so the first tab's top
       // matches the active card's top.
-      const shift = (stageH - cardH) / 2 - headH - headMB;
+      let shift = (stageH - cardH) / 2 - headH - headMB;
+      // 4.3 — guard the H2 so it never slides up behind the fixed 64px
+      // nav on laptop-sized viewports. The .agents-pin-inner has 96px
+      // of padding-top; if shift drops below `(64 - 96) = -32`, the
+      // heading would clip into the nav. Clamping costs a few pixels of
+      // tab/card alignment but keeps the section title fully readable.
+      const NAV_H = 64;
+      const innerPadTop = parseFloat(getComputedStyle(stage.parentElement || stage).paddingTop) || 96;
+      const minShift = -(innerPadTop - NAV_H - 8); // 8px breathing room
+      if (shift < minShift) shift = minShift;
       side.style.setProperty('--side-shift', Math.round(shift) + 'px');
     }
 
@@ -10500,6 +10779,10 @@
         track.style.transform = '';
         return;
       }
+      // 4.3 — while the snap animation is running we drive the
+      // transform via CSS transition (set inside snapToNearest);
+      // skip the per-frame update so the two don't fight.
+      if (snapping) return;
       const rect = section.getBoundingClientRect();
       const total = Math.max(1, section.offsetHeight - window.innerHeight);
       const p = Math.max(0, Math.min(1, -rect.top / total));
@@ -10541,12 +10824,7 @@
       const rect = section.getBoundingClientRect();
       const total = Math.max(1, section.offsetHeight - window.innerHeight);
       const p = -rect.top / total;
-      // Only snap while the pin is engaged. Outside the pin range
-      // (above or past the section), leave the scroll alone.
       if (p <= 0.001 || p >= 0.999) return;
-      // 4.0 round 6 — slice anchor matched to the continuous map in
-      // update(): index i corresponds to p = i / (N-1). Snapping here
-      // puts the right card exactly centered + left tab i active.
       const denom = Math.max(1, N - 1);
       const idx = Math.min(N - 1, Math.max(0, Math.round(p * denom)));
       const anchorP = idx / denom;
@@ -10555,7 +10833,27 @@
       if (Math.abs(target - window.scrollY) < 2) return;
       snapping = true;
       snapStop = target;
+      // 4.3 — drive the track transform via CSS transition so the
+      // right card eases into place. update() is paused above while
+      // `snapping === true`. We also animate the document scroll for
+      // continuity but the track's eased transform is what the eye
+      // actually follows.
+      const stage = track.parentElement;
+      const cardH = cards[0].offsetHeight;
+      const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
+      const stageH = stage.offsetHeight;
+      const offset = (stageH - cardH) / 2 - idx * (cardH + gap);
+      track.classList.add('snapping');
+      track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
+      items.forEach((t, i) => t.classList.toggle('active', i === idx));
+      lastIdx = idx;
+      syncSidePad();
       window.scrollTo({ top: target, behavior: 'smooth' });
+      // release the lock once the eased transform completes.
+      setTimeout(() => {
+        snapping = false;
+        track.classList.remove('snapping');
+      }, 880);
     }
     window.addEventListener('scroll', () => {
       schedule();
