@@ -200,8 +200,10 @@
      3.0 round 21 — wordmark now sits to the right of the restored
      Alva mark. */
   .brand-wordmark {
-    width: 100px;
-    height: 32px;
+    /* 4.2 — pulled down a touch so the wordmark no longer towers over
+       the 28px brand-mark sitting next to it. */
+    width: 84px;
+    height: 26px;
     display: block;
     color: var(--text);
   }
@@ -248,7 +250,9 @@
     display: inline-flex; align-items: center; gap: 7px;
     padding: 0 12px;
     height: 100%;
-    color: var(--muted);
+    /* 4.2 — default white, active alva. Removed the previous muted →
+       white hover ramp in favor of the simpler two-state pattern. */
+    color: var(--text);
     font-family: var(--font);
     font-size: 13px;
     font-weight: 500;
@@ -261,11 +265,9 @@
   }
   .nav-tab i { font-size: 13px; color: inherit; transition: color .2s; }
   .nav-tab span { line-height: 1; }
-  .nav-tab:hover { color: var(--text); }
+  .nav-tab:hover { color: var(--alva); }
   .nav-tab:hover i { color: inherit; }
-  /* Active state uses color/underline (not weight) — keep w500 to stay
-     in btn-s family. Icon inherits the same color as the text. */
-  .nav-tab.active { color: var(--text); }
+  .nav-tab.active { color: var(--alva); }
   .nav-tab.active i { color: inherit; }
   /* The moving indicator — now a thin teal underline that slides along
      the bottom of the tabs row. Width = active tab width, X = active tab
@@ -635,8 +637,11 @@
     position: relative;
     z-index: 5;
     text-align: center;
-    max-width: 880px;
-    padding: 0 24px;
+    /* 4.2 — widen the hero column so the big H1 has both sides to
+       spread across; previous 880px max-width forced the headline to
+       wrap multiple times at the new font size. */
+    max-width: 1400px;
+    padding: 0 32px;
   }
   /* TS token: display-xl — Hero H1 (3.0 round 9 — liquid effect
      reverted per user; H1 is now just solid brand teal). */
@@ -661,6 +666,9 @@
     display: block;
     line-height: 0.95;
     min-height: 0;
+    /* 4.2 — each clause stays on its own single line; the wider
+       .opening-content gives the headline both sides to fill. */
+    white-space: nowrap;
   }
   .opening h1 .line-2 {
     margin-top: 0;
@@ -5754,6 +5762,10 @@
     }
     .opening h1 .line-handle { margin-top: 0.24em; }
     .opening h1 .line-2      { margin-top: 0.22em; }
+    /* mobile: allow the headline to wrap so a 390-wide viewport can
+       still fit "Which FinTwit account" / "actually makes money?". */
+    .opening h1 .line-1,
+    .opening h1 .line-2 { white-space: normal; }
     .handle-roller {
       text-shadow:
         0 0  8px #ffffff,
