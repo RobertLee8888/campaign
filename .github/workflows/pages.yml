@@ -22,7 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v4
+      # configure-pages skipped — codeload archive download flaking for
+      # both v4 and v5 from this runner region; not strictly required for
+      # a static-site deploy from repo root.
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
