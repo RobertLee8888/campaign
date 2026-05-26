@@ -165,16 +165,15 @@
      NAV  (faithful to audit.html)
      ============================================================ */
   .nav {
-    /* FIXED (not sticky) so the nav doesn't occupy 64px of layout space.
-       Combined with the transparent background + backdrop blur, this lets
-       the opening section start at viewport y=0 and provide its own bg
-       behind the nav — no more pale page-bg strip at the top while the
-       opening below it is teal-tinted. */
     position: fixed; top: 0; left: 0; right: 0; z-index: 30;
-    background: transparent;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--line);
+    /* 4.1 — slight dark tint added so nav tabs read clearly when the
+       page bg behind them is bright (used to wash out on the teal
+       sections + the H1 iridescence band). Still blurs the content
+       below for that soft-glass effect. */
+    background: rgba(10, 10, 14, 0.55);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
   .nav-inner {
     max-width: 1440px; margin: 0 auto;
@@ -601,20 +600,22 @@
   .float-tweet .ft-name {
     font-size: 1em;
     font-weight: 500;
-    color: #2a2a30;
+    /* 4.1 — was #2a2a30 (dark grey, invisible on dark cards). Light
+       enough to read but still ambient. */
+    color: #e4e4ea;
     line-height: 1.2;
   }
   .float-tweet .ft-handle {
     font-family: var(--font-mono);
     font-size: 0.82em;
-    color: var(--muted-2);
+    color: #9a9aa6;
     letter-spacing: 0.02em;
     margin-top: 0.12em;
   }
   .float-tweet p {
     font-size: 1em;
     line-height: 1.5;
-    color: var(--muted);
+    color: #b6b6c0;
     margin: 0;
   }
   @keyframes drift {
@@ -642,10 +643,12 @@
   .opening h1 {
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(40px, 4.6vw, 60px);
-    line-height: 0.88;
-    letter-spacing: -0.02em;
-    margin: 0 0 28px;
+    /* 4.1 — H1 scaled up substantially (4.6vw → 8.4vw, max 60 → 112)
+       per feedback that the hero needs more impact. */
+    font-size: clamp(56px, 8.4vw, 112px);
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    margin: 0 0 32px;
     color: var(--alva);
   }
   /* Each clause is its own block — tighten the per-line line-height
@@ -1138,9 +1141,10 @@
   .stage-marquee .stage-title {
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(28px, 3.2vw, 44px);
-    line-height: 1.15;
-    letter-spacing: -0.018em;
+    /* 4.1 — matches the other section H2 tier. */
+    font-size: clamp(36px, 4.4vw, 60px);
+    line-height: 1.08;
+    letter-spacing: -0.022em;
     margin: 0;
     color: var(--text);
   }
@@ -2014,14 +2018,15 @@
     margin-bottom: 12px;
   }
   /* TS token: display-l — canonical for all section H2.
-     Use Cases, Leaderboard, and any future sections all cascade here. */
+     4.1 — bumped a tier (28/3.2vw/44 → 36/4.4vw/60) so every section
+     title carries more presence and reads closer to the hero. */
   .section-head h2 {
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(28px, 3.2vw, 44px);
-    line-height: 1.15;
-    letter-spacing: -0.018em;
-    margin: 0 0 18px;
+    font-size: clamp(36px, 4.4vw, 60px);
+    line-height: 1.08;
+    letter-spacing: -0.022em;
+    margin: 0 0 22px;
     color: var(--text);
   }
   .section-head h2 .alva { color: var(--alva); }
@@ -3386,22 +3391,27 @@
     transform: translateY(var(--side-shift, 0px));
   }
   .agents-head {
-    /* 4.0 — gap retuned (was 12, too tight) → 28; still much tighter
-       than the 3.0 default of 56. */
-    margin-bottom: 28px;
+    /* 4.1 — extra room below the heading (was 28 → 40) so the bigger
+       H2 isn't crowded by the tab list directly underneath. */
+    margin-bottom: 40px;
     flex-shrink: 0;
   }
   /* TS token: display-l — canonical for all section H2s (S2/S3/S4) */
   .agents-head h2 {
-    margin: 0 0 18px;
+    margin: 0 0 22px;
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(28px, 3.2vw, 44px);
-    line-height: 1.15;
-    letter-spacing: -0.018em;
+    /* 4.1 — bumped to match other section H2s. */
+    font-size: clamp(36px, 4.4vw, 60px);
+    line-height: 1.08;
+    letter-spacing: -0.022em;
     color: var(--text);
   }
-  .agents-head h2 .alva { color: var(--alva); }
+  /* 4.1 — Use Cases H2 accent dropped (was alva). Harry called out
+     "lots of green text in the use cases section feels messy"; the
+     section already has alva on the active tab title + CTA, which is
+     enough brand accent. H2 stays solid text color. */
+  .agents-head h2 .alva { color: inherit; }
   /* TS token: lead — canonical for all section subtitles */
   .agents-head p {
     margin: 0;
@@ -6280,31 +6290,21 @@
   /* ============================================================
      campaign-4.0 dark-mode section accents
      ============================================================ */
-  /* Section 2 — KOL marquee on brand green */
-  .stage.stage-marquee { background: var(--alva); }
-  .stage.stage-marquee .alva { color: #ffffff; }
+  /* Section 2 — 4.1 — pulled back from solid alva to a dark slab with
+     just two subtle teal washes. Brand green was reading too loud in
+     the page rhythm. */
+  .stage.stage-marquee {
+    background:
+      radial-gradient(720px 480px at 12% 18%, rgba(73,163,166,0.18) 0%, transparent 60%),
+      radial-gradient(620px 420px at 88% 86%, rgba(92,185,188,0.10) 0%, transparent 60%),
+      #0f1216;
+  }
+  .stage.stage-marquee .alva { color: var(--alva); }
   .stage-marquee .stage-headline-overlay,
   .stage-marquee .stage-title,
-  .stage-marquee .stage-title-sub { color: #ffffff; }
-  /* CTAs sitting on the green field — invert to white pill + alva ink */
-  .stage-marquee .btn-primary {
-    background: #ffffff;
-    color: var(--alva);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
-  }
-  .stage-marquee .btn-primary:hover {
-    background: #f5f5f7;
-    box-shadow: 0 22px 44px rgba(0, 0, 0, 0.28);
-  }
-  .stage-marquee .btn-ghost {
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.55);
-  }
-  .stage-marquee .btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.10);
-    border-color: #ffffff;
-    color: #ffffff;
-  }
+  .stage-marquee .stage-title-sub { color: var(--text); }
+  /* CTAs revert to default (alva pill + white) which now reads against
+     the dark slab; no need for the white-on-green inversion anymore. */
 
   /* Section 3 — use-cases on a distinct dark-gray slab, with a
      full-bleed Silk shader behind the pinned content (reactbits.dev). */
