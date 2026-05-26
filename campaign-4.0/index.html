@@ -42,6 +42,15 @@
      mid-tier 4G). Reference: web.dev "Below-the-fold-only JS should
      be deferred or conditionally loaded". -->
 <script>
+  /* 4.4 round 9 — disable browser scroll restoration as EARLY as
+     possible (before first paint, in <head>) so refreshes never flash
+     the previous scroll position. The previous reset lived deep in
+     <body> at line ~7822 and ran after the browser had already
+     restored + painted a frame at e.g. Section 2, producing a visible
+     "jump to S2 then back" on every refresh. */
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+</script>
+<script>
   if (!window.matchMedia('(max-width: 760px)').matches) {
     var s = document.createElement('script');
     s.src = './three.min.js';
@@ -4424,7 +4433,10 @@
     border-color: rgba(255, 255, 255,0.10);
     color: var(--text);
   }
-  .dialog .bcard-form input::placeholder { color: rgba(10,10,16,0.40); }
+  /* 4.4 round 8 — placeholder was rgba(10,10,16,0.40) (dark on dark)
+     left over from when the dialog was a light card. 4.0 modals are
+     dark, so the placeholder needs to be light. */
+  .dialog .bcard-form input::placeholder { color: rgba(255,255,255,0.40); }
   .dialog .bcard-form input:focus {
     border-color: var(--alva);
     background: rgba(73,163,166,0.06);
@@ -4696,10 +4708,23 @@
     -webkit-backdrop-filter: blur(10px);
     text-decoration: none;
     color: var(--text);
-    transition: transform .15s ease, box-shadow .15s ease;
+    /* 4.4 round 7 — transform composed from two parts: the JS-driven
+       footer-lift (`--badge-lift`, negative pixels) and the hover
+       nudge (`--badge-hover-y`). Listing both via `translateY()` lets
+       a single transform property carry both without one stomping the
+       other. The transition smooths the footer-lift change on scroll. */
+    --badge-lift: 0px;
+    --badge-hover-y: 0px;
+    transform: translateY(calc(var(--badge-lift) + var(--badge-hover-y)));
+    /* 4.4 round 8 — transform transition removed. The footer-lift is
+       driven by scroll position via rAF; with a transition the badge
+       lagged behind the scroll and looked jumpy. Without transition,
+       the lift tracks the footer 1:1 each frame. Hover's 2px nudge is
+       small enough to read fine as instant. */
+    transition: box-shadow .15s ease;
   }
   .alva-badge:hover {
-    transform: translateY(-2px);
+    --badge-hover-y: -2px;
     box-shadow: 0 22px 44px rgba(10,10,16,0.18);
   }
   .alva-badge-text {
@@ -7797,14 +7822,19 @@
      producing a visible flash of the first screen followed by a jump
      to the saved position. Always-top is the cleanest fix.
      ============================================================ */
-  if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
-  }
-  // Defensive: force scroll to top before first paint in case the browser
-  // ignores the manual hint above (older Safari/iOS), and once more on the
-  // load event for any async layout shifts that re-position content.
-  window.scrollTo(0, 0);
-  addEventListener('load', () => window.scrollTo(0, 0));
+  // (scrollRestoration = 'manual' is set in the early <head> script
+  // so the browser never even attempts to restore.) These defensive
+  // resets use behavior:'instant' to override the global
+  // `html { scroll-behavior: smooth }` rule — otherwise the legacy
+  // scrollTo(x,y) form animated visibly, producing the "jump to S2
+  // then back" on refresh.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  try { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); }
+  catch (e) { window.scrollTo(0, 0); }
+  addEventListener('load', () => {
+    try { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); }
+    catch (e) { window.scrollTo(0, 0); }
+  });
 
   /* ============================================================
      SECTION 2 CARD-STACK HOVER — JS-driven for stability
@@ -10945,6 +10975,44 @@
         window.scrollTo({ top: snapStop, behavior: 'smooth' });
       });
     });
+  })();
+
+  /* ============================================================
+     ALVA BADGE — footer-aware lift  (4.4 round 7)
+     The persistent bottom-right .alva-badge is `position: fixed` at
+     `bottom: 20px`. Without intervention it covers the footer's
+     rightmost content when the user reaches the page bottom. This
+     IIFE listens on scroll/resize, measures how much the badge would
+     overlap the footer, and translates the badge upward by exactly
+     that amount so it appears to be "pushed up" by the footer.
+     ============================================================ */
+  (function () {
+    const badge = document.querySelector('.alva-badge');
+    const footer = document.querySelector('footer.f');
+    if (!badge || !footer) return;
+    // The badge has its own hover transform (translateY(-2px)). Apply
+    // the lift via a CSS variable consumed by an inline transform so
+    // the two don't fight. See the matching CSS tweak.
+    badge.style.setProperty('--badge-lift', '0px');
+    const GAP = 16; // breathing room between badge and footer top edge
+    let raf = 0;
+    function update() {
+      raf = 0;
+      const footerTop = footer.getBoundingClientRect().top;
+      const vh = window.innerHeight;
+      // badge bottom anchor lives at vh - 20 (its `bottom: 20px`).
+      // overlap = how far the badge bottom sits below the footer top.
+      const badgeBottom = vh - 20;
+      const overlap = Math.max(0, badgeBottom - footerTop + GAP);
+      badge.style.setProperty('--badge-lift', '-' + overlap.toFixed(1) + 'px');
+    }
+    function schedule() {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    }
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    update();
   })();
 
 </script>
