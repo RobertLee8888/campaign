@@ -77,8 +77,13 @@
   @font-face { font-family: 'Delight'; font-weight: 200; font-style: normal; font-display: swap; src: url('./fonts/Delight-ExtraLight.ttf') format('truetype'); }
   @font-face { font-family: 'Delight'; font-weight: 300; font-style: normal; font-display: swap; src: url('./fonts/Delight-Light.ttf') format('truetype'); }
   @font-face { font-family: 'Delight'; font-weight: 400; font-style: normal; font-display: swap; src: url('./fonts/Delight-Regular.ttf') format('truetype'); }
+  /* 4.4 round 12 — SemiBold moved from 500 → 600 (its proper CSS slot)
+     so that font-weight:500 actually resolves to Delight-Medium.ttf.
+     Previously both files were declared at 500 with SemiBold's
+     duplicate-key declaration winning, which silently made every
+     "medium-weight" call site render as SemiBold. */
   @font-face { font-family: 'Delight'; font-weight: 500; font-style: normal; font-display: swap; src: url('./fonts/Delight-Medium.ttf') format('truetype'); }
-  @font-face { font-family: 'Delight'; font-weight: 500; font-style: normal; font-display: swap; src: url('./fonts/Delight-SemiBold.ttf') format('truetype'); }
+  @font-face { font-family: 'Delight'; font-weight: 600; font-style: normal; font-display: swap; src: url('./fonts/Delight-SemiBold.ttf') format('truetype'); }
   @font-face { font-family: 'Delight'; font-weight: 700; font-style: normal; font-display: swap; src: url('./fonts/Delight-Bold.ttf') format('truetype'); }
   @font-face { font-family: 'Delight'; font-weight: 800; font-style: normal; font-display: swap; src: url('./fonts/Delight-ExtraBold.ttf') format('truetype'); }
   @font-face { font-family: 'Delight'; font-weight: 900; font-style: normal; font-display: swap; src: url('./fonts/Delight-Black.ttf') format('truetype'); }
@@ -95,9 +100,17 @@
     --line:      #2a2a32;
     --card:      #1c1c24;
     --card-line: rgba(255,255,255,0.08);
-    --alva:      #49A3A6;
-    --alva-hi:   #5cb9bc;
-    --alva-dim:  rgba(73,163,166,0.18);
+    /* 4.4 round 38 — pulled back from the cyan/neon side per
+       feedback. Same hue as the original #49A3A6 brand teal (~182°)
+       but with the lightness lifted a notch so it actually reads as
+       a brighter version, not a bluer one. */
+    --alva:      #58C3C6;
+    --alva-hi:   #7AD3D6;
+    /* 4.4 round 16 — foreground used on alva-green buttons. User
+       feedback: switch text + icons from white to dark gray so the
+       label reads with stronger contrast against the bright teal. */
+    --on-alva:   #15151c;
+    --alva-dim:  rgba(88,195,198,0.18);
     --orange:    #ff8a4c;
     --purple:    #b388ff;
     --gain:      #22c55e;
@@ -412,7 +425,7 @@
   .nav-drawer-item.active,
   .nav-drawer-action:hover,
   .nav-drawer-action:active {
-    background: rgba(73, 163, 166, 0.06);
+    background: rgba(88, 195, 198, 0.06);
   }
   .nav-drawer-item:hover i,
   .nav-drawer-item.active i,
@@ -434,20 +447,21 @@
     padding: 9px 16px;
     border-radius: 999px;
     background: var(--alva);
-    color: #fff;
+    color: var(--on-alva);
     border: 0;
     font-family: var(--font);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 0 0 rgba(0,0,0,0);
-    transition: background .15s, transform .18s ease, box-shadow .18s ease;
+    /* 4.4 round 36 — button shadow removed. */
+    box-shadow: none;
+    transition: background .15s, transform .18s ease;
   }
   .nav-cta i { color: inherit; font-size: 14px; }
   .nav-cta:hover {
     background: var(--alva);
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 14px 28px rgba(10,10,16,0.20);
+    box-shadow: none;
   }
   /* secondary ghost button — link to the For-KOLs card */
   /* TS token: btn-s */
@@ -467,16 +481,17 @@
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 0 0 rgba(0,0,0,0);
-    transition: background .15s, border-color .15s, color .15s, transform .18s ease, box-shadow .18s ease;
+    /* 4.4 round 36 — button shadow removed. */
+    box-shadow: none;
+    transition: background .15s, border-color .15s, color .15s, transform .18s ease;
   }
   .nav-cta-ghost i { color: inherit; font-size: 13px; }
   .nav-cta-ghost:hover {
-    background: rgba(73,163,166,0.06);
+    background: rgba(88,195,198,0.06);
     border-color: var(--alva);
     color: var(--alva);
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 12px 24px rgba(10,10,16,0.12);
+    box-shadow: none;
   }
   /* (.nav-cta-ghost:hover i no longer needed — `color: inherit` on the
      icon means it automatically picks up the hover-state text color.) */
@@ -658,9 +673,25 @@
     font-family: var(--font-display);
     /* 4.3 — weight pulled from 500 → 400 (regular) per feedback. */
     font-weight: 400;
-    font-size: clamp(56px, 8.4vw, 112px);
+    /* 4.4 round 15b — size is now derived from available width so it
+       NEVER overflows the viewport (previous 8.6vw scaler was past
+       the empirical char-width budget of ~0.57em for Delight; the
+       lines clipped on the right on 1900+ canvases). Formula:
+       font ≤ (viewport - 80px) / 11.4   for 20-char nowrap lines.
+       Clamp floors at 72px and caps at 200px so on huge screens the
+       headline still grows. Letter-spacing tightened -0.03 → -0.04
+       to claw back a little extra room for impact. */
+    /* 4.4 round 23 — root cause: any pure-CSS calc that assumes an
+       average em-width is brittle, because Delight Display has wildly
+       variable glyph widths (W ≈ 0.95em, i ≈ 0.25em). 3 rounds of
+       bumping the divisor was treating a symptom, not the cause.
+       The size is now set by JS at runtime — see the IIFE that
+       measures the longest line at a reference font-size and scales
+       to fit container width. This CSS rule provides a sensible
+       fallback for the moment between paint and JS sizing. */
+    font-size: clamp(64px, 7.5vw, 132px);
     line-height: 0.92;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.035em;
     margin: 0 0 32px;
     color: var(--alva);
   }
@@ -689,6 +720,15 @@
     z-index: 12;
   }
   .opening h1 .alva { color: var(--alva); }
+  /* 4.4 round 19 — wrap breakpoint widened. Below 1100px the H1
+     lines wrap (allowed to break) so the calc font size doesn't have
+     to fit 21 chars in a 1024-wide window — that would force a
+     fragile ~50px font that fights line-height. Above 1100, nowrap
+     resumes and the calc handles sizing safely. */
+  @media (max-width: 1100px) {
+    .opening h1 .line-1,
+    .opening h1 .line-2 { white-space: normal; }
+  }
   /* Typewriter @handle in the Opening H1. JS types characters in
      and out of .handle-slot. A blinking ::after caret reads as a
      terminal cursor and remains visible even when the slot is empty.
@@ -785,106 +825,38 @@
       drop-shadow(0 0 22px rgba(10,10,14,0.35));
   }
 
-  /* scroll cue — circle ring + arrow both shimmer with the same multi-color
-     gradient sweeping top → bottom. The ring is a thin border made by a
-     ::before (fill = animated gradient) + ::after (page-bg inner disc that
-     masks all but a 1.5px edge). The arrow glyph reuses the same gradient
-     via `background-clip: text`. Both animate in sync. */
-  .opening-arrow {
-    position: relative;
-    display: inline-grid;
-    place-items: center;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-    isolation: isolate;
-    transition: transform .2s;
-    /* halo — soft dark glow on dark page, just enough to lift the
-       arrow off drifting cards without bleeding white. */
-    box-shadow:
-      0 0 24px 10px rgba(10, 10, 14, 0.65),
-      0 0 48px 20px rgba(10, 10, 14, 0.40);
-  }
-  .opening-arrow:hover { transform: translateY(-2px) scale(1.02); }
-
-  .opening-arrow::before {
-    content: "";
+  /* 4.4 round 22 — opening scroll cue. Non-interactive double-chevron
+     pinned to the bottom of section 1, bobbing up-down. No ring, no
+     hover, no click. Pure decorative wayfinding. */
+  .opening-cue {
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background:
-      linear-gradient(180deg,
-        var(--text)            0%,
-        var(--text)           33%,
-        rgba(73,163,166,1)    38%,   /* alva */
-        rgba(73,163,166,1)    44%,   /* alva plateau */
-        rgba(255,138,76,1)    48%,
-        rgba(255,138,76,1)    54%,   /* orange plateau */
-        rgba(176,38,255,1)    58%,
-        rgba(176,38,255,1)    64%,   /* purple plateau */
-        var(--text)           70%,
-        var(--text)          100%);
-    background-size: 100% 400%;
-    background-position: 0 0%;
-    animation: arrowShimmer 6.5s linear infinite;
-    z-index: 0;
+    left: 50%;
+    /* 4.4 round 24 — lifted away from the section bottom edge so the
+       cue isn't crammed against the next section. */
+    bottom: 64px;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 4;
   }
-  .opening-arrow::after {
-    /* inner disc — pure white (#fff) instead of page bg (--bg = #f5f5f7)
-       so the button reads as a clean white pill on the grey opening
-       background, not as a grey tinted shape. Still masks ::before so
-       only the gradient ring shows. */
-    content: "";
-    position: absolute;
-    inset: 2.5px;
-    border-radius: inherit;
-    background: var(--bg-soft);
-    z-index: 1;
+  .opening-cue i {
+    /* 4.4 round 24 — switched to the regular (non-bold) Phosphor
+       variant for a thinner stroke; bumped opacity floor up so the
+       cue actually reads against the dark vignette. Pure white with
+       opacity rather than a grey for a cleaner look. */
+    font-size: 32px;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1;
+    animation: openingCueBob 2.4s ease-in-out infinite;
   }
-  /* sweep happens in the first ~22% of the cycle (~1.4s), then holds for
-     the remaining ~5s. Direction: bottom → top, opposite to the arrow. */
-  @keyframes arrowShimmer {
-    0%    { background-position: 0 0%;   }   /* band below element */
-    22%   { background-position: 0 100%; }   /* band has passed above */
-    100%  { background-position: 0 100%; }   /* hold for ~5s pause */
+  @keyframes openingCueBob {
+    0%, 100% { transform: translateY(0);    opacity: 0.65; }
+    50%      { transform: translateY(6px);  opacity: 1;    }
   }
-
-  .opening-arrow i {
-    position: relative;
-    z-index: 2;
-    font-size: 28px;
-    background:
-      linear-gradient(180deg,
-        var(--text)            0%,
-        var(--text)           33%,
-        rgba(73,163,166,1)    38%,
-        rgba(73,163,166,1)    44%,
-        rgba(255,138,76,1)    48%,
-        rgba(255,138,76,1)    54%,
-        rgba(176,38,255,1)    58%,
-        rgba(176,38,255,1)    64%,
-        var(--text)           70%,
-        var(--text)          100%);
-    background-size: 100% 400%;
-    background-position: 0 0%;
-    -webkit-background-clip: text;
-            background-clip: text;
-    -webkit-text-fill-color: transparent;
-            color: transparent;
-    animation: bobDown 2.2s ease-in-out infinite,
-               arrowShimmer 6.5s linear infinite;
-  }
-
-  /* hover: invert — black disc + white arrow, no shimmer */
-  .opening-arrow:hover::after { background: var(--alva); }
-  .opening-arrow:hover i {
-    background: none;
-    -webkit-text-fill-color: #fff;
-            color: #fff;
-    animation: bobDown 2.2s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    .opening-cue i { animation: none; }
   }
   @keyframes bobDown {
     0%, 100% { transform: translateY(0); opacity: 0.7; }
@@ -915,9 +887,9 @@
        cards on top. The headline plaque + title text were reverted
        to the light-bg variants in their own rules below. */
     background:
-      radial-gradient(70% 60% at 18% 28%, rgba(73,163,166,0.16) 0%, transparent 70%),
-      radial-gradient(60% 55% at 86% 78%, rgba(92,185,188,0.14) 0%, transparent 65%),
-      rgba(73,163,166,0.08);
+      radial-gradient(70% 60% at 18% 28%, rgba(88,195,198,0.16) 0%, transparent 70%),
+      radial-gradient(60% 55% at 86% 78%, rgba(122,211,214,0.14) 0%, transparent 65%),
+      rgba(88,195,198,0.08);
     position: relative;
     /* `clip` on the x-axis only — lets each row's hover lift + shadow
        extend vertically without being chopped off. `overflow-x: clip`
@@ -1121,8 +1093,8 @@
      remains. */
   .stage-marquee .stage-actions .btn-primary {
     background: var(--alva);
-    color: #fff;
-    box-shadow: 0 8px 20px rgba(10,10,16,0.18);
+    color: var(--on-alva);
+    box-shadow: none;
   }
   .stage-marquee .stage-actions .btn-primary::before,
   .stage-marquee .stage-actions .btn-primary::after {
@@ -1130,9 +1102,9 @@
   }
   .stage-marquee .stage-actions .btn-primary:hover {
     background: var(--alva);
-    color: #fff;
+    color: var(--on-alva);
     transform: translateY(-1px);
-    box-shadow: 0 14px 28px rgba(10,10,16,0.26);
+    box-shadow: none;
   }
   /* Section 2 sits on a mint wash; .btn-ghost defaults to transparent
      which makes it look grey-tinted by the wash. Force a white fill so
@@ -1168,8 +1140,10 @@
      (clamp 20-28) so all three sections share the same heading scale. */
   .stage-marquee .stage-title {
     font-family: var(--font-display);
-    font-weight: 500;
-    /* 4.1 — matches the other section H2 tier. */
+    /* 4.4 round 15 — drop one weight step (500 → 400) to match the
+       other section H2s. Earlier sweep missed this rule because it
+       lives in the stage-marquee block, not under .section-head h2. */
+    font-weight: 400;
     font-size: clamp(36px, 4.4vw, 60px);
     line-height: 1.08;
     letter-spacing: -0.022em;
@@ -1262,18 +1236,72 @@
     contain: layout style paint;
     transform: translateZ(0);
   }
-  .mq-card:hover {
-    /* 4.4 round 5 — hover lift -10px combined with height growth to
-       reveal the bottom CTA row inside the card surface. */
-    transform: translate3d(0, -10px, 0);
-    box-shadow: none;
+  /* 4.4 round 10 — marquee cards no longer interactive per user
+     direction ("第二个section的卡片不再支持交互"). No lift, no height
+     growth, no CTA. The hover-grow logic moves to modal cards only,
+     scoped below. */
+  .marquee-track .mq-card { cursor: default; }
+  .marquee-track .mq-card:hover { transform: none; box-shadow: none; }
+  /* 4.4 round 58 — round-40's blanket reset of transform+box-shadow
+     on results-grid hover has been REMOVED. It was clobbering the
+     intended hover shadow/scale rule lower in the file because they
+     shared specificity and this one came later in source. The
+     intended hover rule lives below and now wins by default. */
+  .fk-preview-card { cursor: default; pointer-events: none; }
+  .fk-preview-card:hover { transform: none; box-shadow: none; }
+  /* 4.4 round 58 — modal cards are now EXACTLY the landing marquee
+     dimensions (540 × 283) so they match 1:1 with no proportional
+     tweaks. */
+  .results-grid > .result-card-wrap {
+    position: relative;
+    height: 283px;
   }
-  /* Only marquee cards (fixed-pixel height) grow on hover. Results-grid
-     cards use aspect-ratio: 1.905/1 and can't be overridden with a
-     fixed-pixel height without breaking the modal layout. */
-  .marquee-track .mq-card:hover {
-    height: calc(var(--mq-base-h) + var(--mq-cta-h));
+  /* 4.4 round 56 — anchored at vertical center of wrap (top:50% +
+     translateY(-50%)) instead of inset:0. This makes height
+     growth on hover extend symmetrically above + below the wrap's
+     center, keeping the card's visual center fixed in its grid
+     slot. */
+  .results-grid .mq-card {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    --mq-base-h: 283px;
+    height: 283px;
+    aspect-ratio: auto;
+    z-index: 1;
+    transform: translateY(-50%);
   }
+  .results-grid .mq-card:hover {
+    /* 4.4 round 56 — preserve the translateY(-50%) center-anchor on
+       hover; add scale on top so the entire card visibly grows AND
+       stays centered. Height also grows so the CTA strip is revealed
+       symmetrically above + below the wrap's center. */
+    transform: translateY(-50%) scale(1.06);
+    transform-origin: center center;
+    height: calc(283px + var(--mq-cta-h));
+    z-index: 3;
+    /* 4.4 round 60 — plain dark drop shadow per user direction
+       (no blue ring, no alva glow). Subtle on the dark backdrop
+       but matches the "regular shadow" intent. */
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  }
+  .results-grid .mq-card .mq-body {
+    height: 283px;
+  }
+  .results-grid .mq-card .mq-cta {
+    top: 283px;
+  }
+  /* fk-preview-card sits inside its own wrap, no hover. Keeps the
+     landing-marquee 540×283 size since the fk modal is centered and
+     has plenty of room for it. */
+  .fk-card-wrap .fk-preview-card {
+    aspect-ratio: auto;
+    --mq-base-h: 283px;
+    height: 283px;
+  }
+  .fk-card-wrap .fk-preview-card .mq-body { height: 283px; }
+  .fk-card-wrap .fk-preview-card .mq-cta { top: 283px; }
   .mq-avatar {
     width: 56px; height: 56px;
     border-radius: 50%;
@@ -1427,17 +1455,216 @@
      marquee hover-growth reveals empty space at the bottom of the
      card box rather than stretching the body. */
   .mq-card .mq-body {
-    display: flex;
-    flex-direction: column;
-    padding: 14px 18px 12px;
+    /* 4.4 round 67 — body is now a 2-column grid: left (avatar +
+       donut) | right (best-calls list). Old top/chart/foot stack
+       removed; chart moved INTO the featured call on the right. */
+    display: grid;
+    grid-template-columns: minmax(180px, 0.85fr) minmax(0, 1.15fr);
+    column-gap: 14px;
+    padding: 14px 18px 14px;
     box-sizing: border-box;
     width: 100%;
     height: 100%;
     position: relative;
     z-index: 1;
   }
+
+  /* LEFT COLUMN — avatar/meta on top, big donut with text-in-center
+     on the bottom. */
+  .mq-card .mq-left {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+  /* 4.4 round 69 — left column tuned for Twitter-shareable visual
+     impact: larger avatar, heavier name typography. Card now reads
+     "person X" at a glance, which is what gets remembered when
+     someone scrolls past a shared playbook card on the timeline. */
+  .mq-card .mq-left .mq-id {
+    display: flex; align-items: center; gap: 12px;
+    min-width: 0;
+  }
+  .mq-card .mq-left .mq-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    /* Subtle ring + soft shadow lifts the avatar off the card bg
+       (helps it read at thumbnail size in social previews). */
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08),
+                0 4px 14px rgba(0, 0, 0, 0.35);
+  }
+  .mq-card .mq-left .mq-meta {
+    display: flex; flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+    gap: 2px;
+  }
+  .mq-card .mq-left .mq-meta b {
+    font-family: var(--font);
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.01em;
+  }
+  .mq-card .mq-left .mq-meta span {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .mq-card .mq-donut-wrap {
+    position: relative;
+    width: 100%;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+  .mq-card .mq-donut-wrap svg {
+    width: 100%;
+    height: 100%;
+    max-width: 170px;
+    max-height: 170px;
+  }
+  .mq-card .mq-donut-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .mq-card .mq-donut-pct {
+    font-family: var(--font);
+    font-weight: 500;
+    font-size: 30px;
+    letter-spacing: -0.015em;
+  }
+  .mq-card .mq-donut-lbl {
+    margin-top: 4px;
+    font-family: var(--font);
+    font-size: 11px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .mq-card .mq-donut-sub {
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* RIGHT COLUMN — calls header + featured first call + 2 compact
+     rows beneath. */
+  .mq-card .mq-right {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .mq-card .mq-right .mq-calls-head {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  /* 4.4 round 68 — best-call rows lose the background tile; rows
+     separated by a hairline divider instead. */
+  .mq-card .mq-right .mq-call {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+    padding: 8px 0;
+    background: transparent;
+    border-radius: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+  }
+  .mq-card .mq-right .mq-call-featured {
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 8px 0 6px;
+    gap: 6px;
+    min-height: 0;
+    overflow: hidden;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .mq-card .mq-call-featured-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+  }
+  .mq-card .mq-call-featured-head .mq-call-l {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .mq-card .mq-call-featured-head .mq-call-tk { font-size: 13px; }
+  .mq-card .mq-call-featured-head .mq-call-val {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+  }
+  .mq-card .mq-call-tag {
+    margin-left: 4px;
+    padding: 1px 6px;
+    background: rgba(52, 211, 153, 0.18);
+    color: #5dd9af;
+    border-radius: 4px;
+    font-family: var(--font);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .mq-card .mq-call-chart {
+    flex: 1 1 auto;
+    min-height: 0;
+    position: relative;
+  }
+  .mq-card .mq-fc-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+  }
+  /* 4.4 round 68 — CALL / PEAK labels render as HTML overlays
+     positioned with % so they don't get stretched by the SVG's
+     preserveAspectRatio: none. */
+  .mq-card .mq-fc-label {
+    position: absolute;
+    top: 0;
+    font-family: var(--font);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: rgba(255, 255, 255, 0.65);
+    pointer-events: none;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .mq-card .mq-fc-label-call { transform: translateX(6px); }
+  .mq-card .mq-fc-label-peak { transform: translateX(calc(-100% - 6px)); }
   .marquee-track .mq-card .mq-body {
     height: var(--mq-base-h);
+  }
+  /* 4.4 round 10 — modal cards pin body to the JS-measured base
+     height so the chart's `margin-top: auto` doesn't absorb the
+     hover-growth and shift content downward. */
+  .results-grid .mq-card.has-base-h .mq-body,
+  .fk-preview-card.has-base-h .mq-body {
+    height: var(--card-base-h);
   }
 
   /* 4.4 round 5 — hover CTA: a row that lives INSIDE the card,
@@ -1469,12 +1696,19 @@
     transition: color .18s ease, background-color .18s ease;
     z-index: 4;
   }
-  /* Results-grid + modal cards don't have the marquee's fixed-pixel
-     height, so the absolute-positioned CTA wouldn't line up. Hide it
-     there — the CTA is a marquee-discovery affordance, not needed in
-     the user's own result modal. */
+  /* 4.4 round 10 — scope flipped: CTA is now a MODAL-only affordance.
+     Marquee cards are no longer interactive (per user direction);
+     modal cards (results-grid + fk-preview-card) get the hover CTA. */
+  .marquee-track .mq-card .mq-cta { display: none; }
+  /* 4.4 round 41 — CTA's top anchored to --mq-base-h (the fixed
+     pixel height set by .results-grid .mq-card above). Was using a
+     stale --card-base-h from the deleted JS-pinning approach, which
+     fell back to 100% and broke positioning when the card height
+     transitioned. */
   .results-grid .mq-card .mq-cta,
-  .fk-preview-card .mq-cta { display: none; }
+  .fk-preview-card .mq-cta {
+    top: var(--mq-base-h);
+  }
   .mq-cta:hover {
     color: #fff;
     background: rgba(255, 255, 255, 0.04);
@@ -1565,6 +1799,38 @@
     background: rgba(255,255,255,0.04);
     border-radius: 6px;
   }
+  /* 4.4 round 11 — left side of each best-calls row: brand logo +
+     ticker text. Logo is 16×16, rounded, white bg behind the image so
+     transparent PNGs from Clearbit / coincap don't disappear against
+     the dark card. */
+  .mq-card .mq-call-l {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .mq-card .mq-call-logo {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    object-fit: contain;
+    background: #fff;
+    flex-shrink: 0;
+    /* tiny ring so the white bg has a defined edge against the card */
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.10);
+  }
+  .mq-card .mq-call-logo.mq-call-logo-fb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(88, 195, 198, 0.22);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: var(--font);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    box-shadow: none;
+  }
   .mq-card .mq-call-tk {
     font-family: var(--font);
     font-weight: 500;
@@ -1594,6 +1860,54 @@
     position: relative;
   }
   .mq-card .mq-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  /* 4.4 round 13 — BEST ROI chip rendered as an HTML overlay over the
+     SVG so backdrop-filter actually blurs the chart line behind it.
+     Position is set inline as %; the [data-anchor] attribute drives
+     the transform-origin so middle/start/end anchors line up with
+     the corresponding viewBox point. */
+  .mq-card .mq-chart-chip {
+    position: absolute;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 10px;
+    border-radius: 7px;
+    background: rgba(8, 10, 14, 0.22);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+            backdrop-filter: blur(8px) saturate(140%);
+    pointer-events: none;
+    line-height: 1;
+    white-space: nowrap;
+    z-index: 2;
+    /* small ring so the chip has a defined edge against the chart */
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+  /* 4.4 round 25 — chip is anchored DIRECTLY to the peak point
+     (peakX, peakY). Horizontal anchor: start / middle / end snaps
+     the chip to left / center / right of peak. Vertical: above the
+     peak by 8px (default), or below by 8px when there's no room
+     above. */
+  .mq-card .mq-chart-chip { transform: translateY(calc(-100% - 8px)); }
+  .mq-card .mq-chart-chip[data-anchor="middle"] { transform: translate(-50%, calc(-100% - 8px)); }
+  .mq-card .mq-chart-chip[data-anchor="end"]    { transform: translate(-100%, calc(-100% - 8px)); }
+  .mq-card .mq-chart-chip[data-place="below"]                       { transform: translateY(8px); }
+  .mq-card .mq-chart-chip[data-place="below"][data-anchor="middle"] { transform: translate(-50%, 8px); }
+  .mq-card .mq-chart-chip[data-place="below"][data-anchor="end"]    { transform: translate(-100%, 8px); }
+  .mq-card .mq-chart-chip-lbl {
+    font-family: var(--font);
+    font-size: 8px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.78);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .mq-card .mq-chart-chip-val {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
   .mq-card .mq-foot {
     margin-top: 10px;
     display: flex; align-items: center; justify-content: space-between;
@@ -1958,7 +2272,7 @@
   }
   /* per-card colored wash — pulled down to 12–16% opacity since the
      base is now white instead of near-black */
-  .card.c-1 { background: linear-gradient(135deg, rgba(73,163,166,0.16),  rgba(255,255,255,0) 60%), var(--bg-soft); }
+  .card.c-1 { background: linear-gradient(135deg, rgba(88,195,198,0.16),  rgba(255,255,255,0) 60%), var(--bg-soft); }
   .card.c-2 { background: linear-gradient(135deg, rgba(179,136,255,0.14), rgba(255,255,255,0) 60%), var(--bg-soft); }
   .card.c-3 { background: linear-gradient(135deg, rgba(255,138,76,0.14),  rgba(255,255,255,0) 60%), var(--bg-soft); }
   .card.c-4 { background: linear-gradient(135deg, rgba(244,114,182,0.14), rgba(255,255,255,0) 60%), var(--bg-soft); }
@@ -2038,7 +2352,7 @@
     letter-spacing: -0.04em;
     color: var(--alva);
     /* glow softened — was 0.55 alpha on dark, too strong on light */
-    text-shadow: 0 0 14px rgba(73,163,166,0.25);
+    text-shadow: 0 0 14px rgba(88,195,198,0.25);
   }
   .pc-score .type {
     font-family: var(--font-mono);
@@ -2070,7 +2384,7 @@
   }
   .pc-rank svg { width: 100%; height: 100%; transform: rotate(-90deg); }
   .pc-rank .ring-track { stroke: rgba(10,10,16,0.08); }
-  .pc-rank .ring-fill  { stroke: var(--alva); filter: drop-shadow(0 0 6px rgba(73,163,166,0.35)); }
+  .pc-rank .ring-fill  { stroke: var(--alva); filter: drop-shadow(0 0 6px rgba(88,195,198,0.35)); }
   .pc-rank .ring-text {
     position: absolute; inset: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -2126,7 +2440,7 @@
        sections still alternate white / teal-tint. */
     background: var(--bg-soft);
   }
-  .section.alt { background: rgba(73, 163, 166, 0.04); }
+  .section.alt { background: rgba(88, 195, 198, 0.04); }
   .section-wrap { max-width: 1320px; margin: 0 auto; padding: 0 16px; }
   .section-head { margin-bottom: 48px; max-width: 760px; }
   /* section-head variant with a right-aligned action button */
@@ -2149,7 +2463,7 @@
     padding: 14px 26px;
     border-radius: 999px;
     background: var(--alva);
-    color: #fff;
+    color: var(--on-alva);
     border: 0;
     /* TS token: btn */
     font-family: var(--font);
@@ -2159,11 +2473,13 @@
     text-decoration: none;
     flex-shrink: 0;
   }
-  .section-action i { color: #fff; font-size: 14px; transition: transform .2s ease; }
+  /* 4.4 round 16b — icon inherits the button text color (now
+     var(--on-alva), dark gray) instead of hardcoded white. */
+  .section-action i { color: inherit; font-size: 14px; transition: transform .2s ease; }
   .section-action:hover {
     background: var(--alva);
     transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(73,163,166,0.32);
+    box-shadow: none;
   }
   .section-action:hover i { transform: translate(2px, -2px); }
   /* TS token: tag (3.0 round 7 — w500 → w400) */
@@ -2181,7 +2497,9 @@
      title carries more presence and reads closer to the hero. */
   .section-head h2 {
     font-family: var(--font-display);
-    font-weight: 500;
+    /* 4.4 round 14 — section H2s drop one weight step (500 → 400)
+       per feedback "section主标题再降一点字重". */
+    font-weight: 400;
     font-size: clamp(36px, 4.4vw, 60px);
     line-height: 1.08;
     letter-spacing: -0.022em;
@@ -2369,7 +2687,7 @@
     font-size: 96px;
     filter: drop-shadow(0 10px 28px rgba(0,0,0,0.22));
   }
-  .play-cover[data-variant="teal"]   { background: linear-gradient(135deg, #49A3A6 0%, #5cb9bc 60%, #2f7a7d 100%); }
+  .play-cover[data-variant="teal"]   { background: linear-gradient(135deg, #3CC2C6 0%, #5BD9DD 60%, #2a9396 100%); }
   .play-cover[data-variant="dark"]   { background: linear-gradient(135deg, #1a1a1e 0%, #0a0a10 65%, #000 100%); }
   .play-cover[data-variant="warm"]   { background: linear-gradient(135deg, #ff8a4c 0%, #ff6f3a 55%, #c84c1f 100%); }
   .play-cover[data-variant="purple"] { background: linear-gradient(135deg, #b388ff 0%, #8a5cf2 60%, #5b2bb8 100%); }
@@ -2396,7 +2714,7 @@
     padding: 14px 26px;
     border-radius: 999px;
     background: var(--alva);
-    color: #fff;
+    color: var(--on-alva);
     /* TS token: btn */
     font-family: var(--font);
     font-size: 14px;
@@ -2408,7 +2726,7 @@
   .play-cta:hover {
     background: var(--alva);
     transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(73,163,166,0.32);
+    box-shadow: none;
   }
   .play-cta:hover i { transform: translate(2px, -2px); }
   @media (max-width: 960px) {
@@ -2417,7 +2735,7 @@
   }
   .playbook-text h2 {
     font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: 400;
     font-size: clamp(30px, 4.0vw, 56px);
     line-height: 1.06;
     letter-spacing: -0.025em;
@@ -2493,7 +2811,7 @@
     filter: drop-shadow(0 10px 28px rgba(0,0,0,0.22));
   }
   .pbs-card[data-variant="teal"] .pbs-visual {
-    background: linear-gradient(135deg, #49A3A6 0%, #5cb9bc 60%, #2f7a7d 100%);
+    background: linear-gradient(135deg, #3CC2C6 0%, #5BD9DD 60%, #2a9396 100%);
   }
   .pbs-card[data-variant="warm"] .pbs-visual {
     background: linear-gradient(135deg, #ff8a4c 0%, #ff6f3a 55%, #c84c1f 100%);
@@ -2552,7 +2870,7 @@
   .playbook-card:hover {
     transform: translateY(-6px);
     box-shadow: 0 18px 40px rgba(10,10,16,0.14);
-    border-color: rgba(73,163,166,0.4);
+    border-color: rgba(88,195,198,0.4);
   }
   .pbc-visual {
     aspect-ratio: 16 / 9;
@@ -2578,7 +2896,7 @@
     opacity: 0.45;
   }
   .playbook-card[data-variant="teal"] .pbc-visual {
-    background: linear-gradient(135deg, #49A3A6 0%, #5cb9bc 60%, #2f7a7d 100%);
+    background: linear-gradient(135deg, #3CC2C6 0%, #5BD9DD 60%, #2a9396 100%);
   }
   .playbook-card[data-variant="warm"] .pbc-visual {
     background: linear-gradient(135deg, #ff8a4c 0%, #ff6f3a 55%, #c84c1f 100%);
@@ -2719,7 +3037,7 @@
   }
   .scan-head h2 {
     font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: 400;
     font-size: clamp(26px, 3.0vw, 36px);
     line-height: 1.12;
     letter-spacing: -0.02em;
@@ -2812,7 +3130,7 @@
   }
   .btn-ghost:hover {
     background: var(--alva);
-    color: #fff;
+    color: var(--on-alva);
     border-color: var(--text);
     transform: translateY(-1px);
   }
@@ -2872,7 +3190,7 @@
     transition: background .25s, color .25s;
   }
   .section.alt .feat .ic { background: var(--bg-soft); }
-  .feat:hover .ic { background: rgba(73,163,166,0.10); color: var(--alva); }
+  .feat:hover .ic { background: rgba(88,195,198,0.10); color: var(--alva); }
   .feat h3 {
     font-size: 18px; font-weight: 500;
     margin: 0 0 12px;
@@ -2885,7 +3203,7 @@
     font-size: 10px; font-weight: 500;
     padding: 4px 8px;
     border-radius: 4px;
-    background: rgba(73,163,166,0.10);
+    background: rgba(88,195,198,0.10);
     color: var(--alva);
     letter-spacing: 0.06em;
   }
@@ -3024,8 +3342,9 @@
   /* single column header — replaces the per-cell labels in each row */
   .lb-header {
     display: grid;
-    /* 3.0: Score column removed (idx + who + 4 metrics + risk = 7 cols) */
-    grid-template-columns: 40px minmax(220px, 1.4fr) repeat(4, minmax(70px, .55fr)) 100px;
+    /* 4.4 round 32 — 6-column layout: rank | creator | tickers |
+       metric | stats | open-arrow. */
+    grid-template-columns: 56px minmax(280px, 1.5fr) minmax(120px, 0.8fr) minmax(160px, 0.9fr) minmax(240px, 1.2fr) 44px;
     align-items: center;
     gap: 16px;
     padding: 14px 24px 12px;
@@ -3036,6 +3355,7 @@
     font-weight: 400;
     color: var(--muted);
     letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
   /* lb-rows render more rows than fit — overflow:hidden + section.bottom
      hard-cut at the lb-card's flat bottom creates the "table got cut,
@@ -3083,9 +3403,9 @@
        to be here. The aurora halo on ::before still reads against this
        wash (card itself is opaque white, covers the middle). */
     background:
-      radial-gradient(60% 55% at 80% 22%, rgba(73,163,166,0.16) 0%, transparent 65%),
-      radial-gradient(70% 60% at 14% 82%, rgba(92,185,188,0.14) 0%, transparent 70%),
-      rgba(73,163,166,0.08);
+      radial-gradient(60% 55% at 80% 22%, rgba(88,195,198,0.16) 0%, transparent 65%),
+      radial-gradient(70% 60% at 14% 82%, rgba(122,211,214,0.14) 0%, transparent 70%),
+      rgba(88,195,198,0.08);
     /* 3.0 round 31 — padding-top bumped 96 → 120 to match the stage
        section above (.stage.stage-marquee has padding 120 0 120).
        Visual symmetry: stage top-padding = leaderboard top-padding
@@ -3219,7 +3539,8 @@
      element. */
   #leaderboard .lb-header,
   #leaderboard .lb-row {
-    grid-template-columns: 56px minmax(220px, 1.6fr) repeat(4, minmax(90px, 0.8fr)) 120px;
+    /* 4.4 round 32 — 6-col layout (added 44px open-arrow trailing col). */
+    grid-template-columns: 56px minmax(300px, 1.6fr) minmax(140px, 0.9fr) minmax(180px, 1fr) minmax(260px, 1.3fr) 44px;
     gap: 20px;
     padding-left: 28px;
     padding-right: 28px;
@@ -3237,14 +3558,23 @@
   /* 3.0 round 24 — table window 760 → 540. The fade-mask at the bottom
      still implies more rows below; a shorter window keeps the section
      compact without breaking the "scroll for full board" visual. */
-  #leaderboard .lb-rows { max-height: 540px; }
+  /* 4.4 round 32 — locked container height = 7 full rows + 2/3 of
+     the 8th. Each row is 100px, so 7 × 100 + 67 = 767. overflow:
+     hidden in the base rule keeps the bottom 33% of row 8 clipped
+     — gives the "scroll for more" cue without extra padding. */
+  #leaderboard .lb-rows { height: 767px; min-height: 767px; max-height: 767px; }
   .lb-row {
     display: grid;
-    /* 3.0: Score column removed — matches .lb-header (7 cols). */
-    grid-template-columns: 40px minmax(220px, 1.4fr) repeat(4, minmax(70px, .55fr)) 100px;
+    /* 4.4 round 32 — 6-col layout (added 44px open-arrow trailing col). */
+    grid-template-columns: 56px minmax(280px, 1.5fr) minmax(120px, 0.8fr) minmax(160px, 0.9fr) minmax(240px, 1.2fr) 44px;
     align-items: center;
     gap: 16px;
-    padding: 10px 24px;       /* tighter rows */
+    padding: 0 24px;
+    /* 4.4 round 32 — fixed row height so every row aligns at the
+       same baseline regardless of tag-chip count. Tag-chip wrap is
+       suppressed below via overflow:hidden + max-height on .who-tags. */
+    height: 100px;
+    box-sizing: border-box;
     /* 3.0 round 39 — dividers moved from border-bottom to border-top.
        lb-rows clips at max-height 540 with overflow:hidden; if a row's
        border-bottom happened to land at the clip line, the border
@@ -3257,15 +3587,40 @@
     text-decoration: none; color: inherit;
   }
   .lb-row:first-child { border-top: 0; }
-  .lb-row:hover { background: rgba(73,163,166,0.04); }
+  .lb-row:hover { background: rgba(88,195,198,0.04); }
   /* TS token: num */
   .lb-row .idx {
     font-family: var(--font-mono);
     font-weight: 500;
-    font-size: 13px;
+    font-size: 15px;
     letter-spacing: -0.01em;
     color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
+  /* 4.4 round 32 — trailing arrow-up-right glyph on every row.
+     Used as a "open this playbook" affordance (matches the alva.ai
+     leaderboard's chevron). Hover brightens to alva. */
+  .lb-row .lb-open {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.45);
+    transition: color .15s ease, background .15s ease;
+  }
+  .lb-row:hover .lb-open {
+    color: var(--alva);
+    background: rgba(88, 195, 198, 0.10);
+  }
+  .lb-row .lb-open i { font-size: 18px; color: inherit; }
+
+  /* 4.4 round 22 — top-3 ranks: number stays, just color shifts.
+     Gold / silver / bronze applied directly to the .idx number.
+     No medal chip, no row backdrop tint. */
+  .lb-row.rank-1 .idx { color: #f0c14b; font-weight: 600; }
+  .lb-row.rank-2 .idx { color: #c8ccd2; font-weight: 600; }
+  .lb-row.rank-3 .idx { color: #d28653; font-weight: 600; }
   .lb-row .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .lb-row .who img {
     width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
@@ -3291,6 +3646,158 @@
   }
   .lb-row .cell .v.gain { color: var(--gain); }
   .lb-row .cell .v.loss { color: var(--loss); }
+  /* 4.4 round 18 — new cell types for the alva.ai-style row. */
+  .lb-row .who-wrap {
+    display: flex; flex-direction: column; min-width: 0; gap: 4px;
+  }
+  .lb-row .who-name-line {
+    display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px;
+  }
+  /* 4.4 round 30 — name dialed back: was 22px/600 which felt too
+     heavy. Now sits 2 size steps above the 12px handle line. */
+  .lb-row .who .who-name,
+  .lb-row .who-wrap .who-name {
+    font-family: var(--font);
+    font-weight: 500;
+    font-size: 16px;
+    color: #fff;
+    letter-spacing: -0.005em;
+    line-height: 1.25;
+  }
+  /* Ensure the handle span (also matched by `.who span`) keeps the
+     mono caption look but with the explicit who-handle styles. */
+  .lb-row .who .who-handle,
+  .lb-row .who-wrap .who-handle {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    margin-top: 0;
+  }
+  .lb-row .who-handle {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .lb-row .who-tags {
+    display: flex; flex-wrap: nowrap; gap: 6px; margin-top: 2px;
+    /* 4.4 round 32 — single-line chip strip; extras clipped so the
+       row height stays consistent. */
+    overflow: hidden;
+    max-height: 24px;
+  }
+  .lb-row .who-tag {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(88, 195, 198, 0.10);
+    color: var(--alva-hi);
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  .lb-row .who-tag.muted {
+    background: rgba(255,255,255,0.04);
+    color: var(--muted);
+  }
+  /* Top tickers strip — 3 overlapping circular logos */
+  .lb-row .lb-tickers {
+    display: flex; align-items: center;
+  }
+  .lb-row .lb-tickers img,
+  .lb-row .lb-tickers .lb-tk-fb {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #fff;
+    object-fit: contain;
+    box-shadow: 0 0 0 2px var(--bg-soft);
+    margin-left: -6px;
+  }
+  .lb-row .lb-tickers > :first-child { margin-left: 0; }
+  .lb-row .lb-tickers .lb-tk-fb {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(88, 195, 198, 0.20);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: var(--font);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  /* Active metric column */
+  .lb-row .lb-metric {
+    display: flex; flex-direction: column; gap: 4px;
+    min-width: 0;
+  }
+  .lb-row .lb-metric-val {
+    font-family: var(--font);
+    font-weight: 500;
+    font-size: 22px;
+    color: var(--gain);
+    letter-spacing: -0.015em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .lb-row .lb-metric-val .lb-metric-tk {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 18px;
+  }
+  .lb-row .lb-metric-val .lb-metric-tk img,
+  .lb-row .lb-metric-val .lb-metric-tk .lb-tk-fb {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #fff; object-fit: contain;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.10);
+  }
+  .lb-row .lb-metric-sub {
+    font-family: var(--font);
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1;
+  }
+  /* Key stats column */
+  .lb-row .lb-stats {
+    display: flex; flex-direction: column; gap: 6px;
+    min-width: 0;
+  }
+  .lb-row .lb-stat {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: nowrap;
+    align-self: flex-start;
+  }
+  .lb-row .lb-stat b {
+    font-weight: 500;
+    color: var(--text);
+  }
+  .lb-row .lb-stat .lb-stat-lbl {
+    color: var(--muted);
+  }
+  .lb-row .lb-stat .lb-tk-mini {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; object-fit: contain;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.10);
+  }
+  .lb-row .lb-stat .lb-tk-mini.lb-tk-fb {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(88, 195, 198, 0.22);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: var(--font);
+    font-size: 7px;
+    font-weight: 600;
+  }
+  .lb-row .lb-stat .lb-stat-val.gain { color: var(--gain); }
+  .lb-row .lb-stat .lb-stat-val.loss { color: var(--loss); }
   /* TS token: tag (10px small variant) */
   .risk-pill {
     display: inline-flex; align-items: center; justify-content: center;
@@ -3308,7 +3815,7 @@
     display: inline-flex; align-items: center; justify-content: center; gap: 4px;
     padding: 7px 12px;
     border-radius: 999px;
-    background: var(--alva); color: #fff;
+    background: var(--alva); color: var(--on-alva);
     font-size: 11px; font-weight: 500;
   }
   /* (previous fade-out treatment removed — leaderboard now shows a clean
@@ -3345,7 +3852,7 @@
   }
   .agents-search:focus-within {
     border-color: var(--alva);
-    box-shadow: 0 14px 36px rgba(73,163,166,0.18);
+    box-shadow: 0 14px 36px rgba(88,195,198,0.18);
   }
   .agents-search > i {
     align-self: center;
@@ -3410,7 +3917,7 @@
   }
   .agents-chip:hover {
     border-color: var(--alva);
-    background: rgba(73,163,166,0.06);
+    background: rgba(88,195,198,0.06);
     color: var(--alva);
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 12px 24px rgba(10,10,16,0.12);
@@ -3466,7 +3973,7 @@
      area (during exit) doesn't show body-grey. */
   #agents {
     position: relative;
-    background: rgba(73,163,166,0.08);
+    background: rgba(88,195,198,0.08);
   }
 
   /* ============================================================
@@ -3559,7 +4066,7 @@
   .agents-head h2 {
     margin: 0 0 22px;
     font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: 400;
     /* 4.1 — bumped to match other section H2s. */
     font-size: clamp(36px, 4.4vw, 60px);
     line-height: 1.08;
@@ -3613,19 +4120,27 @@
      competing border weight needed.
        inactive: rgba(10,10,16,0.04) — soft grey wash
        active:   var(--bg-soft) (pure white) — pops against the grey */
+  /* 4.4 round 12 — tabs lose the border outline. Adjacent tabs are
+     separated by a single bottom divider line; the list as a whole
+     also gets a TOP divider on the first item so the top edge has a
+     matching line. Title is white by default, alva only when active.
+     Divider color stays constant (no alva on active) per feedback. */
   .agents-tab-item {
     display: flex;
     flex-direction: column;
     gap: 0;
-    /* 4.3 — outline-only style per feedback: no fill, white border. */
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 14px;
-    padding: 14px 22px;
-    transition: border-color .2s, background .2s;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 0;
+    padding: 18px 4px;
+    transition: border-color .2s;
+  }
+  .agents-tab-item:first-child {
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
   }
   .agents-tab-item:hover {
-    border-color: rgba(255, 255, 255, 0.45);
+    border-bottom-color: rgba(255, 255, 255, 0.22);
   }
   .agents-tab-v {
     position: relative;
@@ -3634,10 +4149,14 @@
     background: transparent;
     text-align: left;
     font-family: var(--font);
-    font-size: 18px;
-    font-weight: 500;
-    line-height: 1.3;
-    color: var(--muted);
+    /* 4.4 round 26 — title bumped 24 → 32 per feedback ("再大一点"). */
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    /* 4.4 round 12 — title defaults to white; only the active tab
+       picks up the alva color. */
+    color: var(--text);
     cursor: pointer;
     transition: color .2s;
     white-space: normal;
@@ -3645,20 +4164,13 @@
   .agents-tab-v:hover {
     color: var(--text);
   }
-  /* Active title: brand-teal. Card bg stays white; the bg distinction
-     comes from the EXPANDED detail block beneath the title. */
   .agents-tab-item.active .agents-tab-v {
     color: var(--alva);
-    font-weight: 500;
+    font-weight: 400;
   }
-  /* 3.0 round 24 — active card: brand-teal tint only, no shadow.
-     User flagged shadow as unwanted; the bg-color difference between
-     neutral grey (inactive) and brand teal (active) already carries
-     enough hierarchy. Cleaner, flatter look. */
+  /* Active tab: no change to divider color — just the title color. */
   .agents-tab-item.active {
-    /* 4.3 — outline-only active state: brighter border, no fill. */
     background: transparent;
-    border-color: rgba(255, 255, 255, 0.65);
   }
   /* Detail block (subtitle + CTA) — collapsed by default, expanded when
      parent .agents-tab-item is .active. max-height animation gives a
@@ -3682,7 +4194,8 @@
   }
   .agents-tab-detail p {
     margin: 0;
-    color: var(--muted);
+    /* 4.4 round 14 — body copy color muted → white per feedback. */
+    color: var(--text);
     font-family: var(--font);
     font-weight: 400;
     font-size: 15px;
@@ -3761,7 +4274,8 @@
     /* 3:2 banner — matches the original card cover ratio so the cover
        reads as a wide product hero, not a tall poster. */
     aspect-ratio: 3 / 2;
-    border-radius: 12px;
+    /* 4.4 round 26 — corners squared per feedback ("改成直角"). */
+    border-radius: 0;
     display: grid;
     place-items: center;
     position: relative;
@@ -3781,7 +4295,7 @@
     font-size: 104px;
     filter: drop-shadow(0 10px 28px rgba(0,0,0,0.22));
   }
-  .agents-card-cover[data-variant="teal"]   { background: linear-gradient(135deg, #49A3A6 0%, #5cb9bc 60%, #2f7a7d 100%); }
+  .agents-card-cover[data-variant="teal"]   { background: linear-gradient(135deg, #3CC2C6 0%, #5BD9DD 60%, #2a9396 100%); }
   .agents-card-cover[data-variant="dark"]   { background: linear-gradient(135deg, #1a1a1e 0%, #0a0a10 65%, #000 100%); }
   .agents-card-cover[data-variant="warm"]   { background: linear-gradient(135deg, #ff8a4c 0%, #ff6f3a 55%, #c84c1f 100%); }
   .agents-card-cover[data-variant="purple"] { background: linear-gradient(135deg, #b388ff 0%, #8a5cf2 60%, #5b2bb8 100%); }
@@ -4026,7 +4540,7 @@
   }
   .closing h2 {
     font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: 400;
     font-size: clamp(36px, 4.6vw, 60px);
     line-height: 1.05;
     letter-spacing: -0.025em;
@@ -4060,7 +4574,7 @@
     letter-spacing: 0.06em;
     padding: 5px 10px;
     border-radius: 4px;
-    background: rgba(73,163,166,0.14);
+    background: rgba(88,195,198,0.14);
   }
   .closing-path h3 {
     margin: 18px 0 0;
@@ -4151,7 +4665,7 @@
   }
   .section-do .section-head h2 {
     font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: 400;
     font-size: clamp(28px, 3.4vw, 46px);
     line-height: 1.08;
     letter-spacing: -0.025em;
@@ -4182,7 +4696,7 @@
   .do-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 14px 30px rgba(10,10,16,0.08);
-    border-color: rgba(73,163,166,0.35);
+    border-color: rgba(88,195,198,0.35);
   }
   .do-card-head {
     display: flex;
@@ -4196,10 +4710,10 @@
     display: grid;
     place-items: center;
     background: var(--alva);
-    color: #fff;
+    color: var(--on-alva);
     font-size: 22px;
     flex-shrink: 0;
-    box-shadow: 0 8px 20px rgba(73,163,166,0.30);
+    box-shadow: 0 8px 20px rgba(88,195,198,0.30);
   }
   .do-icon-x {
     background: #0a0a10;
@@ -4288,8 +4802,8 @@
     margin: auto 0 14px;
     padding: 16px 18px;
     border-radius: 12px;
-    background: rgba(73,163,166,0.08);
-    border: 1px solid rgba(73,163,166,0.30);
+    background: rgba(88,195,198,0.08);
+    border: 1px solid rgba(88,195,198,0.30);
     color: var(--text);
     font-size: 14px;
     line-height: 1.5;
@@ -4395,7 +4909,7 @@
   .bcard-form input::placeholder { color: rgba(255,255,255,0.4); }
   .bcard-form input:focus {
     border-color: var(--alva);
-    background: rgba(73,163,166,0.08);
+    background: rgba(88,195,198,0.08);
   }
   /* TS token: btn-s */
   .bcard-form button {
@@ -4416,7 +4930,7 @@
   }
   .bcard-form button:hover {
     background: var(--alva);
-    color: #fff;
+    color: var(--on-alva);
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 16px 32px rgba(0,0,0,0.30);
   }
@@ -4439,7 +4953,7 @@
   .dialog .bcard-form input::placeholder { color: rgba(255,255,255,0.40); }
   .dialog .bcard-form input:focus {
     border-color: var(--alva);
-    background: rgba(73,163,166,0.06);
+    background: rgba(88,195,198,0.06);
   }
   /* 3.0 round 6 — dark closer card INSIDE the dialog (e.g.
      .results-request .bcard-dark) was inheriting the light-dialog form
@@ -4454,17 +4968,17 @@
   .dialog .bcard-dark .bcard-form input::placeholder { color: rgba(255,255,255,0.40); }
   .dialog .bcard-dark .bcard-form input:focus {
     border-color: var(--alva);
-    background: rgba(73,163,166,0.10);
+    background: rgba(88,195,198,0.10);
   }
   .dialog .bcard-form button {
     background: var(--alva);
-    color: #fff;
-    box-shadow: 0 12px 28px rgba(73,163,166,0.28);
+    color: var(--on-alva);
+    box-shadow: none;
   }
   .dialog .bcard-form button:hover {
     background: var(--alva-hi);
-    color: #fff;
-    box-shadow: 0 18px 40px rgba(73,163,166,0.40);
+    color: var(--on-alva);
+    box-shadow: none;
   }
   .dialog .bcard-form textarea {
     background: rgba(255, 255, 255,0.04) !important;
@@ -4506,21 +5020,23 @@
     font-family: var(--font);
     font-size: 14px;
     font-weight: 500;
-    color: #fff;
+    color: var(--on-alva);
     background: var(--alva);
     border: 0;
     padding: 14px 28px;
     border-radius: 999px;
     cursor: pointer;
     overflow: hidden;
-    transition: transform .15s, box-shadow .15s, background .15s;
-    box-shadow: 0 12px 28px rgba(73,163,166,0.32);
+    /* 4.4 round 36 — drop-shadow removed per feedback ("所有按钮外
+       部的阴影都去掉"). Buttons rely on background + transform only. */
+    transition: transform .15s, background .15s;
+    box-shadow: none;
   }
   .btn-primary > * { position: relative; z-index: 1; }
   .btn-primary:hover {
     transform: translateY(-2px) scale(1.02);
     background: var(--alva-hi);
-    box-shadow: 0 22px 44px rgba(73,163,166,0.48);
+    box-shadow: none;
   }
   /* (Icon shift on hover removed — internal element movement is out;
      only the button itself transforms.) */
@@ -4556,22 +5072,42 @@
      headline now needs its own typographic treatment (large, weighted,
      brand-teal accent on the verb cluster).
      ============================================================ */
+  /* 4.4 round 39 — cant-find modal restructured to match the fk /
+     connect modal pattern (eyebrow + display headline + subtitle +
+     form). The .search-dialog override widens the padding so the
+     content has the same breathing room as the other modals. */
+  .search-dialog {
+    width: min(640px, 100%);
+    padding: 56px 56px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .search-dialog .eyebrow { margin-bottom: -8px; }
   .cant-find-headline {
     margin: 0;
     font-family: var(--font-display);
-    font-weight: 500;
-    font-size: clamp(24px, 2.6vw, 32px);
-    line-height: 1.25;
-    letter-spacing: -0.018em;
+    font-weight: 400;
+    font-size: clamp(30px, 3.2vw, 42px);
+    line-height: 1.14;
+    letter-spacing: -0.022em;
     color: var(--text);
-    max-width: 640px;
+    max-width: 740px;
   }
   .cant-find-headline .alva { color: var(--alva); }
+  .cant-find-sub {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 560px;
+  }
   .search-form {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
-    margin-top: 18px;
+    margin-top: 4px;
   }
   .search-form input {
     flex: 1 1 240px;
@@ -4615,8 +5151,8 @@
     margin-top: 18px;
     padding: 16px 18px;
     border-radius: 8px;
-    background: rgba(73,163,166,0.08);
-    border: 1px solid rgba(73,163,166,0.30);
+    background: rgba(88,195,198,0.08);
+    border: 1px solid rgba(88,195,198,0.30);
     color: var(--text);
     font-family: var(--font);
     font-size: 14px;
@@ -4660,7 +5196,7 @@
     height: 48px;                              /* Apple HIG floor, with margin */
     padding: 0 22px;
     background: var(--alva);
-    color: #fff;
+    color: var(--on-alva);
     border: 0; border-radius: 999px;
     font-family: var(--font-display);
     font-size: 14px; font-weight: 500;
@@ -4833,22 +5369,20 @@
     z-index: 5;
     width: 36px; height: 36px;
     border: 0; border-radius: 8px;
-    /* 4.0 — close button needs to read on top of dark dialogs; use a
-       semi-transparent white chip + explicit icon color rather than the
-       page bg (which was rendering invisible on .modal/.dialog now that
-       the whole palette is dark). */
-    background: rgba(255, 255, 255, 0.10);
-    color: var(--text);
+    /* 4.4 round 31 — backdrop chip removed per feedback. Icon-only
+       close, with the glyph rendered at reduced opacity by default
+       and brightening to full white on hover. */
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
     cursor: pointer;
     display: grid; place-items: center;
-    transition: background .15s, color .15s, transform .15s;
+    transition: color .15s, transform .15s;
   }
   .close:hover {
-    background: rgba(255, 255, 255, 0.18);
     color: #ffffff;
-    transform: scale(1.04);
+    transform: scale(1.05);
   }
-  .close i { color: inherit; font-size: 16px; }
+  .close i { color: inherit; font-size: 18px; }
   /* methodology modal — single flat list, no per-step cards or color chips */
   .dialog .steps {
     margin-top: 24px;
@@ -4902,8 +5436,12 @@
   .fk-state {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    /* 4.4 round 31 — unified vertical rhythm across all states:
+       eyebrow + headline + subtitle + (form/card/actions) all stack
+       with the same baseline gap. */
+    gap: 20px;
   }
+  .fk-state .eyebrow { margin-bottom: -8px; /* tighten to headline */ }
   /* 4.4 — playbook preview wrap inside result-on. The mq-card has a
      fixed 540×283 in the marquee; in the modal it flexes via
      aspect-ratio so it stays OG-shaped at any dialog width. */
@@ -4921,16 +5459,56 @@
     flex-shrink: 1;
   }
   .fk-state[hidden] { display: none; }
-  /* Big single-stack headline — the offer/reward IS the hook. */
+  /* 4.4 round 33 — dialog animates its height between states so the
+     transition (input → loading → result) feels deliberate rather
+     than a jump. Height is set explicitly in pixels by JS during the
+     transition window; this transition rule then interpolates it. */
+  .fk-dialog {
+    transition: height .42s cubic-bezier(.22, 1, .36, 1);
+  }
+  .fk-state {
+    /* slight fade-in so the new state doesn't pop in flat. */
+    animation: fkStateIn .28s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes fkStateIn {
+    0%   { opacity: 0; transform: translateY(4px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  /* Loading state visuals — spinner + status text row. */
+  .fk-loading-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 14px;
+  }
+  .fk-spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.12);
+    border-top-color: var(--alva);
+    animation: fkSpin .9s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes fkSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .fk-dialog { transition: none; }
+    .fk-state  { animation: none; }
+    .fk-spinner { animation-duration: 3s; }
+  }
+  /* 4.4 round 31 — headline weight pulled to regular (400) and size
+     bumped a notch. All four fk-state headlines share this rule. */
   .fk-headline {
     margin: 0;
     font-family: var(--font-display);
-    font-weight: 500;
-    font-size: clamp(26px, 2.8vw, 36px);
-    line-height: 1.18;
-    letter-spacing: -0.018em;
+    font-weight: 400;
+    font-size: clamp(30px, 3.2vw, 42px);
+    line-height: 1.14;
+    letter-spacing: -0.022em;
     color: var(--text);
-    max-width: 640px;
+    max-width: 740px;
   }
   .fk-headline .alva { color: var(--alva); }
   .fk-form {
@@ -4975,13 +5553,41 @@
     color: var(--text);
     font-weight: 500;
   }
+  /* 4.4 round 31 — action row: primary CTA fills available width,
+     secondary button hugs its content; both share the same height +
+     are stretched-aligned so their tops/bottoms match.
+     4.4 round 34 — gap bumped 12 → 24 so the primary pill + text
+     link breathe apart. */
   .fk-actions {
     margin-top: 4px;
     display: flex;
-    align-items: center;
-    gap: 16px;
+    align-items: stretch;
+    gap: 24px;
     flex-wrap: wrap;
   }
+  .fk-actions .btn-primary {
+    flex: 1 1 auto;       /* fill remaining width */
+    justify-content: center;
+    /* keep the existing 14px vertical padding so the pill has its
+       natural height; align-items:stretch on the parent will pull
+       the secondary up to match. */
+  }
+  /* Secondary in the action row stays as a plain text link, just
+     centered vertically with the primary pill (stretched to match
+     the primary's natural height). */
+  .fk-actions .fk-secondary {
+    flex: 0 0 auto;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    color: var(--text);
+    font-weight: 500;
+    align-self: stretch;
+  }
+  .fk-actions .fk-secondary:hover { color: #fff; }
   /* Eyebrow accent when the result is "Congratulations" — brand-teal
      so it reads as a win, not a neutral label. */
   .fk-eyebrow-good {
@@ -4989,7 +5595,11 @@
   }
   @media (max-width: 760px) {
     .fk-dialog { padding: 40px 28px 32px; }
-    .fk-headline { font-size: clamp(22px, 6vw, 28px); }
+    .fk-headline { font-size: clamp(26px, 6.5vw, 32px); }
+    /* 4.4 round 35 — mobile: action buttons stack vertically. */
+    .fk-actions { flex-direction: column; gap: 14px; }
+    .fk-actions .btn-primary,
+    .fk-actions .fk-secondary { width: 100%; justify-content: center; }
   }
   /* 4.4 — demo hint stacks under the dialog. Override the modal's
      default centering for this modal only so the dialog + hint flow
@@ -5083,9 +5693,49 @@
     line-height: 1.55;
   }
   .notice b { color: var(--text); font-weight: 500; }
-  .dialog-actions { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
-  /* TS token: btn — inherits font from .btn-primary */
-  .dialog-actions .btn-primary { padding: 12px 22px; border-radius: 999px; }
+  /* 4.4 round 35 — generic .dialog-actions now mirrors .fk-actions
+     for consistency across modals: primary CTA fills available
+     width, secondary buttons hug content + render as plain text
+     links stretched to the primary's height, 24px gap. */
+  .dialog-actions {
+    margin-top: 22px;
+    display: flex;
+    align-items: stretch;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .dialog-actions .btn-primary {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 14px 28px;
+    border-radius: 999px;
+  }
+  .dialog-actions .dialog-ghost,
+  .dialog-actions .fk-secondary {
+    flex: 0 0 auto;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    align-self: stretch;
+    box-shadow: none;
+    transform: none;
+  }
+  .dialog-actions .dialog-ghost:hover,
+  .dialog-actions .fk-secondary:hover {
+    color: #fff;
+    border-color: transparent;
+    transform: none;
+    box-shadow: none;
+  }
   /* TS token: btn */
   .dialog-ghost {
     display: inline-flex; align-items: center; gap: 8px;
@@ -5098,14 +5748,15 @@
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 0 0 rgba(0,0,0,0);
-    transition: color .15s, border-color .15s, transform .18s ease, box-shadow .18s ease;
+    /* 4.4 round 36 — button shadow removed. */
+    box-shadow: none;
+    transition: color .15s, border-color .15s, transform .18s ease;
   }
   .dialog-ghost:hover {
     color: var(--text);
     border-color: var(--muted-2);
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 12px 24px rgba(10,10,16,0.12);
+    box-shadow: none;
   }
 
   /* ============================================================
@@ -5114,16 +5765,20 @@
      from the standard .dialog: compact, centered, icon-led,
      single primary CTA.
      ============================================================ */
+  /* 4.4 round 37 — connect modal restructured to match the fk-modal:
+     wider dialog, left-aligned content, eyebrow + headline + sub
+     stacking, horizontal perms row, action button via .dialog-actions
+     so it inherits the same flat-primary treatment.  */
   .connect-dialog {
     position: relative;
-    width: min(440px, 100%);
+    width: min(640px, 100%);
     max-height: 86vh;
     overflow: auto;
     border-radius: 10px;
     background: var(--bg-soft);
-    padding: 44px 36px 36px;
+    padding: 56px 56px 48px;
     box-shadow: 0 30px 80px rgba(0,0,0,0.3);
-    text-align: center;
+    text-align: left;
     transform-origin: center;
   }
   /* Entrance animation — scale+fade pop when modal opens. Used by
@@ -5138,83 +5793,62 @@
     0%   { opacity: 0; transform: scale(0.92); }
     100% { opacity: 1; transform: scale(1); }
   }
-  .connect-close {
-    position: absolute;
-    top: 14px; right: 14px;
-    width: 32px; height: 32px;
+  .connect-stage {
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
   }
-  .connect-stage { display: none; flex-direction: column; align-items: center; gap: 0; }
   .connect-dialog[data-state="auth"]    .connect-auth    { display: flex; }
   .connect-dialog[data-state="loading"] .connect-loading { display: flex; }
-  .connect-dialog[data-state="loading"] .connect-close { display: none; }
-
-  /* AUTH STATE */
-  .connect-x-mark {
-    width: 72px; height: 72px;
-    display: grid; place-items: center;
-    background: var(--alva);
-    color: #fff;
-    border-radius: 8px;
-    margin-bottom: 28px;
-  }
-  .connect-x-mark i { font-size: 36px; }
-  /* TS token: display-m — connect modal title inherits canonical
-     display-m via .dialog h3; only margin + transform stay. */
+  .connect-dialog[data-state="loading"] .close { display: none; }
+  /* (X-mark dropped — eyebrow text + headline carry identity now,
+     matching the fk-modal layout.) */
+  .connect-dialog .eyebrow { margin-bottom: -8px; }
+  /* Headline matches .fk-headline (display, weight 400, big). */
   .connect-dialog .connect-title {
-    margin: 0 0 24px;
-    text-transform: none;
-    color: var(--text);
-  }
-  /* TS token: body — connect-sub inherits .dialog p; only layout stays */
-  .connect-dialog .connect-sub {
-    margin: 0 0 32px;
-    max-width: 340px;
-  }
-  /* TS token: tag */
-  .connect-perms {
-    display: flex; flex-direction: column;
-    gap: 12px;
-    margin: 0 0 32px;
-    align-items: flex-start;
-    width: 100%;
-    max-width: 320px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--muted);
-    letter-spacing: 0.02em;
-  }
-  .connect-perms span { display: inline-flex; align-items: center; gap: 10px; }
-  .connect-perms i { color: var(--alva); font-size: 14px; }
-  .connect-go {
-    width: 100%;
-    justify-content: center;
-    padding: 14px 24px;
-    /* TS token: btn — inherits font from .btn-primary */
-    border-radius: 10px;
-  }
-
-  /* LOADING STATE */
-  .connect-loading { padding: 12px 0 0; gap: 18px; }
-  .connect-spinner { width: 56px; height: 56px; }
-  .connect-spinner svg { width: 100%; height: 100%; animation: connectSpin 1.1s linear infinite; }
-  .connect-spinner circle {
-    stroke: var(--alva);
-    stroke-dasharray: 90;
-    stroke-dashoffset: 30;
-  }
-  @keyframes connectSpin { to { transform: rotate(360deg); } }
-  /* TS token: display-m */
-  .connect-status {
+    margin: 0;
     font-family: var(--font-display);
-    font-size: clamp(20px, 2.0vw, 28px);
-    font-weight: 500;
-    line-height: 1.2;
-    letter-spacing: -0.012em;
+    font-weight: 400;
+    font-size: clamp(30px, 3.2vw, 42px);
+    line-height: 1.14;
+    letter-spacing: -0.022em;
     color: var(--text);
-    min-height: 1.4em;
-    transition: opacity .2s;
+    text-transform: none;
+    max-width: 740px;
+  }
+  .connect-dialog .connect-sub {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 560px;
+  }
+  /* Permissions row: horizontal chips, single line where it fits. */
+  .connect-perms {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 14px 24px;
+    margin: 0;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+  .connect-perms span { display: inline-flex; align-items: center; gap: 8px; }
+  .connect-perms i { color: var(--alva); font-size: 16px; }
+  /* Action row spans full width like .fk-actions / .dialog-actions. */
+  .connect-actions { width: 100%; }
+
+  /* LOADING STATE — same spinner pattern as the fk-modal loading. */
+  .connect-loading { padding: 0; gap: 20px; }
+  .connect-status {
+    /* (kept for JS targeting; the visible status text is the
+       .fk-loading-step span now, but JS still sets .textContent on
+       elements with id="connect-status".) */
   }
   .connect-progress {
     width: 100%;
@@ -5246,41 +5880,73 @@
      - Hosts a grid of audited KOL score cards + an inline
        Request-a-KOL closer matching the homepage bottom card.
      ============================================================ */
-  .modal.modal-full { padding: 0; align-items: stretch; justify-content: stretch; }
+  /* 4.4 round 45 — was a true full-viewport sheet; now a regular
+     centered dialog at a generous size so it matches the styling
+     of the other modals (rounded corners, padding, drop shadow). */
+  .modal.modal-full {
+    padding: 32px;
+    align-items: center;
+    justify-content: center;
+  }
   .dialog-full {
-    position: relative;        /* anchor for absolute close button */
-    width: 100%;
-    max-height: 100vh;
-    height: 100vh;
-    border-radius: 0;
-    /* Top padding loosened so the title + privacy pill + lead paragraph
-       have real breathing room above the card grid. The close button
-       stays at top: 20px regardless via absolute positioning. */
-    padding: 112px clamp(20px, 4vw, 56px) 56px;
-    overflow: auto;
-    box-shadow: none;
+    position: relative;
+    /* 4.4 round 61 — CSS-driven width. Default = 1 col (668), then
+       upgraded to 2 cols (1224) at ≥1288vw and 3 cols (1780) at
+       ≥1844vw via the @media rules below. Math matches the grid
+       column overrides so dialog width always equals N×540 + gaps
+       + padding. */
+    width: min(668px, calc(100% - 64px));
+    max-width: 100%;
+    max-height: calc(100vh - 64px);
+    height: auto;
+    border-radius: 14px;
+    /* 4.4 round 46 — dialog itself no longer scrolls. Inner content
+       scrolls inside .dialog-scroll. Padding moves to the scroller
+       so the close button (anchored to the dialog, not the scroller)
+       stays put as content scrolls underneath. */
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
     background: var(--bg-soft);
+    display: flex;
+    flex-direction: column;
+  }
+  .dialog-full > .dialog-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: scroll;
+    /* 4.4 round 53 — scroll instead of auto + scrollbar-gutter:stable
+       so the scrollbar lane is reserved at all times. Without this,
+       a card growing/scaling on hover could tip the layout into a
+       scrollbar appearance, narrowing the grid by ~16px and shifting
+       all cards horizontally. */
+    scrollbar-gutter: stable;
+    padding: 56px clamp(24px, 4vw, 64px) 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
   .dialog-full-close {
     position: absolute;
     top: 20px;
-    right: clamp(20px, 4vw, 56px);
+    right: clamp(20px, 3vw, 32px);
     z-index: 5;
   }
-  .dialog-full > .dialog-head { max-width: 1320px; margin: 0 auto; }
+  .dialog-full .dialog-head { max-width: 1320px; margin: 0 auto; }
 
-  /* Privacy banner — sits centred BELOW the head (auto-margins only work
-     on block elements, so use a block flex with width:max-content). */
+  /* 4.4 round 47 — privacy banner left-aligned to match the rest
+     of the now-modal-style head (was centered when the dialog was
+     fullscreen). */
   .results-privacy {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 10px;
     width: max-content;
     max-width: 100%;
-    margin: 22px auto 0;        /* block centring under the title block */
+    margin: 0;
     padding: 10px 18px;
-    background: rgba(73,163,166,0.08);
-    border: 1px solid rgba(73,163,166,0.20);
+    background: rgba(88,195,198,0.08);
+    border: 1px solid rgba(88,195,198,0.20);
     border-radius: 999px;
     color: var(--text);
     /* TS token: caption */
@@ -5291,25 +5957,57 @@
   .results-privacy i { color: var(--alva); font-size: 16px; flex-shrink: 0; }
   .results-privacy b { font-weight: 500; color: var(--text); }
 
-  /* TS token: lead — results modal lead paragraph */
+  /* 4.4 round 47 — lead paragraph matches the fk / connect modal
+     subtitle baseline (left-aligned, 15px muted). */
   .dialog-full .dialog-lead {
-    max-width: 760px; margin: 18px auto 0;
+    max-width: 720px; margin: 0;
     color: var(--muted);
     font-family: var(--font);
     font-weight: 400;
-    font-size: clamp(16px, 1.4vw, 19px);
-    line-height: 1.5;
+    font-size: 15px;
+    line-height: 1.55;
     letter-spacing: -0.005em;
-    text-align: center;
+    text-align: left;
   }
-  /* TS token: display-m — results modal h3 inherits .dialog h3;
-     only text-align stays here */
-  .dialog-full h3 { text-align: center; }
-  .dialog-full > .dialog-head > div { text-align: center; flex: 1; }
-  /* .dialog-full uses .dialog-full-close which sits outside this row,
-     and the head is centered — so cancel the padding-right offset that
-     the standard .dialog-head added for the small-modal close. */
-  .dialog-full > .dialog-head { align-items: center; padding-right: 0; }
+  /* 4.4 round 37 — fullscreen results modal headline matches the
+     landing page section H2 style (display, weight 400, clamp 36-60).
+     Keeps center-alignment that the modal layout needs.
+     4.4 round 44 — scoped to .dialog-head h3 only so smaller H3s
+     inside the modal (e.g. .results-request .bcard h3) keep their
+     own size token instead of inheriting the section-tier 60px. */
+  /* 4.4 round 47 — top region styled like the fk / connect / cant-
+     find modals: left-aligned eyebrow + display headline + lead.
+     Same typographic envelope as .fk-headline. */
+  .dialog-full .dialog-head h3 {
+    text-align: left;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(30px, 3.2vw, 42px);
+    line-height: 1.14;
+    letter-spacing: -0.022em;
+    margin: 0;
+  }
+  .dialog-full .dialog-head .eyebrow {
+    display: block;
+    text-align: left;
+    margin-bottom: -4px;
+  }
+  .dialog-full .dialog-head > div {
+    text-align: left;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .dialog-full .dialog-head {
+    align-items: flex-start;
+    padding-right: 0;
+    max-width: none;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
   .alva-text { color: var(--text); }
 
   /* Grid of audited score cards. The .card primitive already has a
@@ -5319,24 +6017,56 @@
      own top edge (rotateX -90deg, invisible) and flips down to flat,
      one after the other. */
   .results-grid {
-    max-width: 1320px;
-    margin: 48px auto 0;
+    /* 4.4 round 62 — max-width removed. It was capping the grid
+       container at 1320 even though 3 × 540 + 2 × 16 = 1652 needs
+       to fit when the 3-col media query is active, causing card 3
+       to overflow the dialog by ~100px on wide monitors. */
+    margin: 16px auto 0;
     display: grid;
-    /* 4.0 — widened track so the new rich-playbook cards fit (avatar +
-       win-rate donut + best calls + sparkline + footer). 3 columns at
-       desktop max-width, gracefully collapses to 2/1 on smaller screens. */
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 20px;
+    /* 4.4 round 46/49 — columns pinned to landing marquee card width
+       (540px). 4.4 round 49 — gap reduced 24 → 16 per feedback.
+       4.4 round 61 — CSS-only column layout. Default = 1 column
+       (narrow viewport). Media queries below upgrade to 2 cols at
+       ≥1288vw and 3 cols at ≥1920vw. */
+    grid-template-columns: 540px;
+    justify-content: start;
+    gap: 16px;
+  }
+  /* 4.4 round 65 — only show the top 8 cards in the results modal. */
+  #modal-results .results-grid > :nth-child(n+9) {
+    display: none;
+  }
+  @media (min-width: 1288px) {
+    #modal-results .results-grid {
+      grid-template-columns: repeat(2, 540px);
+    }
+  }
+  @media (min-width: 1920px) {
+    #modal-results .results-grid {
+      grid-template-columns: repeat(3, 540px);
+    }
+  }
+  /* Dialog width upgrades in lockstep with the grid column count. */
+  @media (min-width: 1288px) {
+    #modal-results .dialog-full {
+      width: min(1224px, calc(100% - 64px));
+    }
+  }
+  @media (min-width: 1920px) {
+    #modal-results .dialog-full {
+      width: min(1780px, calc(100% - 64px));
     perspective: 1200px;
     perspective-origin: 50% 0%;
   }
   /* When a results card is upgraded to the mq-card rich layout, drop the
      marquee-only fixed dimensions so the card stretches to fill its
      grid cell at the OG aspect ratio. */
+  /* 4.4 round 41 — legacy aspect-ratio override removed. The
+     hover-grow approach requires a fixed-pixel base height so the
+     CTA's top:var(--mq-base-h) anchors correctly. Height now comes
+     from the .results-grid .mq-card rule above (240px). */
   .results-grid .card.mq-card {
     width: 100%;
-    height: auto;
-    aspect-ratio: 1.905 / 1;
     margin-right: 0;
   }
   /* Inline request — same bcard treatment as the homepage closer, but
@@ -5344,19 +6074,41 @@
      well below the card grid so it doesn't need to fit above the fold;
      the user discovers it by scrolling after they've looked through
      the cards). */
+  /* 4.4 round 54 — root cause finally identified: inside the
+     dialog-scroll's flex column container, the section's default
+     `flex-shrink: 1` was compressing it down to height 0 (the
+     article inside had natural 231px height but the section box
+     itself was being shrunk by the flex layout). flex-shrink:0
+     forces it to keep its content height. */
   .results-request {
-    max-width: 760px;          /* narrower than the grid */
-    margin: 180px auto 0;      /* clearly below the cards fold */
-    border-radius: 8px;
+    max-width: 760px;
+    width: 100%;
+    align-self: center;
+    /* 4.4 round 57 — bigger gap above the closer card so it doesn't
+       feel crowded against the grid (was 24, now 80). */
+    margin-top: 80px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 18px 44px rgba(10,10,16,0.14);
+    box-shadow: none;
+    flex-shrink: 0;
   }
-  .results-request .bcard { padding: 28px 32px; }
-  /* TS token: display-m — inherits from .bcard h3 */
+  /* 4.4 round 37 — center every piece of the bottom closer so
+     headline / sub / form / trust copy all sit on the same axis. */
+  .results-request .bcard { padding: 32px 40px; text-align: center; }
   .results-request .bcard h3 { text-transform: none; }
-  /* TS token: body — inherits from .bcard p */
-  .results-request .bcard p { margin: 8px 0 0; }
-  .results-request .bcard-foot { margin-top: 22px; }
+  .results-request .bcard p  { margin: 10px auto 0; max-width: 520px; }
+  .results-request .bcard-foot {
+    margin-top: 24px;
+    display: flex; flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .results-request .bcard-form {
+    width: 100%;
+    max-width: 520px;
+    justify-content: center;
+  }
+  .results-request .bcard-trust { text-align: center; }
 
   @media (max-width: 760px) {
     .dialog-full { padding: 36px 18px 40px; }
@@ -5401,9 +6153,11 @@
   #modal-results.modal.open {
     animation: modalBackdropIn .3s ease-out both;
   }
+  /* 4.4 round 46 — backdrop matched to other modals (was a leftover
+     white-themed 0.5 alpha; the rest of the page is dark). */
   @keyframes modalBackdropIn {
-    0%   { background-color: rgba(255, 255, 255,0); }
-    100% { background-color: rgba(255, 255, 255,0.5); }
+    0%   { background-color: rgba(0, 0, 0, 0); }
+    100% { background-color: rgba(0, 0, 0, 0.65); }
   }
 
   /* (2) The white dialog panel fades in — opacity only, NO scale.
@@ -5420,15 +6174,15 @@
   /* (3) Top-to-bottom content sequence inside the dialog. Each part
      fades + translates up. */
   #modal-results.modal.open .dialog-full-close,
-  #modal-results.modal.open .dialog-full > .dialog-head,
-  #modal-results.modal.open .dialog-full > .results-privacy,
-  #modal-results.modal.open .dialog-full > .dialog-lead {
+  #modal-results.modal.open .dialog-full .dialog-head,
+  #modal-results.modal.open .dialog-full .results-privacy,
+  #modal-results.modal.open .dialog-full .dialog-lead {
     animation: dialogContentIn .4s cubic-bezier(.22, 1, .36, 1) backwards;
   }
   #modal-results.modal.open .dialog-full-close            { animation-delay: .35s; }
-  #modal-results.modal.open .dialog-full > .dialog-head   { animation-delay: .40s; }
-  #modal-results.modal.open .dialog-full > .results-privacy { animation-delay: .50s; }
-  #modal-results.modal.open .dialog-full > .dialog-lead   { animation-delay: .60s; }
+  #modal-results.modal.open .dialog-full .dialog-head   { animation-delay: .40s; }
+  #modal-results.modal.open .dialog-full .results-privacy { animation-delay: .50s; }
+  #modal-results.modal.open .dialog-full .dialog-lead   { animation-delay: .60s; }
   @keyframes dialogContentIn {
     0%   { opacity: 0; transform: translateY(12px); }
     100% { opacity: 1; transform: translateY(0); }
@@ -5439,15 +6193,17 @@
     opacity: 0;
     backface-visibility: hidden;
   }
-  /* When .is-revealed is on the grid: visible (post-animation) AND
-     animation runs with backwards fill so 0% covers the stagger delay. */
+  /* 4.4 round 64 — replaced the flip-down animation with a simple
+     fade + tiny slide-up per user direction ("don't flip, just
+     appear one by one"). Stagger delays below stay so the cascade
+     still reads. */
   .results-grid.is-revealed > * {
     opacity: 1;
-    animation: cardFlipDown .5s cubic-bezier(.22, 1, .36, 1) backwards;
+    animation: cardFadeIn .35s ease-out backwards;
   }
-  @keyframes cardFlipDown {
-    0%   { opacity: 0; transform: perspective(900px) rotateX(-90deg); transform-origin: center top; }
-    100% { opacity: 1; transform: perspective(900px) rotateX(0deg);   transform-origin: center top; }
+  @keyframes cardFadeIn {
+    0%   { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
   /* per-card stagger — 50ms apart, offset 700ms so the cascade
      starts AFTER the dialog header sequence has finished arriving */
@@ -5465,12 +6221,15 @@
   .results-grid.is-revealed > :nth-child(12) { animation-delay: 1250ms; }
   .results-grid.is-revealed > :nth-child(n+13) { animation-delay: 1300ms; }
 
-  /* (5) Request card — fades in last */
+  /* 4.4 round 53 — reveal animation dropped. The 1800ms delay +
+     dependency on the is-revealed class was the reason the closer
+     card "wasn't appearing" — if the entrance JS for any reason
+     didn't add .is-revealed, the section stayed at opacity:0.
+     Now it just renders. */
   .results-request {
-    opacity: 0;
-    transition: opacity .4s ease-out;
+    opacity: 1;
   }
-  .results-request.is-revealed { opacity: 1; transition-delay: 1800ms; }
+  .results-request.is-revealed { opacity: 1; }
 
   /* ============================================================
      RESULT CARD WRAP  (card + corner share affordance)
@@ -5488,13 +6247,11 @@
     cursor: pointer;
     border-radius: 10px;
   }
-  .results-grid .result-card-wrap > .card {
-    box-shadow: 0 12px 28px -10px rgba(20,20,30,0.12), 0 4px 10px -2px rgba(20,20,30,0.05);
-    transition: box-shadow .2s ease;
-  }
-  .results-grid > .result-card-wrap:hover > .card {
-    box-shadow: 0 24px 48px -12px rgba(20,20,30,0.18), 0 6px 14px -4px rgba(20,20,30,0.10);
-  }
+  /* 4.4 round 59 — removed `.results-grid .result-card-wrap > .card
+     { box-shadow: none }` because it had the same specificity as
+     the hover-state shadow rule but came LATER in source, blocking
+     the hover shadow. Default no-shadow is already covered by the
+     base .mq-card rule. */
   /* (Removed the hover-only bottom-right arrow chip — the wrap is
      clickable on its own, the hover tilt below is the affordance.) */
 
@@ -5688,7 +6445,7 @@
   .share-method:hover {
     background: var(--alva);
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 22px 44px rgba(10,10,16,0.40);
+    box-shadow: none;
   }
   .share-method.is-active {
     background: var(--alva);
@@ -5730,7 +6487,7 @@
   }
   .cd-more:hover {
     background: var(--alva);
-    color: #fff;
+    color: var(--on-alva);
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 26px 56px rgba(10,10,16,0.32);
   }
@@ -5963,7 +6720,11 @@
        Linear lands at 40px, Anthropic ~48px, Vercel floors at 24
        (extreme). Alva tracks Linear's density. */
     .opening h1 {
-      font-size: clamp(36px, 9.5vw, 44px);
+      /* 4.4 round 15 — mobile H1 pushed bigger too (36→44 min,
+         9.5vw→12vw, 44→72 max). On a 393w canvas this lands at 47px
+         (was 37); on 760w it hits the 72 cap. Lines wrap so no
+         overflow concern. */
+      font-size: clamp(44px, 12vw, 72px);
       margin: 0 0 22px;
       /* Halo collapsed from 6 stacked text-shadows (one as large as
          0 0 170px #fff) down to 2. The original 6-layer recipe was
@@ -6014,9 +6775,10 @@
         0 0  72px #ffffff,
         0 0 110px #ffffff;
     }
-    .opening-arrow { width: 48px; height: 48px; }
-    .opening-arrow::after { inset: 2px; }
-    .opening-arrow i { font-size: 22px; }
+    /* 4.4 round 22/24 — opening-arrow replaced by .opening-cue;
+       mobile inset proportionally smaller. */
+    .opening-cue { bottom: 40px; }
+    .opening-cue i { font-size: 26px; }
     /* Drop tweet card density — 4 cards is enough texture without
        crowding the H1. They're also smaller so the H1 reads cleanly. */
     .float-tweet {
@@ -6416,9 +7178,12 @@
     /* ---------------------------------------------------------- */
     .dialog        { padding: 30px 22px 28px; max-height: 92vh; }
     .dialog h2     { font-size: 22px; }
-    .dialog-actions { gap: 8px; }
+    /* 4.4 round 35 — mobile: stack actions vertically with a smaller
+       gap; both items become full width. */
+    .dialog-actions { gap: 14px; flex-direction: column; }
     .dialog-actions .btn-primary,
-    .dialog-actions .dialog-ghost { width: 100%; justify-content: center; }
+    .dialog-actions .dialog-ghost,
+    .dialog-actions .fk-secondary { width: 100%; justify-content: center; }
     .connect-dialog { padding: 36px 24px 28px; }
 
     /* ---------------------------------------------------------- */
@@ -6514,6 +7279,115 @@
     .play-card { flex: 0 0 calc(100vw - 48px); max-width: 360px; }
     .play-track { padding-left: 14px; padding-right: 14px; }
     .section.section-playbook { padding: 72px 0 84px; }
+
+    /* ---------------------------------------------------------- */
+    /* 4.4 ROUND 66 — MOBILE ADAPTATION FOR RECENT FEATURES       */
+    /* ---------------------------------------------------------- */
+
+    /* Leaderboard — 6-col desktop grid (rank | creator | tickers |
+       metric | stats | arrow) is way too wide for narrow phones.
+       Collapse to a vertical card-style stack: rank+creator on top,
+       metric beneath, key stats wrap, ticker strip + arrow hidden. */
+    #leaderboard .lb-header { display: none; }
+    #leaderboard .lb-rows { min-height: auto; max-height: none; height: auto; }
+    #leaderboard .lb-row,
+    .lb-row {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: flex-start;
+      gap: 12px;
+      height: auto !important;
+      padding: 18px 16px;
+      border-top: 1px solid var(--line);
+      grid-template-columns: none !important;
+    }
+    #leaderboard .lb-row .lb-tickers,
+    #leaderboard .lb-row .lb-open { display: none; }
+    #leaderboard .lb-row .idx {
+      align-self: flex-start;
+      font-size: 22px;
+      font-weight: 500;
+      min-width: 32px;
+    }
+    #leaderboard .lb-row .who {
+      width: 100%;
+    }
+    #leaderboard .lb-row .who img {
+      width: 44px !important; height: 44px !important;
+    }
+    #leaderboard .lb-row .who-name {
+      font-size: 17px !important;
+    }
+    #leaderboard .lb-row .who-handle {
+      font-size: 12px !important;
+    }
+    #leaderboard .lb-row .who-tags { gap: 4px; }
+    #leaderboard .lb-row .who-tag { font-size: 10px; padding: 2px 6px; }
+    #leaderboard .lb-row .lb-metric {
+      width: 100%;
+    }
+    #leaderboard .lb-row .lb-metric-val { font-size: 28px; }
+    #leaderboard .lb-row .lb-stats { width: 100%; }
+    #leaderboard .lb-row .lb-stat { font-size: 11px; padding: 3px 8px; }
+
+    /* Connect modal — narrower padding + smaller headline on phones. */
+    .connect-dialog {
+      width: 100% !important;
+      padding: 40px 24px 32px !important;
+    }
+    .connect-dialog .connect-title {
+      font-size: clamp(24px, 7vw, 32px) !important;
+    }
+    .connect-dialog .connect-sub { font-size: 14px !important; }
+    .connect-perms { gap: 10px 14px; font-size: 12px; }
+
+    /* Cant-find modal — same padding + headline shrink. */
+    .search-dialog {
+      width: 100% !important;
+      padding: 40px 24px 32px !important;
+    }
+    .cant-find-headline {
+      font-size: clamp(24px, 7vw, 32px) !important;
+    }
+    .cant-find-sub { font-size: 14px; }
+    .search-form input { width: 100%; }
+
+    /* Results modal — already has 1-col grid via media queries above.
+       Reduce dialog padding so cards have more room. */
+    #modal-results .dialog-full > .dialog-scroll {
+      padding: 40px 16px 40px !important;
+      gap: 14px;
+    }
+    #modal-results .dialog-full {
+      max-height: calc(100vh - 32px);
+    }
+    .modal.modal-full { padding: 16px; }
+    #modal-results .dialog-full-close {
+      right: 16px;
+      top: 16px;
+    }
+    .dialog-full .dialog-head h3 {
+      font-size: clamp(22px, 6.5vw, 28px) !important;
+      line-height: 1.18;
+    }
+    .dialog-full .dialog-lead { font-size: 14px !important; }
+    .results-privacy { font-size: 11px !important; padding: 8px 14px; }
+
+    /* KOL card on mobile — grid column is 540px by default (fixed),
+       which overflows narrow viewports. Switch to 1fr so cards fill
+       available width minus dialog padding. */
+    #modal-results .results-grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .results-grid > .result-card-wrap {
+      width: 100%;
+      max-width: 100%;
+    }
+    /* fk-preview-card too. */
+    .fk-card-wrap .fk-preview-card {
+      width: 100%;
+      max-width: 100%;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
@@ -6604,20 +7478,20 @@
        dominant brand color. First + last stop match → seamless tile. */
     background-image: linear-gradient(
       105deg,
-      #49A3A6   0%,
-      #5cb9bc   8%,
+      #3CC2C6   0%,
+      #5BD9DD   8%,
       #6dd5a6  16%,
       #4ade80  22%,
-      #5cb9bc  30%,
+      #5BD9DD  30%,
       #b388ff  38%,
-      #5cb9bc  46%,
-      #49A3A6  54%,
+      #5BD9DD  46%,
+      #3CC2C6  54%,
       #ff8a4c  62%,
       #6dd5a6  70%,
-      #5cb9bc  78%,
+      #5BD9DD  78%,
       #b388ff  86%,
-      #5cb9bc  94%,
-      #49A3A6 100%
+      #5BD9DD  94%,
+      #3CC2C6 100%
     );
     background-size: 200% 100%;
     background-position: 0% 50%;
@@ -6677,7 +7551,7 @@
            Alva block, path 2 (white) is the inset mark; together they
            make the green-on-dark + white combo. -->
       <svg class="brand-mark" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M34.4684 0.397058C38.1369 -0.132341 41.8624 -0.132364 45.5309 0.397058C45.8246 0.439446 46.1194 0.486373 46.7086 0.580652C46.9049 0.612064 47.0035 0.628453 47.0914 0.648035C48.2192 0.899298 49.1009 1.77999 49.3522 2.9078C49.3717 2.99576 49.3872 3.09432 49.4186 3.29061C49.5129 3.8799 49.5598 4.17464 49.6022 4.46835C50.1316 8.13701 50.1316 11.8632 49.6022 15.5318C49.5598 15.8255 49.5128 16.1204 49.4186 16.7096C49.3871 16.906 49.3718 17.0044 49.3522 17.0924C49.1009 18.2202 48.2192 19.1009 47.0914 19.3521C47.0035 19.3717 46.9049 19.3871 46.7086 19.4185C46.1193 19.5128 45.8246 19.5607 45.5309 19.6031C43.6966 19.8678 41.8481 19.9996 39.9996 19.9996C28.9548 20.0001 20.0013 28.9538 20.0006 39.9986H19.9996C19.9997 41.8476 19.8679 43.6971 19.6031 45.5318C19.5608 45.8255 19.5128 46.1203 19.4186 46.7096C19.3871 46.906 19.3718 47.0043 19.3522 47.0924C19.1009 48.2202 18.2202 49.1009 17.0924 49.3521C17.0044 49.3717 16.906 49.3871 16.7096 49.4185C16.1203 49.5128 15.8255 49.5607 15.5318 49.6031C11.8632 50.1326 8.13701 50.1326 4.46837 49.6031C4.17464 49.5607 3.88002 49.5128 3.29064 49.4185C3.0942 49.3871 2.99583 49.3717 2.90783 49.3521C1.78005 49.1009 0.899342 48.2201 0.64806 47.0924C0.628444 47.0043 0.612121 46.9061 0.580677 46.7096C0.486402 46.1203 0.439464 45.8255 0.397083 45.5318C-0.132361 41.8632 -0.132361 38.137 0.397083 34.4683C0.439471 34.1746 0.486392 33.8799 0.580677 33.2906C0.612101 33.0942 0.628467 32.9958 0.64806 32.9078C0.899321 31.78 1.78002 30.8993 2.90783 30.648C2.99585 30.6284 3.09415 30.6121 3.29064 30.5807C3.87992 30.4864 4.17468 30.4394 4.46837 30.3971C6.30257 30.1324 8.15117 29.9996 9.99962 29.9996V29.9976C20.8724 29.9974 29.7188 21.322 29.9928 10.5152L29.9996 9.99862C29.9997 8.15047 30.1314 6.30225 30.3961 4.46835C30.4385 4.1746 30.4864 3.87999 30.5807 3.29061C30.6121 3.09428 30.6275 2.99577 30.6471 2.9078C30.8983 1.7801 31.7792 0.899397 32.9068 0.648035C32.9949 0.628428 33.0933 0.612069 33.2897 0.580652C33.8791 0.486335 34.1746 0.439454 34.4684 0.397058Z" fill="#49A3A6"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M34.4684 0.397058C38.1369 -0.132341 41.8624 -0.132364 45.5309 0.397058C45.8246 0.439446 46.1194 0.486373 46.7086 0.580652C46.9049 0.612064 47.0035 0.628453 47.0914 0.648035C48.2192 0.899298 49.1009 1.77999 49.3522 2.9078C49.3717 2.99576 49.3872 3.09432 49.4186 3.29061C49.5129 3.8799 49.5598 4.17464 49.6022 4.46835C50.1316 8.13701 50.1316 11.8632 49.6022 15.5318C49.5598 15.8255 49.5128 16.1204 49.4186 16.7096C49.3871 16.906 49.3718 17.0044 49.3522 17.0924C49.1009 18.2202 48.2192 19.1009 47.0914 19.3521C47.0035 19.3717 46.9049 19.3871 46.7086 19.4185C46.1193 19.5128 45.8246 19.5607 45.5309 19.6031C43.6966 19.8678 41.8481 19.9996 39.9996 19.9996C28.9548 20.0001 20.0013 28.9538 20.0006 39.9986H19.9996C19.9997 41.8476 19.8679 43.6971 19.6031 45.5318C19.5608 45.8255 19.5128 46.1203 19.4186 46.7096C19.3871 46.906 19.3718 47.0043 19.3522 47.0924C19.1009 48.2202 18.2202 49.1009 17.0924 49.3521C17.0044 49.3717 16.906 49.3871 16.7096 49.4185C16.1203 49.5128 15.8255 49.5607 15.5318 49.6031C11.8632 50.1326 8.13701 50.1326 4.46837 49.6031C4.17464 49.5607 3.88002 49.5128 3.29064 49.4185C3.0942 49.3871 2.99583 49.3717 2.90783 49.3521C1.78005 49.1009 0.899342 48.2201 0.64806 47.0924C0.628444 47.0043 0.612121 46.9061 0.580677 46.7096C0.486402 46.1203 0.439464 45.8255 0.397083 45.5318C-0.132361 41.8632 -0.132361 38.137 0.397083 34.4683C0.439471 34.1746 0.486392 33.8799 0.580677 33.2906C0.612101 33.0942 0.628467 32.9958 0.64806 32.9078C0.899321 31.78 1.78002 30.8993 2.90783 30.648C2.99585 30.6284 3.09415 30.6121 3.29064 30.5807C3.87992 30.4864 4.17468 30.4394 4.46837 30.3971C6.30257 30.1324 8.15117 29.9996 9.99962 29.9996V29.9976C20.8724 29.9974 29.7188 21.322 29.9928 10.5152L29.9996 9.99862C29.9997 8.15047 30.1314 6.30225 30.3961 4.46835C30.4385 4.1746 30.4864 3.87999 30.5807 3.29061C30.6121 3.09428 30.6275 2.99577 30.6471 2.9078C30.8983 1.7801 31.7792 0.899397 32.9068 0.648035C32.9949 0.628428 33.0933 0.612069 33.2897 0.580652C33.8791 0.486335 34.1746 0.439454 34.4684 0.397058Z" fill="#3CC2C6"/>
         <path fill-rule="evenodd" clip-rule="evenodd" d="M45.5312 30.3971C41.8626 29.8677 38.1372 29.8677 34.4687 30.3971C34.1749 30.4395 33.8794 30.4864 33.29 30.5807C33.0936 30.6121 32.9952 30.6275 32.9071 30.6471C31.7795 30.8984 30.8988 31.7793 30.6474 32.9069C30.6278 32.9949 30.6124 33.0941 30.581 33.2906C30.4867 33.8799 30.4388 34.1747 30.3964 34.4684C29.867 38.1368 29.867 41.8624 30.3964 45.5309C30.4388 45.8246 30.4867 46.1201 30.581 46.7096C30.6124 46.9059 30.6278 47.0044 30.6474 47.0924C30.8987 48.2201 31.7795 49.1009 32.9071 49.3522C32.9952 49.3718 33.0936 49.3872 33.29 49.4186C33.8794 49.5129 34.1749 49.5607 34.4687 49.6031C38.1371 50.1325 41.8627 50.1326 45.5312 49.6031C45.8249 49.5608 46.1196 49.5129 46.7089 49.4186C46.9052 49.3872 47.0038 49.3717 47.0917 49.3522C48.2195 49.1009 49.1012 48.2202 49.3525 47.0924C49.3721 47.0044 49.3874 46.906 49.4189 46.7096C49.5132 46.1201 49.5601 45.8246 49.6025 45.5309C50.1319 41.8624 50.1319 38.1369 49.6025 34.4684C49.5601 34.1747 49.5131 33.8799 49.4189 33.2906C49.3874 33.0941 49.3721 32.9949 49.3525 32.9069C49.1011 31.7792 48.2194 30.8983 47.0917 30.6471C47.0038 30.6275 46.9051 30.6121 46.7089 30.5807C46.1196 30.4864 45.8249 30.4395 45.5312 30.3971ZM15.5322 0.397086C11.8635 -0.132362 8.13731 -0.132362 4.46867 0.397086C4.17498 0.439473 3.88023 0.486393 3.29094 0.580679C3.09461 0.612093 2.9961 0.627503 2.90813 0.647086C1.78049 0.898312 0.899769 1.77928 0.648361 2.90685C0.628742 2.99491 0.612434 3.09405 0.580978 3.29064C0.486706 3.87984 0.43977 4.17467 0.397385 4.46837C-0.132023 8.13688 -0.132004 11.8624 0.397385 15.5309C0.439781 15.8246 0.48666 16.1201 0.580978 16.7096C0.6124 16.906 0.628754 17.0044 0.648361 17.0924C0.899708 18.2201 1.78042 19.1009 2.90813 19.3522C2.99611 19.3718 3.09457 19.3871 3.29094 19.4186C3.88032 19.5129 4.17493 19.5607 4.46867 19.6031C8.13731 20.1326 11.8635 20.1326 15.5322 19.6031C15.8258 19.5608 16.1207 19.5128 16.7099 19.4186C16.9063 19.3871 17.0047 19.3718 17.0927 19.3522C18.2204 19.1009 19.1011 18.2201 19.3525 17.0924C19.3721 17.0044 19.3875 16.9059 19.4189 16.7096C19.5132 16.1201 19.561 15.8246 19.6034 15.5309C20.1328 11.8624 20.1328 8.13685 19.6034 4.46837C19.5611 4.17466 19.5131 3.8799 19.4189 3.29064C19.3874 3.09405 19.3721 2.99491 19.3525 2.90685C19.1011 1.77924 18.2204 0.898318 17.0927 0.647086C17.0047 0.627474 16.9063 0.612111 16.7099 0.580679C16.1207 0.486415 15.8258 0.439463 15.5322 0.397086Z" fill="#ffffff"/>
       </svg>
       <svg class="brand-wordmark"
@@ -6875,9 +7749,12 @@
         <span class="line-2">actually makes money?</span>
       </h1>
       <p class="opening-sub">We tracked thousands of FinTwit accounts, built playbooks on each one, and launched a live leaderboard — to help you find alpha.</p>
-      <button class="opening-arrow" data-scroll-to="audit-yours" aria-label="Scroll to the ranking">
-        <i class="ph-bold ph-arrow-down"></i>
-      </button>
+    </div>
+    <!-- 4.4 round 22 — non-interactive scroll cue at the bottom of
+         section 1. Two stacked chevrons, faint white, bobbing
+         gently up-down. No click, no ring, no hover. -->
+    <div class="opening-cue" aria-hidden="true">
+      <i class="ph ph-caret-double-down"></i>
     </div>
   </section>
 
@@ -7108,22 +7985,20 @@
       <div class="lb-card">
         <div class="lb-toolbar">
           <div class="sort-tabs" role="tablist">
-            <button class="sort-tab active" data-sort="bestRoi">Best ROI</button>
-            <button class="sort-tab" data-sort="medianRoi">Median ROI</button>
-            <button class="sort-tab" data-sort="winRate">Win rate</button>
-            <button class="sort-tab" data-sort="quality">Quality</button>
-            <button class="sort-tab" data-sort="riskScore">Risk</button>
+            <button class="sort-tab active" data-sort="allTimeWin">All-Time Win Rate</button>
+            <button class="sort-tab" data-sort="recentWin">Last 30 Days Win Rate</button>
+            <button class="sort-tab" data-sort="bestRoi">Best ROI</button>
+            <button class="sort-tab" data-sort="bestCall">Best Call</button>
           </div>
-          <div class="lb-meta"><span class="dot"></span> Refreshed 27m ago · 86 ranked</div>
+          <div class="lb-meta"><span class="dot"></span> Refreshed 27m ago · Rows 4-50</div>
         </div>
-        <div class="lb-header">
-          <span class="idx">#</span>
-          <span class="who">Trader</span>
-          <span>Best ROI</span>
-          <span class="hide-sm">Median</span>
-          <span class="hide-sm">Win</span>
-          <span class="hide-sm">Quality</span>
-          <span>Risk</span>
+        <div class="lb-header" id="lb-header">
+          <span class="idx">RANK</span>
+          <span class="who">FINTWIT CREATOR</span>
+          <span class="hide-sm">TOP TICKERS / SIGNALS</span>
+          <span id="lb-metric-label">ALL-TIME WIN RATE</span>
+          <span class="hide-sm">KEY STATISTICS</span>
+          <span aria-hidden="true"></span>
         </div>
         <div class="lb-rows" id="lb-rows"></div>
       </div>
@@ -7203,11 +8078,15 @@
 <div class="modal" id="modal-cant-find" aria-hidden="true">
   <div class="dialog search-dialog">
     <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
-    <h3 class="cant-find-headline">Can't find your favorite FinTwit account? Drop a reply with the handle so we can help you <span class="alva">index and backtest</span>.</h3>
+    <!-- 4.4 round 39 — restructured to match fk / connect modal:
+         eyebrow + display headline + sub + form. -->
+    <span class="eyebrow">Request an account</span>
+    <h3 class="cant-find-headline">Can't find your favorite <span class="alva">FinTwit Trader</span>?</h3>
+    <p class="cant-find-sub">Drop the handle below — we'll index and backtest their public call history end-to-end. Public posts only, failed calls counted.</p>
     <form class="search-form" id="cant-find-form" autocomplete="off">
       <input type="text" name="handle" placeholder="@account-handle" aria-label="Account handle to request" required />
       <button type="submit" class="btn-primary">
-        <i class="ph-bold ph-x-logo"></i> Reply on X
+        Reply on X
       </button>
     </form>
   </div>
@@ -7254,31 +8133,33 @@
      ============================================================ -->
 <div class="modal" id="modal-connect" aria-hidden="true">
   <div class="dialog connect-dialog" data-state="auth">
-    <button class="close connect-close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
+    <button class="close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
 
+    <!-- AUTH STATE — mirrors fk-modal structure: eyebrow + headline + sub + perms + action -->
     <div class="connect-stage connect-auth">
-      <div class="connect-x-mark"><i class="ph-bold ph-x-logo"></i></div>
-      <h3 class="connect-title">Continue with X to scan your follows</h3>
+      <span class="eyebrow">Initialize Scan</span>
+      <h3 class="connect-title">Continue with X to scan your follows.</h3>
       <p class="connect-sub">We read your follow list and match it against the FinTwit Traders we've already audited. Nothing else is requested, nothing is stored.</p>
       <div class="connect-perms">
         <span><i class="ph-fill ph-check-circle"></i> Reading list only</span>
         <span><i class="ph-fill ph-check-circle"></i> No personal score is generated</span>
         <span><i class="ph-fill ph-check-circle"></i> Disconnect anytime</span>
       </div>
-      <button class="btn-primary connect-go" id="connect-go-btn" type="button">
-        <i class="ph-bold ph-x-logo"></i> Continue with X
-      </button>
+      <div class="dialog-actions connect-actions">
+        <button class="btn-primary" id="connect-go-btn" type="button">
+          Continue with X
+        </button>
+      </div>
     </div>
 
+    <!-- LOADING STATE — spinner + cycling status text only (no progress bar). -->
     <div class="connect-stage connect-loading" aria-live="polite">
-      <div class="connect-spinner" aria-hidden="true">
-        <svg viewBox="0 0 50 50">
-          <circle cx="25" cy="25" r="20" fill="none" stroke-width="4" stroke-linecap="round"></circle>
-        </svg>
+      <span class="eyebrow">Scanning</span>
+      <h3 class="connect-title">Matching your follows against the index…</h3>
+      <div class="fk-loading-row">
+        <span class="fk-spinner" aria-hidden="true"></span>
+        <span class="fk-loading-step" id="connect-status">Waiting for x.com response</span>
       </div>
-      <div class="connect-status" id="connect-status">Reading your follow list…</div>
-      <div class="connect-progress"><div class="connect-progress-fill" id="connect-progress-fill"></div></div>
-      <div class="connect-loading-sub">Scanning 1,200+ follows against our audited index. This usually takes a couple of seconds.</div>
     </div>
   </div>
 </div>
@@ -7312,11 +8193,12 @@
     <div class="fk-state" data-fk-state="input">
       <span class="eyebrow">For FinTwit Traders</span>
       <h3 class="fk-headline">We backtested thousands of FinTwit accounts. The top 50 get <span class="alva">$5,000 in Claude Opus credits</span>.</h3>
+      <!-- 4.4 round 31 — link moved above the form per feedback. -->
+      <a class="fk-secondary fk-link-only" href="#leaderboard" data-fk-leaderboard>View Full Leaderboard →</a>
       <form class="bcard-form fk-form" id="for-kols-form">
         <input type="text" name="handle" placeholder="@your-x-handle" aria-label="Your X handle" required />
         <button type="submit" class="btn-primary">Check if I made the cut</button>
       </form>
-      <a class="fk-secondary" href="#leaderboard" data-fk-leaderboard>View Full Leaderboard →</a>
     </div>
 
     <!-- STATE 2 — found on leaderboard -->
@@ -7349,6 +8231,16 @@
           <i class="ph-bold ph-arrow-up-right"></i> Open my Playbook
         </button>
         <a class="fk-secondary" href="#leaderboard" data-fk-leaderboard>View Full Leaderboard →</a>
+      </div>
+    </div>
+
+    <!-- STATE 1.5 — loading (briefly shown between input and a result) -->
+    <div class="fk-state fk-loading" data-fk-state="loading" hidden>
+      <span class="eyebrow">Checking…</span>
+      <h3 class="fk-headline">Looking up <span class="alva" data-fk-handle>@you</span> in the index…</h3>
+      <div class="fk-loading-row">
+        <span class="fk-spinner" aria-hidden="true"></span>
+        <span class="fk-loading-step" data-fk-loading-step>Pulling public posts</span>
       </div>
     </div>
 
@@ -7433,9 +8325,10 @@
      ============================================================ -->
 <div class="modal modal-full" id="modal-results" aria-hidden="true">
   <div class="dialog dialog-full">
-    <!-- Close button absolute-anchored to the dialog so growing the
-         top padding doesn't push it down with the title. -->
+    <!-- 4.4 round 46 — close lives outside the scroller so it stays
+         pinned to the dialog's top-right while content scrolls. -->
     <button class="close dialog-full-close" data-close aria-label="Close"><i class="ph-bold ph-x"></i></button>
+    <div class="dialog-scroll">
     <div class="dialog-head">
       <div>
         <span class="eyebrow">Scan complete</span>
@@ -7758,6 +8651,7 @@
         </div>
       </article>
     </section>
+    </div> <!-- /.dialog-scroll -->
   </div>
 </div>
 
@@ -7868,69 +8762,232 @@
   })();
 
   /* ============================================================
-     LEADERBOARD DATA + RENDER
+     LEADERBOARD DATA + RENDER  (4.4 round 20)
+     Placeholder roster of 10 FinTwit personas. The same 10 entries
+     appear in every tab — each tab sorts on its own metric and
+     assigns rank 1..10 accordingly. Top 3 get a podium treatment.
      ============================================================ */
-  const lbData = [
-    { name:'Yardeni Research', handle:'@yardeni',         theme:'Macro regime',      score:84.2, bestRoi:18.7, medianRoi:7.4,  winRate:61, quality:88, risk:'Low',    riskScore:90, img:'https://unavatar.io/twitter/yardeni' },
-    { name:'Lucy Liu',         handle:'@lucyliu_ai',      theme:'AI / large cap',    score:73.4, bestRoi:228,  medianRoi:4.1,  winRate:50, quality:86, risk:'Medium', riskScore:72, img:'https://unavatar.io/twitter/lucyliu' },
-    { name:'Puru Saxena',      handle:'@saxena_puru',     theme:'Growth / semis',    score:68.0, bestRoi:42.5, medianRoi:6.2,  winRate:54, quality:83, risk:'Low',    riskScore:84, img:'https://unavatar.io/twitter/saxena_puru' },
-    { name:'K A L E O',        handle:'@CryptoKaleo',     theme:'Crypto momentum',   score:67.4, bestRoi:340,  medianRoi:-1.8, winRate:19, quality:78, risk:'High',   riskScore:48, img:'https://unavatar.io/twitter/CryptoKaleo' },
-    { name:'Sly Dawg',         handle:'@sly_dawg33',      theme:'Semis / momentum',  score:66.3, bestRoi:84.0, medianRoi:3.4,  winRate:47, quality:71, risk:'Medium', riskScore:66, img:'https://unavatar.io/twitter/sly_dawg33' },
-    { name:'Dan Pickering',    handle:'@pickeringenergy', theme:'Energy / oil',      score:61.2, bestRoi:17.4, medianRoi:5.6,  winRate:52, quality:62, risk:'Low',    riskScore:83, img:'https://unavatar.io/twitter/pickeringenergy' },
-    { name:'Herman Jin',       handle:'@shanghaojin',     theme:'AI infra / semis',  score:51.3, bestRoi:24.3, medianRoi:3.2,  winRate:46, quality:59, risk:'Medium', riskScore:64, img:'https://unavatar.io/twitter/shanghaojin' },
-    /* 3.0 round 24 — extra rows so the leaderboard fills more vertical
-       space and the mask fade reads as "and there's more below". */
-    { name:'Cathie Wood',      handle:'@CathieDWood',     theme:'Disruptive growth', score:64.5, bestRoi:44.0, medianRoi:2.1,  winRate:43, quality:72, risk:'High',   riskScore:52, img:'https://unavatar.io/twitter/CathieDWood' },
-    { name:'Dylan Patel',      handle:'@SemiAnalysis_',   theme:'AI infra',          score:71.8, bestRoi:28.1, medianRoi:5.8,  winRate:58, quality:81, risk:'Medium', riskScore:70, img:'https://unavatar.io/twitter/SemiAnalysis_' },
-    { name:'Aswath Damodaran', handle:'@AswathDamodaran', theme:'Valuation',         score:55.6, bestRoi:-4.2, medianRoi:1.4,  winRate:49, quality:90, risk:'Low',    riskScore:88, img:'https://unavatar.io/twitter/AswathDamodaran' },
-    { name:'Chamath',          handle:'@chamath',         theme:'Growth / spacs',    score:48.2, bestRoi:33.0, medianRoi:0.7,  winRate:38, quality:55, risk:'High',   riskScore:46, img:'https://unavatar.io/twitter/chamath' },
-    { name:'Liz Ann Sonders',  handle:'@LizAnnSonders',   theme:'Macro',             score:69.7, bestRoi:21.3, medianRoi:4.6,  winRate:57, quality:85, risk:'Low',    riskScore:86, img:'https://unavatar.io/twitter/LizAnnSonders' },
-    { name:'Lance Roberts',    handle:'@LanceRoberts',    theme:'Hedged macro',      score:58.4, bestRoi:9.2,  medianRoi:2.9,  winRate:55, quality:74, risk:'Low',    riskScore:81, img:'https://unavatar.io/twitter/LanceRoberts' },
-    { name:'Raoul Pal',        handle:'@RaoulGMI',        theme:'Liquidity / crypto',score:62.0, bestRoi:55.0, medianRoi:1.8,  winRate:42, quality:70, risk:'High',   riskScore:54, img:'https://unavatar.io/twitter/RaoulGMI' }
+  const KOL_ROSTER = [
+    { name:'Dylan Patel',         handle:'@SemiAnalysis_', tags:['US Equities','Semis','AI Infra'],         topTk:['NVDA','AVGO','MRVL'], winRate:78, signals:64, recentWin:82, recentSignals:19, tradeRoi:58.4, bestTk:'NVDA', bestRoi:412 },
+    { name:'Cathie Wood',         handle:'@CathieDWood',   tags:['US Equities','Frontier Tech'],            topTk:['TSLA','COIN','HOOD'], winRate:62, signals:48, recentWin:71, recentSignals:14, tradeRoi:47.2, bestTk:'COIN', bestRoi:368 },
+    { name:'Lance Roberts',       handle:'@LanceRoberts',  tags:['US Equities','Macro','Rates'],            topTk:['SPY','GOOG','META'],  winRate:74, signals:91, recentWin:68, recentSignals:23, tradeRoi:31.8, bestTk:'META', bestRoi:184 },
+    { name:'Liz Ann Sonders',     handle:'@LizAnnSonders', tags:['US Equities','Macro'],                    topTk:['NVDA','GOOG','BTC'],  winRate:81, signals:55, recentWin:79, recentSignals:18, tradeRoi:42.1, bestTk:'GOOG', bestRoi:241 },
+    { name:'Arthur Hayes',        handle:'@CryptoHayes',   tags:['Crypto','Majors','Rates'],                topTk:['BTC','ETH','SOL'],    winRate:54, signals:42, recentWin:64, recentSignals:11, tradeRoi:71.6, bestTk:'ETH',  bestRoi:526 },
+    { name:'Aswath Damodaran',    handle:'@AswathDamodaran',tags:['US Equities','Value'],                   topTk:['META','ADBE','CRM'],  winRate:69, signals:38, recentWin:73, recentSignals:9,  tradeRoi:24.7, bestTk:'ADBE', bestRoi:147 },
+    { name:'Puru Saxena',         handle:'@saxena_puru',   tags:['US Equities','Semis','AI Infra'],         topTk:['AMD','ARM','SMCI'],   winRate:66, signals:71, recentWin:62, recentSignals:21, tradeRoi:38.5, bestTk:'ARM',  bestRoi:294 },
+    { name:'Sly Dawg',            handle:'@sly_dawg33',    tags:['US Equities','Frontier Tech','AI Infra'], topTk:['RKLB','PLTR','PANW'], winRate:59, signals:62, recentWin:75, recentSignals:16, tradeRoi:52.0, bestTk:'RKLB', bestRoi:438 },
+    { name:'飞鲸投资笔记',         handle:'@flyingwhale919',tags:['US Equities','Semis','AI Infra'],         topTk:['AVGO','MRVL','CRWD'], winRate:72, signals:50, recentWin:88, recentSignals:17, tradeRoi:46.3, bestTk:'AVGO', bestRoi:312 },
+    { name:'Herman Jin',          handle:'@shanghaojin',   tags:['US Equities','Semis','AI Infra'],         topTk:['INTC','AVGO','CRWD'], winRate:51, signals:33, recentWin:58, recentSignals:8,  tradeRoi:28.4, bestTk:'INTC', bestRoi:233 }
   ];
-  /* 3.0: KOL Score column dropped — users found it confusing and it read
-     as subjective. Default sort is Best ROI (the new headline metric). */
-  const metricMap = {
-    bestRoi:   r => r.bestRoi,
-    medianRoi: r => r.medianRoi,
-    winRate:   r => r.winRate,
-    quality:   r => r.quality,
-    riskScore: r => r.riskScore
+  const LB_TABS = {
+    allTimeWin: {
+      metricLabel: 'ALL-TIME WIN RATE',
+      sortKey: k => k.winRate,
+      metricVal:  k => k.winRate + '%',
+      metricSub:  k => k.signals + ' signals'
+    },
+    recentWin: {
+      metricLabel: 'LAST 30 DAYS WIN RATE',
+      sortKey: k => k.recentWin,
+      metricVal:  k => k.recentWin + '%',
+      metricSub:  k => k.recentSignals + ' signals in last 30 days'
+    },
+    bestRoi: {
+      metricLabel: 'BEST ROI',
+      sortKey: k => k.tradeRoi,
+      metricVal:  k => '+' + k.tradeRoi.toFixed(1) + '%',
+      metricSub:  k => k.signals + ' signals'
+    },
+    bestCall: {
+      metricLabel: 'BEST CALL',
+      sortKey: k => k.bestRoi,
+      metricVal:  null, // rendered with logo via the bestCall branch
+      metricSub:  null
+    }
   };
-  function renderLb(key='bestRoi') {
-    const sorted = [...lbData].sort((a,b) => metricMap[key](b) - metricMap[key](a));
+  // Legacy reference (now unused): the old per-tab row arrays were
+  // replaced by a single roster + sort-per-tab so all four tabs share
+  // identity, which keeps the layout (and the page scroll position)
+  // stable when the user clicks between tabs.
+  const _LEGACY_LB_TABS = {
+    allTimeWin: {
+      metricLabel: 'ALL-TIME WIN RATE',
+      rows: [
+        { rank:4,  name:'Kailash Concepts',         handle:'@kailashconcepts', tags:['US Equities','Value'],                          topTk:['GOOG','META','MRVL'],   metric:90, sub:'10 signals',  winRate:90, recentWin:100, bestTk:'VAL',  bestRoi:134  },
+        { rank:5,  name:'qinbafrank',               handle:'@qinbafrank',      tags:['US Equities','Semis','AI Infra'],               topTk:['CRWD','ETH','BTC'],     metric:88, sub:'26 signals',  winRate:88, recentWin:86,  bestTk:'INTC', bestRoi:91   },
+        { rank:6,  name:'Ben Pouladian',            handle:'@benitoz',         tags:['US Equities','Semis','AI Infra'],               topTk:['COIN','CRWD','MRVL'],   metric:86, sub:'29 signals',  winRate:86, recentWin:100, bestTk:'SNDK', bestRoi:369  },
+        { rank:7,  name:'Warren Pies',              handle:'@warrenpies',      tags:['US Equities','Macro'],                          topTk:['SNOW','AVGO','PLTR'],   metric:83, sub:'6 signals',   winRate:83, recentWin:0,   bestTk:'AVGO', bestRoi:100  },
+        { rank:8,  name:'flyingwhale-飞鲸投资笔记', handle:'@flyingwhale919',  tags:['US Equities','Semis','AI Infra'],               topTk:['AVGO','GOOG','MRVL'],   metric:80, sub:'50 signals',  winRate:80, recentWin:100, bestTk:'AVGO', bestRoi:830  },
+        { rank:9,  name:'WallStreetVet',            handle:'@sly_dawg33',      tags:['US Equities','Frontier Tech','AI Infra'],       topTk:['ARM','RKLB','ADBE'],    metric:75, sub:'52 signals',  winRate:75, recentWin:75,  bestTk:'QCOM', bestRoi:70.9 },
+        { rank:10, name:'Diamond Rapids',           handle:'@diamondrapids',   tags:['US Equities','Semis'],                          topTk:['CRWD','AVGO','SMCI'],   metric:75, sub:'8 signals',   winRate:75, recentWin:0,   bestTk:'INTC', bestRoi:279  },
+        { rank:11, name:'铁柱',                     handle:'@tiezhucrypto',    tags:['US Equities','Semis','AI Infra','Rates'],       topTk:['NET','GOOG','SHOP'],    metric:75, sub:'4 signals',   winRate:75, recentWin:0,   bestTk:'SNDK', bestRoi:148  },
+        { rank:12, name:'Nico投资有道',             handle:'@tychozzz',        tags:['US Equities','AI Infra'],                       topTk:['BTC','AAPL','META'],    metric:73, sub:'41 signals',  winRate:73, recentWin:76,  bestTk:'AMD',  bestRoi:154  },
+        { rank:13, name:'Matt Giannino',            handle:'@marketmovesmatt', tags:['US Equities','Index/ETF'],                      topTk:['HOOD','SQ','META'],     metric:70, sub:'43 signals',  winRate:70, recentWin:76,  bestTk:'SOXL', bestRoi:415  },
+        { rank:14, name:'Herman Jin',               handle:'@shanghaojin',     tags:['US Equities','Semis','AI Infra'],               topTk:['CRWD','AVGO','SMCI'],   metric:69, sub:'26 signals',  winRate:69, recentWin:0,   bestTk:'INTC', bestRoi:233  }
+      ]
+    },
+    recentWin: {
+      metricLabel: 'LAST 30 DAYS WIN RATE',
+      rows: [
+        { rank:4,  name:'Manchurius Hao — Greeks.live首席赌狗', handle:'@antonlavay',     tags:['US Equities','Semis','AI Infra','Energy'], topTk:['COIN','CRWD','MRVL'], metric:88, sub:'8 signals in last 30 days',  winRate:67, recentWin:88, bestTk:'AXTI', bestRoi:238   },
+        { rank:5,  name:'qinbafrank',                          handle:'@qinbafrank',     tags:['US Equities','Semis','AI Infra'],          topTk:['CRWD','ETH','BTC'],   metric:86, sub:'7 signals in last 30 days',  winRate:88, recentWin:86, bestTk:'INTC', bestRoi:91    },
+        { rank:6,  name:'Jukan',                               handle:'@jukan05',        tags:['US Equities','Semis','AI Infra'],          topTk:['AMD','CRWD','MRVL'],  metric:80, sub:'5 signals in last 30 days',  winRate:90, recentWin:80, bestTk:'INTC', bestRoi:201   },
+        { rank:7,  name:'Matt Giannino',                       handle:'@marketmovesmatt',tags:['US Equities','Index/ETF'],                 topTk:['HOOD','SQ','META'],   metric:76, sub:'17 signals in last 30 days', winRate:70, recentWin:76, bestTk:'SOXL', bestRoi:415   },
+        { rank:8,  name:'Nico投资有道',                        handle:'@tychozzz',       tags:['US Equities','AI Infra'],                  topTk:['BTC','AAPL','META'],  metric:76, sub:'17 signals in last 30 days', winRate:73, recentWin:76, bestTk:'AMD',  bestRoi:154   },
+        { rank:9,  name:'WallStreetVet',                       handle:'@sly_dawg33',     tags:['US Equities','Frontier Tech','AI Infra'],  topTk:['ARM','RKLB','ADBE'],  metric:75, sub:'51 signals in last 30 days', winRate:75, recentWin:75, bestTk:'QCOM', bestRoi:70.9  },
+        { rank:10, name:'美股仙人',                            handle:'@hanking66',      tags:['US Equities','General'],                   topTk:['GOOG','CRWD','META'], metric:71, sub:'7 signals in last 30 days',  winRate:63, recentWin:71, bestTk:'INTC', bestRoi:264   },
+        { rank:11, name:'高买低卖的神！',                      handle:'@dearbaibabybus', tags:['US Equities','Semis','AI Infra','Software'],topTk:['CRM','RKLB','ADBE'], metric:71, sub:'14 signals in last 30 days', winRate:65, recentWin:71, bestTk:'AMD',  bestRoi:81.6  },
+        { rank:12, name:'3X Long Labubu',                      handle:'@labubu_trader',  tags:['US Equities','Semis','AI Infra','Commodities'], topTk:['CRWD','AMD','AVGO'], metric:68, sub:'19 signals in last 30 days', winRate:57, recentWin:68, bestTk:'AXTI', bestRoi:1100  },
+        { rank:13, name:'川沐 | Trumoo🐮',                     handle:'@xiaomustock',    tags:['US Equities','Semis','AI Infra'],          topTk:['ARM','INTC','SMCI'],  metric:67, sub:'6 signals in last 30 days',  winRate:64, recentWin:67, bestTk:'AVGO', bestRoi:825   }
+      ]
+    },
+    bestRoi: {
+      metricLabel: 'BEST ROI',
+      rows: [
+        { rank:4,  name:'Rihard Jarc',          handle:'@rihardjarc',     tags:['US Equities','Semis','AI Infra'],          topTk:['GOOG','CRWD','META'],  metric:64.5, isPct:true, sub:'19 signals', winRate:63, recentWin:0,   bestTk:'MRVL', bestRoi:547 },
+        { rank:5,  name:'川沐 | Trumoo🐮',      handle:'@xiaomustock',    tags:['US Equities','Semis','AI Infra'],          topTk:['ARM','INTC','SMCI'],   metric:54.0, isPct:true, sub:'39 signals', winRate:64, recentWin:67,  bestTk:'AVGO', bestRoi:825 },
+        { rank:6,  name:'Ryan Leung 梁興盛, CFA',handle:'@ryanhingshing', tags:['US Equities','Semis','AI Infra'],          topTk:['CRWD','SMCI','ADBE'],  metric:44.7, isPct:true, sub:'33 signals', winRate:58, recentWin:0,   bestTk:'AAOI', bestRoi:697 },
+        { rank:7,  name:'铁柱',                 handle:'@tiezhucrypto',   tags:['US Equities','Semis','AI Infra','Rates'],  topTk:['NET','GOOG','SHOP'],   metric:41.8, isPct:true, sub:'4 signals',  winRate:75, recentWin:0,   bestTk:'SNDK', bestRoi:148 },
+        { rank:8,  name:'Jukan',                handle:'@jukan05',        tags:['US Equities','Semis','AI Infra'],          topTk:['AMD','CRWD','MRVL'],   metric:38.4, isPct:true, sub:'21 signals', winRate:90, recentWin:80,  bestTk:'INTC', bestRoi:201 },
+        { rank:9,  name:'Nullable',             handle:'@nullablex',      tags:['US Equities','Semis','Commodities'],       topTk:['SNOW','SHOP','ADBE'],  metric:37.1, isPct:true, sub:'51 signals', winRate:57, recentWin:100, bestTk:'SNDK', bestRoi:668 },
+        { rank:10, name:'Kailash Concepts',     handle:'@kailashconcepts',tags:['US Equities','Value'],                     topTk:['GOOG','META','MRVL'],  metric:35.8, isPct:true, sub:'10 signals', winRate:90, recentWin:100, bestTk:'VAL',  bestRoi:134 },
+        { rank:11, name:'NullOreo',             handle:'@nulloreo_',      tags:['US Equities','AI Infra','Energy','Rates'], topTk:['SNOW','CRWD','PANW'],  metric:32.3, isPct:true, sub:'43 signals', winRate:53, recentWin:44,  bestTk:'SNDK', bestRoi:985 },
+        { rank:12, name:'Herman Jin',           handle:'@shanghaojin',    tags:['US Equities','Semis','AI Infra'],          topTk:['CRWD','AVGO','SMCI'],  metric:31.7, isPct:true, sub:'26 signals', winRate:69, recentWin:0,   bestTk:'INTC', bestRoi:233 }
+      ]
+    },
+    bestCall: {
+      metricLabel: 'BEST CALL',
+      rows: [
+        { rank:4,  name:'flyingwhale-飞鲸投资笔记', handle:'@flyingwhale919',  tags:['US Equities','Semis','AI Infra'],  topTk:['AVGO','GOOG','MRVL'],     callTk:'AVGO', callRoi:830, winRate:80, recentWin:100, bestTk:'AVGO', bestRoi:830 },
+        { rank:5,  name:'川沐 | Trumoo🐮',         handle:'@xiaomustock',     tags:['US Equities','Semis','AI Infra'],  topTk:['ARM','INTC','SMCI'],      callTk:'AVGO', callRoi:825, winRate:64, recentWin:67,  bestTk:'AVGO', bestRoi:825 },
+        { rank:6,  name:'Ryan Leung 梁興盛, CFA',   handle:'@ryanhingshing',  tags:['US Equities','Semis','AI Infra'],  topTk:['CRWD','SMCI','ADBE'],     callTk:'AAOI', callRoi:697, winRate:58, recentWin:0,   bestTk:'AAOI', bestRoi:697 },
+        { rank:7,  name:'Nullable',                 handle:'@nullablex',      tags:['US Equities','Semis','Commodities'],topTk:['SNOW','SHOP','ADBE'],    callTk:'SNDK', callRoi:668, winRate:57, recentWin:100, bestTk:'SNDK', bestRoi:668 },
+        { rank:8,  name:'shu fen',                  handle:'@shufen46250836', tags:['US Equities','Semis','AI Infra','Energy'], topTk:['CRWD','GOOG','AAPL'], callTk:'SNDK', callRoi:620, winRate:64, recentWin:100, bestTk:'SNDK', bestRoi:620 },
+        { rank:9,  name:'Rihard Jarc',              handle:'@rihardjarc',     tags:['US Equities','Semis','AI Infra'],  topTk:['GOOG','CRWD','META'],     callTk:'MRVL', callRoi:547, winRate:63, recentWin:0,   bestTk:'MRVL', bestRoi:547 },
+        { rank:10, name:'Arthur Hayes',             handle:'@cryptohayes',    tags:['Crypto','Majors','Rates'],          topTk:['BTC','ETH','SOL'],       callTk:'ETH',  callRoi:471, winRate:25, recentWin:100, bestTk:'ETH',  bestRoi:471 },
+        { rank:11, name:'郭明錤 | Ming-Chi Kuo',    handle:'@mingchikuo',     tags:['US Equities','Semis','AI Infra'],  topTk:['CRWD','SMCI','ADBE'],     callTk:'INTC', callRoi:421, winRate:100,recentWin:100, bestTk:'INTC', bestRoi:421 },
+        { rank:12, name:'Matt Giannino',            handle:'@marketmovesmatt',tags:['US Equities','Index/ETF'],          topTk:['HOOD','SQ','META'],      callTk:'SOXL', callRoi:415, winRate:70, recentWin:76,  bestTk:'SOXL', bestRoi:415 },
+        { rank:13, name:'Ben Pouladian',            handle:'@benitoz',        tags:['US Equities','Semis','AI Infra'],  topTk:['COIN','CRWD','MRVL'],     callTk:'SNDK', callRoi:369, winRate:86, recentWin:100, bestTk:'SNDK', bestRoi:369 }
+      ]
+    }
+  };
+
+  function _lbTickerEl(tk, cls) {
+    const url = (typeof window._tickerLogoUrl === 'function') ? window._tickerLogoUrl(tk) : '';
+    const fbHtml = '<span class="' + cls + ' lb-tk-fb">' + tk.charAt(0) + '</span>';
+    if (!url) return fbHtml;
+    return '<img class="' + cls + '" src="' + url + '" alt="" loading="lazy" onerror="this.outerHTML=' +
+           "'<span class=\\'" + cls + " lb-tk-fb\\'>" + tk.charAt(0) + "</span>'" +
+           '">';
+  }
+
+  function renderLb(key='allTimeWin') {
+    const tab = LB_TABS[key] || LB_TABS.allTimeWin;
+    const lbl = document.getElementById('lb-metric-label');
+    if (lbl) lbl.textContent = tab.metricLabel;
     const rowsEl = document.getElementById('lb-rows');
-    rowsEl.innerHTML = sorted.map((r, i) => {
-      const med = r.medianRoi;
-      const medClass = med >= 0 ? 'gain' : 'loss';
-      return `
-        <a class="lb-row" href="#">
-          <div class="idx">${String(i+1).padStart(2,'0')}</div>
-          <div class="who">
-            <img src="${r.img}" alt="${r.handle}">
-            <div>
-              <b>${r.name}</b>
-              <span>${r.handle} · ${r.theme}</span>
-            </div>
-          </div>
-          <div class="cell"><span class="v gain">+${r.bestRoi.toFixed(1)}%</span></div>
-          <div class="cell hide-sm"><span class="v ${medClass}">${med >= 0 ? '+' : ''}${med.toFixed(1)}%</span></div>
-          <div class="cell hide-sm"><span class="v">${r.winRate}%</span></div>
-          <div class="cell hide-sm"><span class="v">${r.quality}</span></div>
-          <div><span class="risk-pill ${r.risk.toLowerCase()}">${r.risk}</span></div>
-        </a>
-      `;
+    // Sort the roster by this tab's metric, assign rank 1..N, then
+    // slice to the top 8 (user direction — 10 felt too dense).
+    const ranked = [...KOL_ROSTER]
+      .sort((a, b) => tab.sortKey(b) - tab.sortKey(a))
+      .map((k, i) => ({ ...k, rank: i + 1 }))
+      .slice(0, 8);
+    rowsEl.innerHTML = ranked.map(r => {
+      // Top tickers strip (3 icons).
+      const tickersHtml = '<div class="lb-tickers">' +
+        (r.topTk || []).slice(0, 3).map(tk => _lbTickerEl(tk, 'lb-tk')).join('') +
+        '</div>';
+      // Active metric column varies per tab.
+      let metricHtml;
+      if (key === 'bestCall') {
+        metricHtml =
+          '<div class="lb-metric">' +
+            '<div class="lb-metric-val">' +
+              '<span class="lb-metric-tk">' +
+                _lbTickerEl(r.bestTk, 'lb-metric-tk-img') +
+                r.bestTk + ' +' + r.bestRoi + '%' +
+              '</span>' +
+            '</div>' +
+          '</div>';
+      } else {
+        metricHtml =
+          '<div class="lb-metric">' +
+            '<div class="lb-metric-val">' + tab.metricVal(r) + '</div>' +
+            '<div class="lb-metric-sub">' + tab.metricSub(r) + '</div>' +
+          '</div>';
+      }
+      // Key stats column.
+      const statsHtml =
+        '<div class="lb-stats">' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+            '<span class="lb-stat"><span class="lb-stat-lbl">Win Rate</span><b>' + r.winRate + '%</b></span>' +
+            '<span class="lb-stat"><span class="lb-stat-lbl">30d Win Rate</span><b>' + r.recentWin + '%</b></span>' +
+          '</div>' +
+          '<span class="lb-stat">' +
+            '<span class="lb-stat-lbl">Best</span>' +
+            _lbTickerEl(r.bestTk, 'lb-tk-mini') +
+            '<b>' + r.bestTk + '</b>' +
+            '<span class="lb-stat-val gain">+' + r.bestRoi + '%</span>' +
+          '</span>' +
+        '</div>';
+      // Tags chips.
+      const tagsHtml = (r.tags || []).map((t, i) =>
+        '<span class="who-tag' + (i === 0 ? '' : ' muted') + '">' + t + '</span>'
+      ).join('');
+      const avatarSrc = 'https://unavatar.io/twitter/' + r.handle.replace(/^@/, '');
+      // Top-3 rank gets a color-only class — the number itself
+       // changes hue (gold / silver / bronze). No medal chip.
+       const rankClass = r.rank <= 3 ? ' rank-' + r.rank : '';
+       const rankInner = String(r.rank);
+      return (
+        '<a class="lb-row' + rankClass + '" href="#" data-rank="' + r.rank + '">' +
+          '<div class="idx">' + rankInner + '</div>' +
+          '<div class="who">' +
+            '<img src="' + avatarSrc + '" alt="' + r.handle + '">' +
+            '<div class="who-wrap">' +
+              '<div class="who-name-line">' +
+                '<span class="who-name">' + r.name + '</span>' +
+              '</div>' +
+              '<span class="who-handle">' + r.handle + '</span>' +
+              '<div class="who-tags">' + tagsHtml + '</div>' +
+            '</div>' +
+          '</div>' +
+          tickersHtml +
+          metricHtml +
+          statsHtml +
+          // 4.4 round 32 — trailing "open" affordance.
+          '<span class="lb-open" aria-hidden="true"><i class="ph-bold ph-arrow-up-right"></i></span>' +
+        '</a>'
+      );
     }).join('');
   }
-  renderLb('bestRoi');
+  renderLb('allTimeWin');
   document.querySelectorAll('.sort-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
+    tab.addEventListener('click', (e) => {
+      // 4.4 round 20 — prevent default + suppress scroll change.
+      // The previous handler let the page jump when the lb-rows
+      // shrank/grew between tabs and the section's height changed
+      // mid-render. Capturing scrollY before render and restoring
+      // it on the next frame keeps the user pinned where they were.
+      e.preventDefault();
+      const y = window.scrollY;
       document.querySelectorAll('.sort-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       renderLb(tab.dataset.sort);
+      // restore in case any layout shift moved the page
+      requestAnimationFrame(() => window.scrollTo({ top: y, behavior: 'instant' }));
     });
   });
+  // Also intercept lb-row clicks so they don't anchor-jump the page.
+  document.getElementById('lb-rows')?.addEventListener('click', (e) => {
+    const row = e.target.closest('.lb-row');
+    if (row) e.preventDefault();
+  });
 
+  /* 4.4 round 18 — live shuffle disabled. Rows are now ranked per
+     tab against alva.ai's data; randomly swapping rows would
+     scramble those ranks. Block kept commented for reference; the
+     shuffler is short-circuited by an early `return`. */
   /* ============================================================
      LEADERBOARD LIVE SHUFFLE — every ~4.5s, swap a random adjacent
      pair of rows with a FLIP animation so the table looks alive
@@ -7945,6 +9002,8 @@
     const EASING   = 'cubic-bezier(.22, 1, .36, 1)';
 
     function shuffleStep() {
+      // 4.4 round 18 — short-circuited: per-tab ranks now matter.
+      return;
       // Skip if user is hovering the table (would yank a row out from
       // under the cursor) or if the page tab isn't visible.
       if (document.hidden) return;
@@ -8050,6 +9109,12 @@
     if (name === 'card-detail') playCardDetailEntrance();
     if (name === 'connect')     playConnectEntrance();
     if (name === 'for-kols')    playForKolsEntrance();
+    // 4.4 round 10 — re-measure modal card heights after the modal
+    // opens (they were 0px while hidden). Two rAFs to let the open
+    // animation settle before reading layout.
+    if (typeof window._pinModalCardHeights === 'function') {
+      requestAnimationFrame(() => requestAnimationFrame(window._pinModalCardHeights));
+    }
   }
   function closeModal(m) {
     if (m.classList.contains('open')) _modalOpenCount = Math.max(0, _modalOpenCount - 1);
@@ -8082,12 +9147,25 @@
     if (!grid && !req) return;
     grid?.classList.remove('is-revealed');
     req?.classList.remove('is-revealed');
+    // 4.4 round 50 — size the results modal based on card count +
+    // viewport width before the reveal animation fires.
+    sizeResultsModal();
     // Two RAFs to ensure the removed class has painted before we re-add
     requestAnimationFrame(() => requestAnimationFrame(() => {
       grid?.classList.add('is-revealed');
       req?.classList.add('is-revealed');
     }));
   }
+  /* 4.4 round 50 — dynamic sizing for the results modal:
+     - >5 cards → aim for 3 cols/row; otherwise 2.
+     - Reduce cols if the resulting dialog wouldn't fit the viewport
+       with a comfortable margin (32px backdrop + safety).
+     - Card width pinned to 540 (landing OG ratio); gap 16; padding 64. */
+  /* 4.4 round 61 — JS sizer NEUTRALISED. CSS media queries on
+     #modal-results .results-grid + .dialog-full now drive column
+     count and dialog width per viewport. Keeping the function as a
+     no-op so existing callers don't error. */
+  function sizeResultsModal() { /* no-op — CSS handles sizing */ }
 
   /* Replay the connect-dialog entrance each time it opens. */
   function playConnectEntrance() {
@@ -8148,32 +9226,20 @@
     connectGoBtn.addEventListener('click', () => {
       const dialog = connectGoBtn.closest('.connect-dialog');
       const modal = document.getElementById('modal-connect');
-      const progressFill = document.getElementById('connect-progress-fill');
       const statusEl = document.getElementById('connect-status');
       if (!dialog || !modal) return;
-      // Reset transitionable bits before switching state
-      if (progressFill) {
-        progressFill.style.transition = 'none';
-        progressFill.style.width = '0%';
-        void progressFill.offsetWidth;          // force reflow
-        progressFill.style.transition = 'width 2.4s ease-out';
-      }
       dialog.dataset.state = 'loading';
-      if (statusEl) statusEl.textContent = 'Reading your follow list…';
-      // Kick the bar after the state swap paints
-      requestAnimationFrame(() => {
-        if (progressFill) progressFill.style.width = '100%';
-      });
-      // Status text marches through the simulated stages
-      const t1 = setTimeout(() => { if (statusEl) statusEl.textContent = 'Matching 86 ranked FinTwit Traders against your follows…'; }, 900);
-      const t2 = setTimeout(() => { if (statusEl) statusEl.textContent = 'Compiling your audited Playbooks…'; }, 1700);
+      // 4.4 round 63 — progress bar removed; just spinner + 3
+      // cycling status lines, then open results modal.
+      if (statusEl) statusEl.textContent = 'Waiting for x.com response';
+      const t1 = setTimeout(() => { if (statusEl) statusEl.textContent = 'Fetching your follow list'; }, 1100);
+      const t2 = setTimeout(() => { if (statusEl) statusEl.textContent = 'Analyzing your follows'; }, 2200);
       const t3 = setTimeout(() => {
         closeModal(modal);
         // Reset to auth state for the next open
         dialog.dataset.state = 'auth';
-        if (progressFill) progressFill.style.width = '0%';
         setTimeout(() => openModal('results'), 120);
-      }, 2500);
+      }, 3300);
       // Stash the timers so a manual close cancels them
       modal._connectTimers = [t1, t2, t3];
     });
@@ -8333,18 +9399,12 @@
       track._marqueeAnim = anim;
     });
 
-    if (typeof window.openCardLightbox !== 'function') return;
+    /* 4.4 round 13 — marquee cards are now fully non-interactive per
+       user direction. Click-to-open-lightbox and hover-to-pause-marquee
+       listeners removed. The marquee animation runs uninterrupted; the
+       cards are purely a moving showcase. */
     document.querySelectorAll('.card-marquee .mq-card').forEach(card => {
-      card.addEventListener('click', e => {
-        e.preventDefault();
-        window.openCardLightbox(card);
-      });
-      const track = card.closest('.marquee-track');
-      const anim  = track?._marqueeAnim;
-      if (anim) {
-        card.addEventListener('mouseenter', () => anim.pause());
-        card.addEventListener('mouseleave', () => anim.play());
-      }
+      card.style.pointerEvents = 'none';
     });
 
     // Pause every track when the page is hidden — no point burning CPU.
@@ -8619,6 +9679,59 @@
       });
     }
 
+    // 4.4 round 33 — switch states with a height transition so the
+    // dialog doesn't snap between sizes. Process:
+    //  1. capture old (current) dialog height
+    //  2. switch the visible state
+    //  3. measure the new natural height (with auto)
+    //  4. write the old height explicitly, then on the next frame
+    //     write the new height — the CSS `transition: height ...`
+    //     rule interpolates between them
+    //  5. once the transition lands, release height to auto
+    let _heightTransitionTimer = 0;
+    function transitionState(name) {
+      const fromH = dialog.getBoundingClientRect().height;
+      showState(name);
+      // measure new content height
+      dialog.style.height = 'auto';
+      const toH = dialog.getBoundingClientRect().height;
+      // start the animation
+      dialog.style.height = fromH + 'px';
+      // force reflow so the browser commits the start frame
+      // eslint-disable-next-line no-unused-expressions
+      dialog.offsetHeight;
+      requestAnimationFrame(() => {
+        dialog.style.height = toH + 'px';
+      });
+      clearTimeout(_heightTransitionTimer);
+      _heightTransitionTimer = setTimeout(() => {
+        dialog.style.height = '';
+      }, 480);
+    }
+
+    // Brief loading sequence between submit and the actual result.
+    // Cycles through 2-3 fake status lines so it feels real.
+    function runLoadingSequence(handle, finalState) {
+      const steps = [
+        'Pulling public posts',
+        'Backtesting last 24 months',
+        'Computing win-rate + ROI'
+      ];
+      const stepEl = dialog.querySelector('[data-fk-loading-step]');
+      let i = 0;
+      if (stepEl) stepEl.textContent = steps[0];
+      const stepTimer = setInterval(() => {
+        i++;
+        if (i < steps.length && stepEl) stepEl.textContent = steps[i];
+      }, 500);
+      // total loading ~ 1.2s, then transition to the result
+      setTimeout(() => {
+        clearInterval(stepTimer);
+        if (finalState === 'result-on') populatePreview(handle);
+        transitionState(finalState);
+      }, 1300);
+    }
+
     // 4.4 — populate the playbook preview card in result-on state.
     // Reuses window._buildRichCard so the visual matches the marquee.
     function populatePreview(handle) {
@@ -8636,6 +9749,12 @@
       for (let i = 0; i < handle.length; i++) h = (h * 31 + handle.charCodeAt(i)) | 0;
       const roi = 120 + (Math.abs(h) % 380); // 120..499
       window._buildRichCard(card, { name, handle, roi, avatarSrc, onerr });
+      // 4.4 round 10 — re-measure the preview card's natural height
+      // so the hover-grow rule has a fresh --card-base-h to add the
+      // CTA height to. Two rAFs to clear layout + paint.
+      if (typeof window._pinModalCardHeights === 'function') {
+        requestAnimationFrame(() => requestAnimationFrame(window._pinModalCardHeights));
+      }
     }
 
     function normaliseHandle(raw) {
@@ -8668,16 +9787,24 @@
       dialog.querySelectorAll('[data-fk-handle]').forEach(el => {
         el.textContent = handle;
       });
-      if (state === 'result-on') populatePreview(handle);
-      showState(state);
+      // 4.4 round 33 — input → loading → result. Loading state's
+      // height is animated to via transitionState(); then the
+      // loading sequence chains another transitionState() into the
+      // final result.
+      transitionState('loading');
+      runLoadingSequence(handle, state);
     });
 
-    // Reset → back to the input state, clear the field.
-    dialog.querySelectorAll('.fk-reset').forEach(btn => {
-      btn.addEventListener('click', () => {
-        form.querySelector('input').value = '';
-        showState('input');
-      });
+    // Reset → back to the input state with an animated shrink.
+    dialog.querySelectorAll('.fk-reset, [data-fk-leaderboard]').forEach(btn => {
+      // [data-fk-leaderboard] inside a result also returns to input
+      // semantically; the link's own scroll handler still fires.
+      if (btn.classList.contains('fk-reset')) {
+        btn.addEventListener('click', () => {
+          form.querySelector('input').value = '';
+          transitionState('input');
+        });
+      }
     });
 
     // Share (state result-on) → X quote-tweet intent.
@@ -9588,7 +10715,7 @@
             }
 
             // -- CRT edge color shift (old-TV phosphor vignette) --
-            // Mix toward alva teal #49A3A6 at the corners — the
+            // Mix toward alva teal #3CC2C6 at the corners — the
             // "周围偏绿" effect the user asked for. Center stays at
             // pure uBgColor, corners blend up to 35% toward alva teal.
             // Using mix-toward-color (instead of multiplicative shift)
@@ -10474,12 +11601,55 @@
     // Plausible ticker pool — varied themes
     const TKPOOL = ['NVDA','AAOI','AXTI','AEHR','TSLA','META','GOOG','AMD','MSTR','BTC','ETH','SOL','MRVL','AVGO','NBIS','PLTR','SHOP','CRM','UBER','NET','SNOW','CRWD','PANW','SMCI','ARM','RKLB','HOOD','COIN','SQ','ADBE'];
 
+    // 4.4 round 29 — Clearbit Logo API got sunset, so every stock
+    // ticker was falling back to the letter chip. Switched to
+    // Google's favicon service (free, reliable, no key needed):
+    //   https://www.google.com/s2/favicons?domain=<domain>&sz=64
+    // Crypto stays on coincap. Domain map expanded to cover every
+    // ticker that appears in the marquee + leaderboard rosters
+    // (INTC, SPY, AAPL, etc.) so fewer rows hit the fallback.
+    const TK_LOGO_DOMAIN = {
+      // Mega-cap / blue chips
+      AAPL: 'apple.com', MSFT: 'microsoft.com', GOOG: 'google.com', GOOGL: 'google.com',
+      META: 'meta.com', AMZN: 'amazon.com', TSLA: 'tesla.com', NFLX: 'netflix.com',
+      // Semis / AI infra
+      NVDA: 'nvidia.com', AMD: 'amd.com', INTC: 'intel.com', AVGO: 'broadcom.com',
+      MRVL: 'marvell.com', ARM: 'arm.com', SMCI: 'supermicro.com', QCOM: 'qualcomm.com',
+      MU: 'micron.com', TSM: 'tsmc.com', AAOI: 'ao-inc.com', AXTI: 'axt.com',
+      AEHR: 'aehr.com', NBIS: 'nebius.com', SNDK: 'sandisk.com',
+      // Software / cloud
+      CRM: 'salesforce.com', ADBE: 'adobe.com', SNOW: 'snowflake.com', NET: 'cloudflare.com',
+      CRWD: 'crowdstrike.com', PANW: 'paloaltonetworks.com', PLTR: 'palantir.com',
+      SHOP: 'shopify.com', UBER: 'uber.com',
+      // Fintech / crypto-adjacent
+      COIN: 'coinbase.com', HOOD: 'robinhood.com', SQ: 'block.xyz', MSTR: 'microstrategy.com',
+      // Other
+      RKLB: 'rocketlabusa.com', LITE: 'lumentum.com',
+      // ETFs / indexes — favicons of issuer sites
+      SPY: 'ssga.com', SOXL: 'direxion.com', SQQQ: 'invesco.com', SPXL: 'direxion.com',
+      QQQ: 'invesco.com',
+      // Commodities / specials
+      GOLD: 'barrick.com', VAL: 'valaris.com', ZEC: 'z.cash'
+    };
+    const TK_CRYPTO = { BTC: 'bitcoin', ETH: 'ethereum', SOL: 'solana' };
+    function tickerLogoUrl(tk) {
+      if (TK_CRYPTO[tk]) {
+        return 'https://assets.coincap.io/assets/icons/' + tk.toLowerCase() + '@2x.png';
+      }
+      const d = TK_LOGO_DOMAIN[tk];
+      if (d) return 'https://www.google.com/s2/favicons?domain=' + d + '&sz=64';
+      return '';
+    }
+    // 4.4 round 18 — leaderboard rebuild also needs the ticker logo
+    // helper, so expose it globally.
+    window._tickerLogoUrl = tickerLogoUrl;
+
     // Per-card corner-gradient palette (mirrors the results-modal card
     // treatment). Picked deterministically per card so identity stays
     // stable across reloads.
     const CARD_TINTS = [
-      'rgba(73,163,166,0.22)',   // alva teal
-      'rgba(92,185,188,0.22)',   // alva-hi
+      'rgba(88,195,198,0.22)',   // alva teal
+      'rgba(122,211,214,0.22)',   // alva-hi
       'rgba(179,136,255,0.22)',  // purple
       'rgba(255,138,76,0.20)',   // orange
       'rgba(96,165,250,0.20)',   // blue
@@ -10547,7 +11717,11 @@
       const labelDx = anchor === 'end' ? -8 : (anchor === 'start' ? 8 : 0);
       const peakLabel = (peakVal >= 0 ? '+' : '') + peakVal.toFixed(peakVal >= 100 || peakVal <= -100 ? 0 : 1) + '%';
       const labelColor = finalPct >= 0 ? '#22c55e' : '#ef4444';
-      const placeAbove = peakY > 36;
+      // 4.4 round 25 — threshold bumped (36 → 45) so chip-above only
+       // kicks in when there's enough room for the ~35px chip + 8px
+       // gap; below that, chip drops below the peak instead of being
+       // clipped against the top of the chart.
+       const placeAbove = peakY > 45;
       const labelY = placeAbove ? (peakY - 32) : (peakY + 12);
       // 4.3 — annotation gets a rounded "chip" backdrop so BEST ROI +
       // value read cleanly against the noisy chart fill. Dimensions
@@ -10565,57 +11739,55 @@
                   : anchor === 'end' ? (chipX + chipW - 9)
                   : (chipX + 9);
       const textAnchor = anchor === 'middle' ? 'middle' : (anchor === 'end' ? 'end' : 'start');
-      return (
+      // 4.4 round 25 — chip is now anchored DIRECTLY to the peak
+       // point (peakX, peakY) instead of the legacy SVG label-Y
+       // offset, which was placing the chip ~45 viewBox-units away
+       // from the peak (= half the chart height in pixels). The
+       // chip's translate (in CSS) handles the visual offset above
+       // or below the peak with a tight 6px gap.
+       const chipLeftPct = (peakX / W) * 100;
+       const chipTopPct  = (peakY / H) * 100;
+       const svgMarkup =
         '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
-          '<defs>' +
-            '<filter id="bdblur-' + Math.round(peakX) + '-' + Math.round(peakY) + '" x="-20%" y="-20%" width="140%" height="140%">' +
-              '<feGaussianBlur stdDeviation="2"/>' +
-            '</filter>' +
-          '</defs>' +
           '<path d="M 0 ' + zeroY + ' L ' + W + ' ' + zeroY + '" stroke="rgba(255,255,255,0.10)" stroke-width="1" fill="none" stroke-dasharray="2 3"/>' +
           '<path d="' + fillPath + '" fill="' + fill + '"/>' +
           '<path d="' + d + '" stroke="' + stroke + '" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>' +
           // peak marker
           '<circle cx="' + peakX.toFixed(1) + '" cy="' + peakY.toFixed(1) + '" r="6" fill="' + stroke + '" opacity="0.18"/>' +
           '<circle cx="' + peakX.toFixed(1) + '" cy="' + peakY.toFixed(1) + '" r="3.2" fill="' + stroke + '"/>' +
-          // chip backdrop (rounded translucent dark rect) so the text
-          // sits on a clean field instead of the busy chart fill.
-          // 4.4 round 6 — chip bg dialed down (0.78 → 0.30) and the
-          // border removed entirely per feedback ("背景太黑了，弱一点，
-          // 也不要边框").
-          '<rect x="' + chipX.toFixed(1) + '" y="' + chipY.toFixed(1) + '" ' +
-                'width="' + chipW + '" height="' + chipH + '" rx="6" ry="6" ' +
-                'fill="rgba(8,10,14,0.30)" stroke="none"/>' +
-          // text inside the chip
-          '<text x="' + textX.toFixed(1) + '" y="' + (chipY + 11) + '" ' +
-            'text-anchor="' + textAnchor + '" font-family="Delight, ui-monospace, monospace">' +
-            '<tspan font-size="8" fill="rgba(255,255,255,0.75)" letter-spacing="0.14em">BEST ROI</tspan>' +
-            '<tspan x="' + textX.toFixed(1) + '" dy="13" font-size="13" font-weight="600" ' +
-              'fill="' + labelColor + '" letter-spacing="-0.01em">' + peakLabel + '</tspan>' +
-          '</text>' +
           // end dot
           '<circle cx="' + x(N - 1).toFixed(1) + '" cy="' + y(pts[N - 1]).toFixed(1) + '" r="3" fill="' + stroke + '"/>' +
-        '</svg>'
-      );
+        '</svg>';
+      const chipMarkup =
+        '<div class="mq-chart-chip" data-anchor="' + anchor +
+             '" data-place="' + (placeAbove ? 'above' : 'below') + '" ' +
+             'style="left:' + chipLeftPct.toFixed(2) + '%; top:' + chipTopPct.toFixed(2) + '%;">' +
+          '<span class="mq-chart-chip-lbl">BEST ROI</span>' +
+          '<span class="mq-chart-chip-val" style="color:' + labelColor + ';">' + peakLabel + '</span>' +
+        '</div>';
+      return svgMarkup + chipMarkup;
     }
 
     // donut ring color picks up the win-rate tier so the deck shows
     // visible chromatic variation across the 32 cards.
     function donutColor(pct) {
-      if (pct >= 65) return '#5cb9bc';   // strong → alva-hi
-      if (pct >= 50) return '#49A3A6';   // mid → alva
+      if (pct >= 65) return '#5BD9DD';   // strong → alva-hi
+      if (pct >= 50) return '#3CC2C6';   // mid → alva
       if (pct >= 42) return '#ff8a4c';   // ok → orange
       return '#b388ff';                  // low → purple
     }
     function makeDonut(pct) {
-      const R = 22, C = 32;
+      // 4.4 round 68 — ring made thinner. Was stroke-width 6 on a
+      // viewBox 64 (≈9.4% of viewBox); now 3.5 (≈5.5%) so the ring
+      // reads as a refined hairline rather than a chunky band.
+      const R = 23, C = 32;
       const circ = 2 * Math.PI * R;
       const dash = (pct / 100) * circ;
       const color = donutColor(pct);
       return (
         '<svg class="mq-donut" viewBox="0 0 64 64" aria-hidden="true">' +
-          '<circle cx="' + C + '" cy="' + C + '" r="' + R + '" stroke="rgba(255,255,255,0.10)" stroke-width="6" fill="none"/>' +
-          '<circle cx="' + C + '" cy="' + C + '" r="' + R + '" stroke="' + color + '" stroke-width="6" fill="none" ' +
+          '<circle cx="' + C + '" cy="' + C + '" r="' + R + '" stroke="rgba(255,255,255,0.08)" stroke-width="3.5" fill="none"/>' +
+          '<circle cx="' + C + '" cy="' + C + '" r="' + R + '" stroke="' + color + '" stroke-width="3.5" fill="none" ' +
             'stroke-linecap="round" stroke-dasharray="' + dash.toFixed(2) + ' ' + circ.toFixed(2) + '" ' +
             'transform="rotate(-90 ' + C + ' ' + C + ')"/>' +
         '</svg>'
@@ -10637,6 +11809,56 @@
     // modal (.results-grid .card) so both decks render the same rich
     // playbook preview (avatar + win-rate donut + best calls + chart
     // + footer caption) and pick up the same corner-gradient tint.
+    // 4.4 round 68 — featured-call mini chart. Light line only (no
+     // heavy fill), CALL/PEAK labels rendered as HTML overlays so
+     // they don't get stretched by preserveAspectRatio: none.
+    function makeFeaturedChart(rng, ticker, roiPct, stroke) {
+      const W = 220, H = 70, PAD_X = 4, PAD_T = 12, PAD_B = 12;
+      const N = 30;
+      const raw = [];
+      let v = 0.1;
+      for (let i = 0; i < N; i++) {
+        v += 0.025 + (rng() - 0.4) * 0.10;
+        v = Math.max(0, Math.min(1, v));
+        raw.push(v);
+      }
+      raw[N - 1] = Math.max(...raw) + 0.03;
+      const minP = Math.min(...raw);
+      const maxP = Math.max(...raw);
+      const x = i => PAD_X + (i / (N - 1)) * (W - PAD_X * 2);
+      const y = vv => PAD_T + (1 - (vv - minP) / (maxP - minP)) * (H - PAD_T - PAD_B);
+
+      const callIdx = 2;
+      let peakIdx = 0;
+      for (let i = 0; i < N; i++) if (raw[i] > raw[peakIdx]) peakIdx = i;
+
+      const line = raw.map((vv, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(vv).toFixed(1)).join(' ');
+      const callX = x(callIdx), callY = y(raw[callIdx]);
+      const peakX = x(peakIdx), peakY = y(raw[peakIdx]);
+      const callLeftPct = (callX / W) * 100;
+      const callTopPct  = (callY / H) * 100;
+      const peakLeftPct = (peakX / W) * 100;
+      const peakTopPct  = (peakY / H) * 100;
+      const lineColor = stroke || '#34d399';
+
+      return (
+        '<svg class="mq-fc-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' +
+          // very subtle fill so the line has body, not a green flood
+          '<path d="' + line + ' L ' + x(N - 1).toFixed(1) + ' ' + (H - PAD_B) + ' L ' + PAD_X + ' ' + (H - PAD_B) + ' Z" fill="' + lineColor + '" fill-opacity="0.06"/>' +
+          '<path d="' + line + '" stroke="' + lineColor + '" stroke-width="1.4" fill="none" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' +
+          // CALL node — vertical guide + dot
+          '<line x1="' + callX.toFixed(1) + '" y1="6" x2="' + callX.toFixed(1) + '" y2="' + H + '" stroke="rgba(255,255,255,0.16)" stroke-width="1" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/>' +
+          '<circle cx="' + callX.toFixed(1) + '" cy="' + callY.toFixed(1) + '" r="3" fill="#fff" vector-effect="non-scaling-stroke"/>' +
+          // PEAK node — vertical guide + filled dot
+          '<line x1="' + peakX.toFixed(1) + '" y1="6" x2="' + peakX.toFixed(1) + '" y2="' + H + '" stroke="rgba(255,255,255,0.16)" stroke-width="1" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/>' +
+          '<circle cx="' + peakX.toFixed(1) + '" cy="' + peakY.toFixed(1) + '" r="3.5" fill="' + lineColor + '" vector-effect="non-scaling-stroke"/>' +
+        '</svg>' +
+        // HTML label overlays — no SVG stretching distorts them
+        '<span class="mq-fc-label mq-fc-label-call" style="left:' + callLeftPct.toFixed(2) + '%;">CALL</span>' +
+        '<span class="mq-fc-label mq-fc-label-peak" style="left:' + peakLeftPct.toFixed(2) + '%;">PEAK</span>'
+      );
+    }
+
     function buildRichCard(card, src) {
       const { name, handle, avatarSrc, onerr, roi } = src;
       const rng = rand(handle + '|' + name);
@@ -10671,62 +11893,80 @@
           Math.round(baseHigh * 0.30 + rng() * 90)
         ].sort((a, b) => b - a);
       }
-      const callsHtml = tickers.map((tk, i) => {
-        const v = tickerRois[i];
+      // Compact rows for 2nd + 3rd calls
+      function compactCallHtml(tk, v) {
         const cls = v >= 0 ? 'mq-call-val gain' : 'mq-call-val loss';
         const sign = v >= 0 ? '+' : '';
+        const logoUrl = tickerLogoUrl(tk);
+        const onerrFallback =
+          "this.onerror=null;this.outerHTML='<span class=\\'mq-call-logo mq-call-logo-fb\\'>" +
+          tk.charAt(0) + "</span>';";
+        const logoHtml = logoUrl
+          ? '<img class="mq-call-logo" src="' + logoUrl + '" alt="" loading="lazy" onerror="' + onerrFallback + '">'
+          : '<span class="mq-call-logo mq-call-logo-fb">' + tk.charAt(0) + '</span>';
         return (
           '<div class="mq-call">' +
-            '<span class="mq-call-tk">' + tk + '</span>' +
+            '<span class="mq-call-l">' + logoHtml + '<span class="mq-call-tk">' + tk + '</span></span>' +
             '<span class="' + cls + '">' + sign + v + '%</span>' +
           '</div>'
         );
-      }).join('');
+      }
+      // Featured first call — bigger, includes a mini price chart with
+      // CALL + PEAK nodes.
+      const featTk = tickers[0];
+      const featRoi = tickerRois[0];
+      const featSign = featRoi >= 0 ? '+' : '';
+      const featCls = featRoi >= 0 ? 'gain' : 'loss';
+      const featStroke = featRoi >= 0 ? '#34d399' : '#f87171';
+      const featLogoUrl = tickerLogoUrl(featTk);
+      const featLogoHtml = featLogoUrl
+        ? '<img class="mq-call-logo" src="' + featLogoUrl + '" alt="" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;mq-call-logo mq-call-logo-fb&quot;>' + featTk.charAt(0) + '</span>\'">'
+        : '<span class="mq-call-logo mq-call-logo-fb">' + featTk.charAt(0) + '</span>';
+      const featChart = makeFeaturedChart(rng, featTk, featRoi, featStroke);
+      const featuredHtml =
+        '<div class="mq-call mq-call-featured">' +
+          '<div class="mq-call-featured-head">' +
+            '<span class="mq-call-l">' + featLogoHtml + '<span class="mq-call-tk">' + featTk + '</span>' +
+              '<span class="mq-call-tag">' + (featRoi >= 0 ? 'LONG' : 'SHORT') + '</span>' +
+            '</span>' +
+            '<span class="mq-call-val ' + featCls + '">' + featSign + featRoi + '%</span>' +
+          '</div>' +
+          '<div class="mq-call-chart">' + featChart + '</div>' +
+        '</div>';
+      const restHtml = tickers.slice(1).map((tk, i) => compactCallHtml(tk, tickerRois[i + 1])).join('');
 
-      const chartHtml = makeChart(rng, roi);
       const donutHtml = makeDonut(winRate);
-      const dateRange = dateWindow(rng);
       const pctColor = donutColor(winRate);
       const tint = CARD_TINTS[Math.floor(rng() * CARD_TINTS.length)];
-      // base lifted from #16161c → #1f1f29 so the card silhouette is
-      // visible against #15151c modal dialogs as well as the green
-      // marquee section.
       card.style.background =
         'linear-gradient(135deg, ' + tint + ' 0%, rgba(255,255,255,0) 60%), #1f1f29';
 
       card.innerHTML =
-        // 4.4 round 6 — wrap inner content in .mq-body so the card's
-        // height growth on hover doesn't reflow .mq-top/.mq-chart/.mq-foot
-        // (the chart's `margin-top: auto` was absorbing the extra 36px
-        // and pushing chart + foot downward). .mq-body keeps its own
-        // fixed height; the CTA lives outside this wrapper and is
-        // revealed when the card grows past the base height.
+        // 4.4 round 67 — left/right layout. Left column = avatar+meta
+        // on top, big donut with text-in-center on bottom. Right
+        // column = 3 best calls stacked, first one is the featured
+        // big tile with a CALL→PEAK mini chart. Old bottom sparkline
+        // + foot caption removed.
         '<div class="mq-body">' +
-        '<div class="mq-top">' +
-          '<div>' +
+          '<div class="mq-left">' +
             '<div class="mq-id">' +
               '<img class="mq-avatar" src="' + avatarSrc + '" alt="" ' + (onerr ? 'onerror="' + onerr.replace(/"/g, '&quot;') + '"' : '') + '>' +
               '<div class="mq-meta"><b>' + name + '</b><span>' + handle + '</span></div>' +
             '</div>' +
-            '<div class="mq-winrate">' +
+            '<div class="mq-donut-wrap">' +
               donutHtml +
-              '<div class="mq-winrate-text">' +
-                '<div class="mq-winrate-pct" style="color:' + pctColor + '">' + winRate + '%</div>' +
-                '<div class="mq-winrate-lbl">Win Rate</div>' +
-                '<div class="mq-winrate-sub">' + winCalls + ' of ' + totalCalls + ' calls</div>' +
+              '<div class="mq-donut-text">' +
+                '<div class="mq-donut-pct" style="color:' + pctColor + '">' + winRate + '%</div>' +
+                '<div class="mq-donut-lbl">Win Rate</div>' +
+                '<div class="mq-donut-sub">' + winCalls + ' / ' + totalCalls + '</div>' +
               '</div>' +
             '</div>' +
           '</div>' +
-          '<div class="mq-calls">' +
+          '<div class="mq-right">' +
             '<div class="mq-calls-head">Best Calls</div>' +
-            callsHtml +
+            featuredHtml +
+            restHtml +
           '</div>' +
-        '</div>' +
-        '<div class="mq-chart">' + chartHtml + '</div>' +
-        '<div class="mq-foot">' +
-          '<span>' + totalCalls + ' signals · ' + dateRange + '</span>' +
-          '<span class="mq-foot-r">Not financial advice</span>' +
-        '</div>' +
         '</div>' /* /.mq-body */ +
         // 4.4 round 2 — hover CTA. Single row that grows below the
         // card on :hover. Left: "{Name}'s Playbook" · Right: external
@@ -10778,6 +12018,27 @@
         avatarSrc: avatarImg.getAttribute('src') || '',
         onerr: avatarImg.getAttribute('onerror') || '',
       });
+      // 4.4 round 40 — whole-card click → navigate to the playbook,
+      // bypassing the lightbox the wrap's bubble-phase listener
+      // opens. Capture-phase + stopPropagation intercepts the click
+      // before the lightbox handler sees it. Matches the landing
+      // card behavior: card hover reveals the CTA strip; click
+      // (anywhere) goes straight to the playbook URL.
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', (e) => {
+        // If the user actually clicked the CTA's own <a>, let the
+        // browser handle the link normally (target=_blank etc).
+        if (e.target.closest('.mq-cta')) {
+          e.stopPropagation();
+          return;
+        }
+        const cta = card.querySelector('.mq-cta');
+        if (cta && cta.href) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.open(cta.href, '_blank', 'noopener,noreferrer');
+        }
+      }, true);
     });
 
     // 4.4 — expose buildRichCard so other modules (for-kols modal)
@@ -10975,6 +12236,113 @@
         window.scrollTo({ top: snapStop, behavior: 'smooth' });
       });
     });
+  })();
+
+  /* ============================================================
+     MODAL CARD BASE-HEIGHT PINNING  (4.4 round 10)
+     Modal cards (.results-grid .mq-card + .fk-preview-card) use
+     aspect-ratio: 1.905/1 to derive their height from the grid cell
+     width. On hover, the card grows by --mq-cta-h to reveal the CTA
+     row. CSS calc() can't add pixels to an aspect-ratio result, so
+     we measure the natural height with JS and store it as
+     --card-base-h. ResizeObserver keeps it in sync when the grid
+     reflows (window resize / modal open). The `.has-base-h` class
+     gates the hover height/aspect-ratio rules — if measurement
+     hasn't happened yet, hover falls back to a no-op rather than
+     producing a janky size.
+     ============================================================ */
+  (function () {
+    function pinHeight(card) {
+      if (card.matches(':hover')) return; // never measure mid-hover
+      // Temporarily clear any pinned height so we can read the natural
+      // (aspect-ratio-derived) value, then write it back.
+      card.classList.remove('has-base-h');
+      card.style.removeProperty('--card-base-h');
+      // force a layout read after style mutation
+      const h = card.getBoundingClientRect().height;
+      if (h > 4) {
+        card.style.setProperty('--card-base-h', h.toFixed(1) + 'px');
+        card.classList.add('has-base-h');
+      }
+    }
+    function pinAll() {
+      document.querySelectorAll('.results-grid .mq-card, .fk-preview-card').forEach(pinHeight);
+    }
+    // Initial pass once DOM is built. The modal cards are built by
+    // the rich-card pass; run after the next frame to make sure
+    // layout has settled.
+    requestAnimationFrame(() => requestAnimationFrame(pinAll));
+    // Resize: debounced re-measure.
+    let rt = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(rt);
+      rt = setTimeout(pinAll, 120);
+    });
+    // Re-measure each time the for-kols modal opens (the preview card
+    // is rebuilt per submission so its dimensions can change).
+    document.addEventListener('click', (e) => {
+      const opener = e.target.closest('[data-open="modal-for-kols"], [data-fk-reset]');
+      if (opener) setTimeout(pinAll, 50);
+    });
+    // Also expose so other code (e.g. fk-modal result-on builder)
+    // can request a re-measure after rebuilding a preview card.
+    window._pinModalCardHeights = pinAll;
+  })();
+
+  /* ============================================================
+     HERO H1 FIT-TO-VIEWPORT  (4.4 round 23)
+     Pure-CSS calc(...) sizing for the nowrap H1 lines was brittle
+     because Delight Display's per-character widths vary wildly
+     ('W' ≈ 0.95em, 'i' ≈ 0.25em). Any divisor we picked would
+     overshoot some viewport sooner or later. Instead: measure the
+     widest line at a reference font-size, then scale font-size so
+     that line just fits the container — works for any font, any
+     string, any viewport.
+     ============================================================ */
+  (function () {
+    const h1 = document.querySelector('.opening h1');
+    if (!h1) return;
+    const lines = [...h1.querySelectorAll('.line-1, .line-2')];
+    if (!lines.length) return;
+    const REF = 100; // reference font-size in px for the measurement pass
+    const MIN = 64;
+    const MAX = 200;
+    const SAFETY = 0.96; // shrink by 4% so the line never touches the edge
+
+    function fit() {
+      const vw = window.innerWidth;
+      // Below the wrap breakpoint the CSS handles sizing (lines can
+      // wrap to multiple rows); skip JS sizing there.
+      if (vw <= 1100) { h1.style.fontSize = ''; return; }
+      const container = h1.parentElement;
+      if (!container) return;
+      // Available width = container width minus the .opening's
+      // horizontal padding (32px each side).
+      const availableW = container.getBoundingClientRect().width - 16;
+      if (availableW <= 0) return;
+      // Measure widest line at the reference size.
+      h1.style.fontSize = REF + 'px';
+      // force layout
+      let maxLineW = 0;
+      lines.forEach(l => { maxLineW = Math.max(maxLineW, l.getBoundingClientRect().width); });
+      if (maxLineW <= 0) return;
+      const fitted = REF * (availableW / maxLineW) * SAFETY;
+      const final = Math.max(MIN, Math.min(MAX, fitted));
+      h1.style.fontSize = final.toFixed(2) + 'px';
+    }
+    function schedule() { requestAnimationFrame(fit); }
+
+    schedule();
+    window.addEventListener('resize', schedule);
+    // Re-fit once Delight has finished loading (initial measurement
+    // may have used the system fallback font, which has different
+    // widths and would mis-size the H1).
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(schedule);
+    } else {
+      // Fallback: refit after window load.
+      window.addEventListener('load', schedule);
+    }
   })();
 
   /* ============================================================
