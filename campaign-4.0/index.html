@@ -42,6 +42,15 @@
      mid-tier 4G). Reference: web.dev "Below-the-fold-only JS should
      be deferred or conditionally loaded". -->
 <script>
+  /* 4.4 round 9 — disable browser scroll restoration as EARLY as
+     possible (before first paint, in <head>) so refreshes never flash
+     the previous scroll position. The previous reset lived deep in
+     <body> at line ~7822 and ran after the browser had already
+     restored + painted a frame at e.g. Section 2, producing a visible
+     "jump to S2 then back" on every refresh. */
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+</script>
+<script>
   if (!window.matchMedia('(max-width: 760px)').matches) {
     var s = document.createElement('script');
     s.src = './three.min.js';
@@ -1248,16 +1257,22 @@
        off paint/style; will-change pre-promotes to a composite layer
        so the hover transform/shadow swap is GPU-only. */
     will-change: transform;
-    /* 4.4 round 2 — `paint` removed from contain so the hover CTA can
-       paint outside the card box. layout/style containment still
-       walls off most repaint cost. */
-    contain: layout style;
+    /* 4.4 round 5 — paint containment restored. CTA is inside the
+       card again; the card grows on hover to reveal it. */
+    contain: layout style paint;
     transform: translateZ(0);
   }
   .mq-card:hover {
-    transform: translate3d(0, -4px, 0);
-    /* 4.3 — no shadow on hover either; the lift transform is enough. */
+    /* 4.4 round 5 — hover lift -10px combined with height growth to
+       reveal the bottom CTA row inside the card surface. */
+    transform: translate3d(0, -10px, 0);
     box-shadow: none;
+  }
+  /* Only marquee cards (fixed-pixel height) grow on hover. Results-grid
+     cards use aspect-ratio: 1.905/1 and can't be overridden with a
+     fixed-pixel height without breaking the modal layout. */
+  .marquee-track .mq-card:hover {
+    height: calc(var(--mq-base-h) + var(--mq-cta-h));
   }
   .mq-avatar {
     width: 56px; height: 56px;
@@ -1342,20 +1357,28 @@
        fixed for the marquee; the .results-grid override below lets the
        modal card flex with the grid cell via aspect-ratio. */
     width: 540px;
-    height: 283px;
-    padding: 14px 18px 12px;
+    height: var(--mq-base-h);
+    /* 4.4 round 6 — padding moved onto .mq-body so the inner layout
+       has its own fixed height and doesn't shift when the card grows
+       on hover. */
+    padding: 0;
     gap: 0;
     align-items: stretch;
     text-align: left;
     margin-right: 24px;
-    /* 4.4 round 2 — overflow now visible so the hover CTA row can grow
-       below the card boundary. The background gradient + noise grain
-       stay bounded because they're painted into the card's own box
-       (the gradient is the card's background and the noise ::before
-       uses inset:0 + border-radius:inherit). */
-    overflow: visible;
+    /* 4.4 round 5 — overflow hidden again. Card grows taller on hover
+       (height: --base-h → --base-h + --cta-h) to REVEAL an extra row
+       at the bottom that lives inside the card surface. No content
+       gets covered; the card just becomes taller. */
+    overflow: hidden;
     position: relative;
     isolation: isolate;
+    --mq-base-h: 283px;
+    --mq-cta-h: 36px;
+    transition: transform .2s cubic-bezier(.22,1,.36,1),
+                height .28s cubic-bezier(.22,1,.36,1),
+                box-shadow .2s ease,
+                border-color .2s ease;
   }
   /* 4.0 round 7 — per-card identity comes from a corner gradient
      instead of a blurred avatar (matches the fullscreen results-modal
@@ -1392,51 +1415,69 @@
     mix-blend-mode: overlay;
     border-radius: inherit;
   }
-  .mq-card > .mq-top,
-  .mq-card > .mq-chart,
-  .mq-card > .mq-foot { position: relative; z-index: 1; }
+  .mq-card .mq-top,
+  .mq-card .mq-chart,
+  .mq-card .mq-foot { position: relative; z-index: 1; }
 
-  /* 4.4 round 2 — hover CTA row. Grows directly below the card on
-     hover: left = "{Name}'s Playbook", right = arrow-up-right icon
-     signalling an external destination. Hidden by default and
-     animated in/out. Lives inside the card so each one binds to its
-     own :hover; positioned absolute so it doesn't reserve layout
-     space and doesn't shift the marquee row. */
+  /* 4.4 round 6 — body wrapper. Owns the card's inner padding + flex
+     layout so the card itself can grow in height (on hover) without
+     reflowing the chart's `margin-top: auto` and dragging the foot
+     down. Default height: 100% (fills modal/grid cards via their
+     aspect-ratio); marquee override below pins it to --mq-base-h so
+     marquee hover-growth reveals empty space at the bottom of the
+     card box rather than stretching the body. */
+  .mq-card .mq-body {
+    display: flex;
+    flex-direction: column;
+    padding: 14px 18px 12px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+  }
+  .marquee-track .mq-card .mq-body {
+    height: var(--mq-base-h);
+  }
+
+  /* 4.4 round 5 — hover CTA: a row that lives INSIDE the card,
+     positioned just past the base height so it's clipped by
+     overflow:hidden when the card is at rest. On hover the card
+     grows by --mq-cta-h, revealing the CTA in the new bottom strip.
+     No tinted bg, no border — same card surface, just a faint divider
+     so the row reads as distinct from the footer above it. */
   .mq-cta {
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(100% + 8px);
-    height: 44px;
-    padding: 0 16px;
+    top: var(--mq-base-h);
+    height: var(--mq-cta-h);
+    padding: 0 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    border-radius: 8px;
-    background: rgba(73, 163, 166, 0.14);
-    border: 1px solid rgba(73, 163, 166, 0.45);
-    color: #d6f1f2;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.82);
     text-decoration: none;
     font-family: var(--font);
     font-size: 13px;
     font-weight: 500;
     letter-spacing: -0.005em;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(-6px);
-    transition: opacity .18s ease, transform .22s cubic-bezier(.22,1,.36,1), background-color .18s ease, border-color .18s ease;
+    transition: color .18s ease, background-color .18s ease;
     z-index: 4;
   }
-  .mq-card:hover .mq-cta {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
-  }
+  /* Results-grid + modal cards don't have the marquee's fixed-pixel
+     height, so the absolute-positioned CTA wouldn't line up. Hide it
+     there — the CTA is a marquee-discovery affordance, not needed in
+     the user's own result modal. */
+  .results-grid .mq-card .mq-cta,
+  .fk-preview-card .mq-cta { display: none; }
   .mq-cta:hover {
-    background: rgba(73, 163, 166, 0.22);
-    border-color: rgba(73, 163, 166, 0.7);
     color: #fff;
+    background: rgba(255, 255, 255, 0.04);
   }
   .mq-cta-name {
     white-space: nowrap;
@@ -1445,10 +1486,10 @@
     min-width: 0;
   }
   .mq-cta-icon {
-    font-size: 16px;
-    color: var(--alva);
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.7);
     flex-shrink: 0;
-    transition: transform .22s cubic-bezier(.22,1,.36,1);
+    transition: transform .22s cubic-bezier(.22,1,.36,1), color .18s ease;
   }
   .mq-cta:hover .mq-cta-icon {
     transform: translate(2px, -2px);
@@ -4392,7 +4433,10 @@
     border-color: rgba(255, 255, 255,0.10);
     color: var(--text);
   }
-  .dialog .bcard-form input::placeholder { color: rgba(10,10,16,0.40); }
+  /* 4.4 round 8 — placeholder was rgba(10,10,16,0.40) (dark on dark)
+     left over from when the dialog was a light card. 4.0 modals are
+     dark, so the placeholder needs to be light. */
+  .dialog .bcard-form input::placeholder { color: rgba(255,255,255,0.40); }
   .dialog .bcard-form input:focus {
     border-color: var(--alva);
     background: rgba(73,163,166,0.06);
@@ -4664,10 +4708,23 @@
     -webkit-backdrop-filter: blur(10px);
     text-decoration: none;
     color: var(--text);
-    transition: transform .15s ease, box-shadow .15s ease;
+    /* 4.4 round 7 — transform composed from two parts: the JS-driven
+       footer-lift (`--badge-lift`, negative pixels) and the hover
+       nudge (`--badge-hover-y`). Listing both via `translateY()` lets
+       a single transform property carry both without one stomping the
+       other. The transition smooths the footer-lift change on scroll. */
+    --badge-lift: 0px;
+    --badge-hover-y: 0px;
+    transform: translateY(calc(var(--badge-lift) + var(--badge-hover-y)));
+    /* 4.4 round 8 — transform transition removed. The footer-lift is
+       driven by scroll position via rAF; with a transition the badge
+       lagged behind the scroll and looked jumpy. Without transition,
+       the lift tracks the footer 1:1 each frame. Hover's 2px nudge is
+       small enough to read fine as instant. */
+    transition: box-shadow .15s ease;
   }
   .alva-badge:hover {
-    transform: translateY(-2px);
+    --badge-hover-y: -2px;
     box-shadow: 0 22px 44px rgba(10,10,16,0.18);
   }
   .alva-badge-text {
@@ -7765,14 +7822,19 @@
      producing a visible flash of the first screen followed by a jump
      to the saved position. Always-top is the cleanest fix.
      ============================================================ */
-  if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
-  }
-  // Defensive: force scroll to top before first paint in case the browser
-  // ignores the manual hint above (older Safari/iOS), and once more on the
-  // load event for any async layout shifts that re-position content.
-  window.scrollTo(0, 0);
-  addEventListener('load', () => window.scrollTo(0, 0));
+  // (scrollRestoration = 'manual' is set in the early <head> script
+  // so the browser never even attempts to restore.) These defensive
+  // resets use behavior:'instant' to override the global
+  // `html { scroll-behavior: smooth }` rule — otherwise the legacy
+  // scrollTo(x,y) form animated visibly, producing the "jump to S2
+  // then back" on refresh.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  try { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); }
+  catch (e) { window.scrollTo(0, 0); }
+  addEventListener('load', () => {
+    try { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); }
+    catch (e) { window.scrollTo(0, 0); }
+  });
 
   /* ============================================================
      SECTION 2 CARD-STACK HOVER — JS-driven for stability
@@ -10518,9 +10580,12 @@
           '<circle cx="' + peakX.toFixed(1) + '" cy="' + peakY.toFixed(1) + '" r="3.2" fill="' + stroke + '"/>' +
           // chip backdrop (rounded translucent dark rect) so the text
           // sits on a clean field instead of the busy chart fill.
+          // 4.4 round 6 — chip bg dialed down (0.78 → 0.30) and the
+          // border removed entirely per feedback ("背景太黑了，弱一点，
+          // 也不要边框").
           '<rect x="' + chipX.toFixed(1) + '" y="' + chipY.toFixed(1) + '" ' +
                 'width="' + chipW + '" height="' + chipH + '" rx="6" ry="6" ' +
-                'fill="rgba(8,10,14,0.78)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>' +
+                'fill="rgba(8,10,14,0.30)" stroke="none"/>' +
           // text inside the chip
           '<text x="' + textX.toFixed(1) + '" y="' + (chipY + 11) + '" ' +
             'text-anchor="' + textAnchor + '" font-family="Delight, ui-monospace, monospace">' +
@@ -10630,6 +10695,13 @@
         'linear-gradient(135deg, ' + tint + ' 0%, rgba(255,255,255,0) 60%), #1f1f29';
 
       card.innerHTML =
+        // 4.4 round 6 — wrap inner content in .mq-body so the card's
+        // height growth on hover doesn't reflow .mq-top/.mq-chart/.mq-foot
+        // (the chart's `margin-top: auto` was absorbing the extra 36px
+        // and pushing chart + foot downward). .mq-body keeps its own
+        // fixed height; the CTA lives outside this wrapper and is
+        // revealed when the card grows past the base height.
+        '<div class="mq-body">' +
         '<div class="mq-top">' +
           '<div>' +
             '<div class="mq-id">' +
@@ -10655,6 +10727,7 @@
           '<span>' + totalCalls + ' signals · ' + dateRange + '</span>' +
           '<span class="mq-foot-r">Not financial advice</span>' +
         '</div>' +
+        '</div>' /* /.mq-body */ +
         // 4.4 round 2 — hover CTA. Single row that grows below the
         // card on :hover. Left: "{Name}'s Playbook" · Right: external
         // arrow icon. target=_blank + rel=noopener — it leads to an
@@ -10902,6 +10975,44 @@
         window.scrollTo({ top: snapStop, behavior: 'smooth' });
       });
     });
+  })();
+
+  /* ============================================================
+     ALVA BADGE — footer-aware lift  (4.4 round 7)
+     The persistent bottom-right .alva-badge is `position: fixed` at
+     `bottom: 20px`. Without intervention it covers the footer's
+     rightmost content when the user reaches the page bottom. This
+     IIFE listens on scroll/resize, measures how much the badge would
+     overlap the footer, and translates the badge upward by exactly
+     that amount so it appears to be "pushed up" by the footer.
+     ============================================================ */
+  (function () {
+    const badge = document.querySelector('.alva-badge');
+    const footer = document.querySelector('footer.f');
+    if (!badge || !footer) return;
+    // The badge has its own hover transform (translateY(-2px)). Apply
+    // the lift via a CSS variable consumed by an inline transform so
+    // the two don't fight. See the matching CSS tweak.
+    badge.style.setProperty('--badge-lift', '0px');
+    const GAP = 16; // breathing room between badge and footer top edge
+    let raf = 0;
+    function update() {
+      raf = 0;
+      const footerTop = footer.getBoundingClientRect().top;
+      const vh = window.innerHeight;
+      // badge bottom anchor lives at vh - 20 (its `bottom: 20px`).
+      // overlap = how far the badge bottom sits below the footer top.
+      const badgeBottom = vh - 20;
+      const overlap = Math.max(0, badgeBottom - footerTop + GAP);
+      badge.style.setProperty('--badge-lift', '-' + overlap.toFixed(1) + 'px');
+    }
+    function schedule() {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    }
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    update();
   })();
 
 </script>
