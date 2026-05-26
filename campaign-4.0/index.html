@@ -1455,11 +1455,11 @@
      marquee hover-growth reveals empty space at the bottom of the
      card box rather than stretching the body. */
   .mq-card .mq-body {
-    /* 4.4 round 67 — body is now a 2-column grid: left (avatar +
-       donut) | right (best-calls list). Old top/chart/foot stack
-       removed; chart moved INTO the featured call on the right. */
+    /* 4.4 round 74 — column ratio shifted from 0.85:1.15 → 3:2
+       (~60% left, 40% right) so the right column narrows to
+       roughly 2/5 of card width per feedback. */
     display: grid;
-    grid-template-columns: minmax(180px, 0.85fr) minmax(0, 1.15fr);
+    grid-template-columns: 3fr 2fr;
     column-gap: 14px;
     padding: 14px 18px 14px;
     box-sizing: border-box;
@@ -1490,10 +1490,8 @@
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
-    /* Subtle ring + soft shadow lifts the avatar off the card bg
-       (helps it read at thumbnail size in social previews). */
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08),
-                0 4px 14px rgba(0, 0, 0, 0.35);
+    /* 4.4 round 70 — shadow + outer ring removed per feedback. */
+    box-shadow: none;
   }
   .mq-card .mq-left .mq-meta {
     display: flex; flex-direction: column;
@@ -1518,48 +1516,58 @@
     letter-spacing: 0.04em;
     white-space: nowrap;
   }
+  /* 4.4 round 78b — arch fills left column width; text is a sibling
+     block below, sitting right under the bridge curve with minimal
+     gap. No absolute positioning so the text never gets clipped by
+     the card's overflow:hidden. */
+  /* 4.4 round 78c — cap width so the arch's auto-derived height
+     (width × 34/64) leaves vertical room for the 3-line text below
+     it without pushing past the card's bottom edge. */
   .mq-card .mq-donut-wrap {
-    position: relative;
     width: 100%;
-    flex: 1 1 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
+    max-width: 260px;
+    margin: 0 auto;
+    flex: 0 0 auto;
+    position: relative;
   }
   .mq-card .mq-donut-wrap svg {
     width: 100%;
-    height: 100%;
-    max-width: 170px;
-    max-height: 170px;
+    height: auto;
+    display: block;
   }
+  /* 4.4 round 80 — text overlays inside the arch interior, not below
+     the bridge. Bowl interior in the 64×34 viewBox is centered at
+     roughly (32, 22): horizontally centered, vertically about 65% from
+     the top of the wrap. */
   .mq-card .mq-donut-text {
     position: absolute;
-    inset: 0;
+    left: 50%;
+    top: 64%;
+    transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     line-height: 1;
+    gap: 1px;
     pointer-events: none;
   }
   .mq-card .mq-donut-pct {
     font-family: var(--font);
     font-weight: 500;
-    font-size: 30px;
+    font-size: 38px;
     letter-spacing: -0.015em;
   }
   .mq-card .mq-donut-lbl {
     margin-top: 4px;
     font-family: var(--font);
-    font-size: 11px;
+    font-size: 13px;
     color: var(--text);
     font-weight: 500;
   }
   .mq-card .mq-donut-sub {
-    margin-top: 2px;
+    margin-top: 3px;
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 13px;
     color: var(--muted);
     letter-spacing: 0.04em;
   }
@@ -1569,7 +1577,7 @@
   .mq-card .mq-right {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 0;
     min-width: 0;
   }
   .mq-card .mq-right .mq-calls-head {
@@ -1597,7 +1605,7 @@
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    padding: 8px 0 6px;
+    padding: 8px 0 8px;
     gap: 6px;
     min-height: 0;
     overflow: hidden;
@@ -1656,6 +1664,44 @@
   }
   .mq-card .mq-fc-label-call { transform: translateX(6px); }
   .mq-card .mq-fc-label-peak { transform: translateX(calc(-100% - 6px)); }
+  /* 4.4 round 79 — round dots as HTML overlay so they're not
+     squashed by the SVG's preserveAspectRatio: none. */
+  .mq-card .mq-fc-dot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    pointer-events: none;
+  }
+  .mq-card .mq-fc-dot-peak { width: 7px; height: 7px; }
+
+  /* 4.4 round 76 — small alva brand mark, bottom-left corner. */
+  .mq-card .mq-brand {
+    position: absolute;
+    bottom: 8px;
+    left: 14px;
+    width: 14px;
+    height: 14px;
+    z-index: 4;
+    opacity: 0.65;
+    pointer-events: none;
+  }
+  /* 4.4 round 84 — on hover the card grows by --mq-cta-h to reveal
+     the CTA strip at the bottom. Lift the brand mark by the same
+     amount so it stays at its original position (just above where
+     the original card bottom was), not pushed down with the new edge. */
+  .results-grid .mq-card:hover .mq-brand {
+    bottom: calc(8px + var(--mq-cta-h));
+  }
+  .mq-card .mq-brand svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .mq-card .mq-brand .lg-bg { fill: var(--alva); }
+  .mq-card .mq-brand .lg-fg { fill: #ffffff; }
   .marquee-track .mq-card .mq-body {
     height: var(--mq-base-h);
   }
@@ -11776,22 +11822,83 @@
       if (pct >= 42) return '#ff8a4c';   // ok → orange
       return '#b388ff';                  // low → purple
     }
-    function makeDonut(pct) {
-      // 4.4 round 68 — ring made thinner. Was stroke-width 6 on a
-      // viewBox 64 (≈9.4% of viewBox); now 3.5 (≈5.5%) so the ring
-      // reads as a refined hairline rather than a chunky band.
-      const R = 23, C = 32;
-      const circ = 2 * Math.PI * R;
-      const dash = (pct / 100) * circ;
-      const color = donutColor(pct);
-      return (
-        '<svg class="mq-donut" viewBox="0 0 64 64" aria-hidden="true">' +
-          '<circle cx="' + C + '" cy="' + C + '" r="' + R + '" stroke="rgba(255,255,255,0.08)" stroke-width="3.5" fill="none"/>' +
-          '<circle cx="' + C + '" cy="' + C + '" r="' + R + '" stroke="' + color + '" stroke-width="3.5" fill="none" ' +
-            'stroke-linecap="round" stroke-dasharray="' + dash.toFixed(2) + ' ' + circ.toFixed(2) + '" ' +
-            'transform="rotate(-90 ' + C + ' ' + C + ')"/>' +
-        '</svg>'
-      );
+    // 4.4 round 76 — small alva logo SVG, reused as a bottom-left
+    // brand mark on every KOL card. Same paths as the alva-badge.
+    const ALVA_LOGO_SVG =
+      '<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">' +
+        '<path class="lg-bg" fill-rule="evenodd" clip-rule="evenodd" d="M34.4684 0.397058C38.1369 -0.132341 41.8624 -0.132364 45.5309 0.397058C45.8246 0.439446 46.1194 0.486373 46.7086 0.580652C46.9049 0.612064 47.0035 0.628453 47.0914 0.648035C48.2192 0.899298 49.1009 1.77999 49.3522 2.9078C49.3717 2.99576 49.3872 3.09432 49.4186 3.29061C49.5129 3.8799 49.5598 4.17464 49.6022 4.46835C50.1316 8.13701 50.1316 11.8632 49.6022 15.5318C49.5598 15.8255 49.5128 16.1204 49.4186 16.7096C49.3871 16.906 49.3718 17.0044 49.3522 17.0924C49.1009 18.2202 48.2192 19.1009 47.0914 19.3521C47.0035 19.3717 46.9049 19.3871 46.7086 19.4185C46.1193 19.5128 45.8246 19.5607 45.5309 19.6031C43.6966 19.8678 41.8481 19.9996 39.9996 19.9996C28.9548 20.0001 20.0013 28.9538 20.0006 39.9986H19.9996C19.9997 41.8476 19.8679 43.6971 19.6031 45.5318C19.5608 45.8255 19.5128 46.1203 19.4186 46.7096C19.3871 46.906 19.3718 47.0043 19.3522 47.0924C19.1009 48.2202 18.2202 49.1009 17.0924 49.3521C17.0044 49.3717 16.906 49.3871 16.7096 49.4185C16.1203 49.5128 15.8255 49.5607 15.5318 49.6031C11.8632 50.1326 8.13701 50.1326 4.46837 49.6031C4.17464 49.5607 3.88002 49.5128 3.29064 49.4185C3.0942 49.3871 2.99583 49.3717 2.90783 49.3521C1.78005 49.1009 0.899342 48.2201 0.64806 47.0924C0.628444 47.0043 0.612121 46.9061 0.580677 46.7096C0.486402 46.1203 0.439464 45.8255 0.397083 45.5318C-0.132361 41.8632 -0.132361 38.137 0.397083 34.4683C0.439471 34.1746 0.486392 33.8799 0.580677 33.2906C0.612101 33.0942 0.628467 32.9958 0.64806 32.9078C0.899321 31.78 1.78002 30.8993 2.90783 30.648C2.99585 30.6284 3.09415 30.6121 3.29064 30.5807C3.87992 30.4864 4.17468 30.4394 4.46837 30.3971C6.30257 30.1324 8.15117 29.9996 9.99962 29.9996V29.9976C20.8724 29.9974 29.7188 21.322 29.9928 10.5152L29.9996 9.99862C29.9997 8.15047 30.1314 6.30225 30.3961 4.46835C30.4385 4.1746 30.4864 3.87999 30.5807 3.29061C30.6121 3.09428 30.6275 2.99577 30.6471 2.9078C30.8983 1.7801 31.7792 0.899397 32.9068 0.648035C32.9949 0.628428 33.0933 0.612069 33.2897 0.580652C33.8791 0.486335 34.1746 0.439454 34.4684 0.397058Z"/>' +
+        '<path class="lg-fg" fill-rule="evenodd" clip-rule="evenodd" d="M45.5312 30.3971C41.8626 29.8677 38.1372 29.8677 34.4687 30.3971C34.1749 30.4395 33.8794 30.4864 33.29 30.5807C33.0936 30.6121 32.9952 30.6275 32.9071 30.6471C31.7795 30.8984 30.8988 31.7793 30.6474 32.9069C30.6278 32.9949 30.6124 33.0941 30.581 33.2906C30.4867 33.8799 30.4388 34.1747 30.3964 34.4684C29.867 38.1368 29.867 41.8624 30.3964 45.5309C30.4388 45.8246 30.4867 46.1201 30.581 46.7096C30.6124 46.9059 30.6278 47.0044 30.6474 47.0924C30.8987 48.2201 31.7795 49.1009 32.9071 49.3522C32.9952 49.3718 33.0936 49.3872 33.29 49.4186C33.8794 49.5129 34.1749 49.5607 34.4687 49.6031C38.1371 50.1325 41.8627 50.1326 45.5312 49.6031C45.8249 49.5608 46.1196 49.5129 46.7089 49.4186C46.9052 49.3872 47.0038 49.3717 47.0917 49.3522C48.2195 49.1009 49.1012 48.2202 49.3525 47.0924C49.3721 47.0044 49.3874 46.906 49.4189 46.7096C49.5132 46.1201 49.5601 45.8246 49.6025 45.5309C50.1319 41.8624 50.1319 38.1369 49.6025 34.4684C49.5601 34.1747 49.5131 33.8799 49.4189 33.2906C49.3874 33.0941 49.3721 32.9949 49.3525 32.9069C49.1011 31.7792 48.2194 30.8983 47.0917 30.6471C47.0038 30.6275 46.9051 30.6121 46.7089 30.5807C46.1196 30.4864 45.8249 30.4395 45.5312 30.3971ZM15.5322 0.397086C11.8635 -0.132362 8.13731 -0.132362 4.46867 0.397086C4.17498 0.439473 3.88023 0.486393 3.29094 0.580679C3.09461 0.612093 2.9961 0.627503 2.90813 0.647086C1.78049 0.898312 0.899769 1.77928 0.648361 2.90685C0.628742 2.99491 0.612434 3.09405 0.580978 3.29064C0.486706 3.87984 0.43977 4.17467 0.397385 4.46837C-0.132023 8.13688 -0.132004 11.8624 0.397385 15.5309C0.439781 15.8246 0.48666 16.1201 0.580978 16.7096C0.6124 16.906 0.628754 17.0044 0.648361 17.0924C0.899708 18.2201 1.78042 19.1009 2.90813 19.3522C2.99611 19.3718 3.09457 19.3871 3.29094 19.4186C3.88032 19.5129 4.17493 19.5607 4.46867 19.6031C8.13731 20.1326 11.8635 20.1326 15.5322 19.6031C15.8258 19.5608 16.1207 19.5128 16.7099 19.4186C16.9063 19.3871 17.0047 19.3718 17.0927 19.3522C18.2204 19.1009 19.1011 18.2201 19.3525 17.0924C19.3721 17.0044 19.3875 16.9059 19.4189 16.7096C19.5132 16.1201 19.561 15.8246 19.6034 15.5309C20.1328 11.8624 20.1328 8.13685 19.6034 4.46837C19.5611 4.17466 19.5131 3.8799 19.4189 3.29064C19.3874 3.09405 19.3721 2.99491 19.3525 2.90685C19.1011 1.77924 18.2204 0.898318 17.0927 0.647086C17.0047 0.627474 16.9063 0.612111 16.7099 0.580679C16.1207 0.486415 15.8258 0.439463 15.5322 0.397086Z"/>' +
+      '</svg>';
+
+    // 4.4 round 75 — color stops for the lit-arc gradient. Each
+    // tier gets a multi-hue ramp (NOT a light→dark fade) so the
+    // ring reads as a vivid color cycle.
+    const DONUT_STOPS = {
+      high:   [[45, 212, 217], [88, 195, 198], [157, 236, 240], [179, 136, 255]], // teal → cyan → violet
+      mid:    [[88, 195, 198], [122, 211, 214], [157, 236, 240], [179, 136, 255]], // alva → cyan → violet
+      warm:   [[200, 122, 44], [245, 158, 11], [251, 191, 36], [253, 224, 71]],    // amber → yellow
+      cool:   [[91, 33, 182], [124, 58, 237], [167, 139, 250], [216, 180, 254]]    // deep violet → light lavender
+    };
+    function _donutStops(pct) {
+      if (pct >= 65) return DONUT_STOPS.high;
+      if (pct >= 50) return DONUT_STOPS.mid;
+      if (pct >= 42) return DONUT_STOPS.warm;
+      return DONUT_STOPS.cool;
+    }
+    function _interpStops(stops, t) {
+      if (t <= 0) return stops[0];
+      if (t >= 1) return stops[stops.length - 1];
+      const n = stops.length - 1;
+      const idx = Math.min(n - 1, Math.floor(t * n));
+      const localT = t * n - idx;
+      const a = stops[idx], b = stops[idx + 1];
+      return [
+        Math.round(a[0] + (b[0] - a[0]) * localT),
+        Math.round(a[1] + (b[1] - a[1]) * localT),
+        Math.round(a[2] + (b[2] - a[2]) * localT)
+      ];
+    }
+    function makeDonut(pct, winCalls, totalCalls) {
+      // 4.4 round 77 — switched from full circle to a half-circle arch
+      // (top half only) per user direction ("like an arch bridge,
+      // frees up the bottom-left space"). Ticks sweep from 9 o'clock
+       // (-180°) up through 12 o'clock (-90°) down to 3 o'clock (0°).
+      const CX = 32, CY = 32;
+      const R_IN = 22, R_OUT = 29;
+      const rawN = totalCalls || Math.round((pct || 0) * 1.5) || 60;
+      const N = Math.max(8, Math.ceil(rawN / 4));
+      const rawWins = (winCalls != null) ? winCalls : Math.round(rawN * (pct || 0) / 100);
+      const wins = Math.round(rawWins / 4);
+      const stops = _donutStops(pct);
+      // 4.4 round 85 — stroke scales inversely with tick count so
+      // sparser donuts read as bolder strokes (and dense donuts stay
+      // crisp without smearing into a solid ring).
+      const sw = Math.max(0.6, Math.min(2.2, 28 / N));
+      let ticks = '';
+      for (let i = 0; i < N; i++) {
+        // 4.4 round 83 — 220° arc with 140° gap at the bottom.
+        // Start at 8π/9 (bottom-left, ~20° below horizontal), sweep
+        // 11π/9 through the top to 19π/9 ≡ π/9 (bottom-right).
+        const t01 = (N === 1) ? 0 : i / (N - 1);
+        const angle = (8 * Math.PI / 9) + t01 * (11 * Math.PI / 9);
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        const x1 = CX + R_IN * cos, y1 = CY + R_IN * sin;
+        const x2 = CX + R_OUT * cos, y2 = CY + R_OUT * sin;
+        let stroke;
+        if (i < wins) {
+          const t = wins <= 1 ? 1 : i / (wins - 1);
+          const [r, g, b] = _interpStops(stops, t);
+          stroke = 'rgb(' + r + ',' + g + ',' + b + ')';
+        } else {
+          stroke = 'rgba(255,255,255,0.10)';
+        }
+        ticks += '<line x1="' + x1.toFixed(2) + '" y1="' + y1.toFixed(2) +
+                 '" x2="' + x2.toFixed(2) + '" y2="' + y2.toFixed(2) +
+                 '" stroke="' + stroke + '" stroke-width="' + sw +
+                 '" stroke-linecap="butt"/>';
+      }
+      // viewBox 64×46 — fits the 220° arc (top y=3, bottom y≈42).
+      return '<svg class="mq-donut" viewBox="0 0 64 46" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' + ticks + '</svg>';
     }
 
     function dateWindow(rng) {
@@ -11846,14 +11953,13 @@
           // very subtle fill so the line has body, not a green flood
           '<path d="' + line + ' L ' + x(N - 1).toFixed(1) + ' ' + (H - PAD_B) + ' L ' + PAD_X + ' ' + (H - PAD_B) + ' Z" fill="' + lineColor + '" fill-opacity="0.06"/>' +
           '<path d="' + line + '" stroke="' + lineColor + '" stroke-width="1.4" fill="none" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' +
-          // CALL node — vertical guide + dot
+          // CALL + PEAK vertical guides (SVG, stretch is fine for lines)
           '<line x1="' + callX.toFixed(1) + '" y1="6" x2="' + callX.toFixed(1) + '" y2="' + H + '" stroke="rgba(255,255,255,0.16)" stroke-width="1" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/>' +
-          '<circle cx="' + callX.toFixed(1) + '" cy="' + callY.toFixed(1) + '" r="3" fill="#fff" vector-effect="non-scaling-stroke"/>' +
-          // PEAK node — vertical guide + filled dot
           '<line x1="' + peakX.toFixed(1) + '" y1="6" x2="' + peakX.toFixed(1) + '" y2="' + H + '" stroke="rgba(255,255,255,0.16)" stroke-width="1" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/>' +
-          '<circle cx="' + peakX.toFixed(1) + '" cy="' + peakY.toFixed(1) + '" r="3.5" fill="' + lineColor + '" vector-effect="non-scaling-stroke"/>' +
         '</svg>' +
-        // HTML label overlays — no SVG stretching distorts them
+        // HTML overlays — dots stay round (SVG circles get squashed by preserveAspectRatio="none")
+        '<span class="mq-fc-dot mq-fc-dot-call" style="left:' + callLeftPct.toFixed(2) + '%;top:' + callTopPct.toFixed(2) + '%;"></span>' +
+        '<span class="mq-fc-dot mq-fc-dot-peak" style="left:' + peakLeftPct.toFixed(2) + '%;top:' + peakTopPct.toFixed(2) + '%;background:' + lineColor + ';"></span>' +
         '<span class="mq-fc-label mq-fc-label-call" style="left:' + callLeftPct.toFixed(2) + '%;">CALL</span>' +
         '<span class="mq-fc-label mq-fc-label-peak" style="left:' + peakLeftPct.toFixed(2) + '%;">PEAK</span>'
       );
@@ -11935,7 +12041,7 @@
         '</div>';
       const restHtml = tickers.slice(1).map((tk, i) => compactCallHtml(tk, tickerRois[i + 1])).join('');
 
-      const donutHtml = makeDonut(winRate);
+      const donutHtml = makeDonut(winRate, winCalls, totalCalls);
       const pctColor = donutColor(winRate);
       const tint = CARD_TINTS[Math.floor(rng() * CARD_TINTS.length)];
       card.style.background =
@@ -11953,8 +12059,7 @@
               '<img class="mq-avatar" src="' + avatarSrc + '" alt="" ' + (onerr ? 'onerror="' + onerr.replace(/"/g, '&quot;') + '"' : '') + '>' +
               '<div class="mq-meta"><b>' + name + '</b><span>' + handle + '</span></div>' +
             '</div>' +
-            '<div class="mq-donut-wrap">' +
-              donutHtml +
+            '<div class="mq-donut-wrap">' + donutHtml +
               '<div class="mq-donut-text">' +
                 '<div class="mq-donut-pct" style="color:' + pctColor + '">' + winRate + '%</div>' +
                 '<div class="mq-donut-lbl">Win Rate</div>' +
@@ -11968,6 +12073,8 @@
             restHtml +
           '</div>' +
         '</div>' /* /.mq-body */ +
+        // 4.4 round 76 — small alva brand mark, bottom-left of card.
+        '<div class="mq-brand" aria-hidden="true">' + ALVA_LOGO_SVG + '</div>' +
         // 4.4 round 2 — hover CTA. Single row that grows below the
         // card on :hover. Left: "{Name}'s Playbook" · Right: external
         // arrow icon. target=_blank + rel=noopener — it leads to an
