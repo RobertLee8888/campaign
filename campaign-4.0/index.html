@@ -3589,6 +3589,8 @@
     --agents-ease: cubic-bezier(.22, 1, .36, 1);
     --agents-dur: .42s;
     --agents-card-w: 760px;
+    --agents-content-top: calc(var(--section-top-pad) + 84px + var(--section-content-gap));
+    --agents-min-pin-h: 680px;
   }
 
   /* ============================================================
@@ -3631,6 +3633,7 @@
     top: var(--nav-h);
     height: calc(100vh - var(--nav-h));
     height: calc(100svh - var(--nav-h));
+    min-height: var(--agents-min-pin-h);
     width: 100%;
     overflow: hidden;
     background: var(--bg-soft);
@@ -3688,7 +3691,7 @@
     justify-content: flex-start;
     height: 100%;
     min-height: 0;
-    padding-top: calc(var(--section-top-pad) + 84px + var(--section-content-gap));
+    padding-top: var(--agents-content-top);
     box-sizing: border-box;
     /* 4.4 round 101 — JS only applies a small vertical shift when the
        active tab would otherwise clip on short viewports; the default
@@ -3984,7 +3987,7 @@
           for desktop; the stage itself is hidden on mobile. */
 
     #agents.agents-pin-section { height: auto; padding: var(--section-top-pad) 0; }
-    #agents .agents-pin { position: static; height: auto; overflow: visible; }
+    #agents .agents-pin { position: static; height: auto; min-height: 0; overflow: visible; }
     /* Section bleeds full-width — no LR padding on the inner wrap.
        Section head + tab-item text re-add 18 px LR padding so reading
        columns still feel inset. */
@@ -11878,13 +11881,15 @@
     const buttons = section.querySelectorAll('.agents-tab-v');
     const cards = section.querySelectorAll('.agents-card');
     const side = section.querySelector('.agents-side');
+    const pin = section.querySelector('.agents-pin');
+    const sectionHead = section.querySelector('.agents-section-head');
     const head = section.querySelector('.agents-head');
     const N = cards.length;
     if (!track || !N) return;
 
     const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
     const navH = () => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 65;
-    const pinH = () => Math.max(1, window.innerHeight - navH());
+    const pinH = () => Math.max(1, pin?.getBoundingClientRect().height || (window.innerHeight - navH()));
     const scrollRange = () => Math.max(1, section.offsetHeight - pinH());
     const activeRange = () => {
       const hold = Math.min(260, Math.max(140, pinH() * 0.22));
@@ -11898,9 +11903,10 @@
       const sectionTop = section.getBoundingClientRect().top + window.scrollY;
       return Math.round(sectionTop - navH() + p * activeRange());
     };
-    function syncCardSize() {
+    function syncAgentsLayout() {
       if (isMobile()) {
         section.style.removeProperty('--agents-card-w');
+        section.style.removeProperty('--agents-content-top');
         return;
       }
       const stage = track.parentElement;
@@ -11908,6 +11914,13 @@
       if (!stage || !tabsList) return;
 
       const stageRect = stage.getBoundingClientRect();
+      if (sectionHead) {
+        const headRect = sectionHead.getBoundingClientRect();
+        const gap = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--section-content-gap')) || 56;
+        const contentTop = Math.max(0, headRect.bottom - stageRect.top + gap);
+        section.style.setProperty('--agents-content-top', Math.round(contentTop) + 'px');
+      }
+
       const tabsRect = tabsList.getBoundingClientRect();
       const anchorTop = Math.max(0, tabsRect.top - stageRect.top);
       const bottomPad = Math.min(44, Math.max(24, stageRect.height * 0.06));
@@ -11964,7 +11977,7 @@
         }
         shift = Math.max(minShift, Math.min(maxShift, shift));
         side.style.setProperty('--side-shift', Math.round(shift) + 'px');
-        syncCardSize();
+        syncAgentsLayout();
         schedule();
       });
     }
@@ -12063,11 +12076,11 @@
     window.addEventListener('resize', () => {
       // Force re-compute (stageH / cardH may have changed)
       lastIdx = -1;
-      syncCardSize();
+      syncAgentsLayout();
       syncSidePad();
       schedule();
     });
-    syncCardSize();
+    syncAgentsLayout();
     syncSidePad();
     schedule();
 
