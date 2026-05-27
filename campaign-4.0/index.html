@@ -127,6 +127,7 @@
     --section-top-pad: 120px;
     --section-title-gap: 12px;
     --section-content-gap: 56px;
+    --section-action-gap: 24px;
     --section-title-size: clamp(28px, 3.4vw, 44px);
     --section-sub-size: clamp(14px, 1.05vw, 16px);
     --section-sub-color: rgba(255, 255, 255, 0.70);
@@ -3142,7 +3143,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 24px;
+    gap: var(--section-action-gap);
   }
   #leaderboard .section-head.with-action > div { max-width: 760px; }
   #leaderboard .lb-sub { margin-left: auto; margin-right: auto; }
@@ -4787,7 +4788,7 @@
     color: var(--text);
   }
   .about-alva p {
-    margin: 0 0 var(--section-content-gap);
+    margin: 0 0 var(--section-action-gap);
     font-family: var(--font);
     font-weight: 400;
     font-size: var(--section-sub-size);
