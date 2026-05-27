@@ -3588,6 +3588,7 @@
     background: rgba(88,195,198,0.08);
     --agents-ease: cubic-bezier(.22, 1, .36, 1);
     --agents-dur: .42s;
+    --agents-card-w: 760px;
   }
 
   /* ============================================================
@@ -3918,7 +3919,7 @@
        margin-left:auto so the card's right edge still matches the
        leaderboard's right edge. */
     width: 100%;
-    max-width: 760px;
+    max-width: var(--agents-card-w);
     margin: 0 0 0 auto;
     display: block;
     padding-right: 0;
@@ -11897,9 +11898,31 @@
       const sectionTop = section.getBoundingClientRect().top + window.scrollY;
       return Math.round(sectionTop - navH() + p * activeRange());
     };
-    const cardAnchorTop = (stageH, cardH) => {
-      const lift = Math.min(96, Math.max(56, stageH * 0.10));
-      return (stageH - cardH) / 2 - lift;
+    function syncCardSize() {
+      if (isMobile()) {
+        section.style.removeProperty('--agents-card-w');
+        return;
+      }
+      const stage = track.parentElement;
+      const tabsList = side?.querySelector('.agents-tabs-v');
+      if (!stage || !tabsList) return;
+
+      const stageRect = stage.getBoundingClientRect();
+      const tabsRect = tabsList.getBoundingClientRect();
+      const anchorTop = Math.max(0, tabsRect.top - stageRect.top);
+      const bottomPad = Math.min(44, Math.max(24, stageRect.height * 0.06));
+      const maxByHeight = Math.max(220, (stageRect.height - anchorTop - bottomPad) * 1.5);
+      const maxByColumn = Math.max(220, stageRect.width);
+      const cardW = Math.min(760, maxByColumn, maxByHeight);
+      section.style.setProperty('--agents-card-w', Math.round(cardW) + 'px');
+    }
+    const cardAnchorTop = () => {
+      const stage = track.parentElement;
+      const tabsList = side?.querySelector('.agents-tabs-v');
+      if (!stage || !tabsList) return 0;
+      const stageRect = stage.getBoundingClientRect();
+      const tabsRect = tabsList.getBoundingClientRect();
+      return Math.max(0, tabsRect.top - stageRect.top);
     };
 
     let lastIdx = -1;
@@ -11941,6 +11964,8 @@
         }
         shift = Math.max(minShift, Math.min(maxShift, shift));
         side.style.setProperty('--side-shift', Math.round(shift) + 'px');
+        syncCardSize();
+        schedule();
       });
     }
 
@@ -11961,12 +11986,10 @@
       // logic + tab clicks below; all three now use the same anchor
       // so free-scroll stops AND the auto-snap leave the right card
       // perfectly centered with the matching left tab.
-      const stage = track.parentElement;
       const cardH = cards[0].offsetHeight;
       const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
-      const stageH = stage.offsetHeight;
       const tCont = p * (N - 1);                  // 0 .. N-1 continuous
-      const offset = cardAnchorTop(stageH, cardH) - tCont * (cardH + gap);
+      const offset = cardAnchorTop() - tCont * (cardH + gap);
       track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
       const idx = Math.min(N - 1, Math.max(0, Math.round(tCont)));
       if (idx !== lastIdx) {
@@ -12004,11 +12027,9 @@
       // `snapping === true`. We also animate the document scroll for
       // continuity but the track's eased transform is what the eye
       // actually follows.
-      const stage = track.parentElement;
       const cardH = cards[0].offsetHeight;
       const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
-      const stageH = stage.offsetHeight;
-      const offset = cardAnchorTop(stageH, cardH) - idx * (cardH + gap);
+      const offset = cardAnchorTop() - idx * (cardH + gap);
       track.classList.add('snapping');
       track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
       items.forEach((t, i) => t.classList.toggle('active', i === idx));
@@ -12042,9 +12063,11 @@
     window.addEventListener('resize', () => {
       // Force re-compute (stageH / cardH may have changed)
       lastIdx = -1;
+      syncCardSize();
       syncSidePad();
       schedule();
     });
+    syncCardSize();
     syncSidePad();
     schedule();
 
@@ -12063,11 +12086,9 @@
         const anchorP = i / denom;
         snapping = true;
         snapStop = scrollYForProgress(anchorP);
-        const stage = track.parentElement;
         const cardH = cards[0].offsetHeight;
         const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
-        const stageH = stage.offsetHeight;
-        const offset = cardAnchorTop(stageH, cardH) - i * (cardH + gap);
+        const offset = cardAnchorTop() - i * (cardH + gap);
         track.classList.add('snapping');
         track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
         items.forEach((t, itemIdx) => t.classList.toggle('active', itemIdx === i));
