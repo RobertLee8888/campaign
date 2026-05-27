@@ -124,9 +124,9 @@
     --font-display: "Delight", system-ui, sans-serif;
     --font-mono:    "Delight", ui-monospace, monospace;
     --nav-h: 65px;
-    --section-top-pad: 120px;
+    --section-top-pad: 96px;
     --section-title-gap: 12px;
-    --section-content-gap: 56px;
+    --section-content-gap: 40px;
     --section-action-gap: 24px;
     --section-title-size: clamp(28px, 3.4vw, 44px);
     --section-sub-size: clamp(14px, 1.05vw, 16px);
@@ -887,7 +887,7 @@
     --s2-pad-top: var(--section-top-pad);
     --s2-bottom-room: clamp(20px, 4vh, 40px);
     --s2-pad-bottom: var(--s2-bottom-room);
-    --s2-content-gap: calc(var(--section-content-gap) + 24px);
+    --s2-content-gap: var(--section-content-gap);
     --s2-row-gap: clamp(14px, 2.8vh, 24px);
     --s2-card-h: 283px;
     --s2-card-w: 540px;
@@ -12210,7 +12210,8 @@
         contentTop = 24;
         section.style.setProperty('--agents-content-top', contentTop + 'px');
       } else if (sectionHead) {
-        const headRect = sectionHead.getBoundingClientRect();
+        const subtitle = sectionHead.querySelector('p');
+        const headRect = (subtitle || sectionHead).getBoundingClientRect();
         const gap = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--section-content-gap')) || 56;
         contentTop = Math.max(0, headRect.bottom - stageRect.top + gap);
         section.style.setProperty('--agents-content-top', Math.round(contentTop) + 'px');
