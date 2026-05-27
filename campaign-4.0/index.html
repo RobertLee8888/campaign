@@ -916,12 +916,14 @@
        this combo only with `clip`, not `hidden`). */
     overflow-x: clip;
     overflow-y: visible;
-    height: calc(100svh - var(--nav-h));
-    max-height: calc(100svh - var(--nav-h));
     min-height: 0;
     display: flex;
     align-items: stretch;
     box-sizing: border-box;
+  }
+  .stage.stage-marquee.s2-constrained {
+    height: calc(100svh - var(--nav-h));
+    max-height: calc(100svh - var(--nav-h));
   }
   /* (3.0 round 43 — S2 background animation removed entirely after
      iterating through dot-grid / mesh / particles / ribbons; user
@@ -12029,10 +12031,17 @@
       const padY = px(stageStyle.paddingTop) + px(stageStyle.paddingBottom);
       const contentGap = px(stageStyle.rowGap || stageStyle.gap);
       const rowGap = px(marqueeStyle.rowGap || marqueeStyle.gap);
-      const available = stageH - padY - headerH - contentGap - rowGap;
-      const baseH = Math.max(MIN_BASE_H, Math.min(MAX_BASE_H, available / 2));
+      const rows = Math.max(1, stage.querySelectorAll('.marquee-row').length || 2);
+      const totalRowGap = rowGap * Math.max(0, rows - 1);
+      const naturalH = padY + headerH + contentGap + totalRowGap + MAX_BASE_H * rows;
+      const constrained = naturalH > stageH;
+      const available = stageH - padY - headerH - contentGap - totalRowGap;
+      const baseH = constrained
+        ? Math.max(MIN_BASE_H, Math.min(MAX_BASE_H, available / rows))
+        : MAX_BASE_H;
       const cardW = baseH * ASPECT;
 
+      stage.classList.toggle('s2-constrained', constrained);
       stage.style.setProperty('--s2-card-h', baseH.toFixed(2) + 'px');
       stage.style.setProperty('--s2-card-w', cardW.toFixed(2) + 'px');
       stage.querySelectorAll('.marquee-row').forEach(row => {
