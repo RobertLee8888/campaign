@@ -887,7 +887,7 @@
     --s2-pad-top: var(--section-top-pad);
     --s2-bottom-room: clamp(20px, 4vh, 40px);
     --s2-pad-bottom: var(--s2-bottom-room);
-    --s2-content-gap: var(--section-content-gap);
+    --s2-content-gap: calc(var(--section-content-gap) + 24px);
     --s2-row-gap: clamp(14px, 2.8vh, 24px);
     --s2-card-h: 283px;
     --s2-card-w: 540px;
@@ -12067,7 +12067,7 @@
     const DESIGN_W = 540;
     const ASPECT = 1.91;
     const MAX_BASE_H = 283;
-    const MIN_BASE_H = 120;
+    const MIN_BASE_H = 112;
     const observed = new WeakSet();
 
     function px(value) {
