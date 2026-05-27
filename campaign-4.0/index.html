@@ -3984,7 +3984,6 @@
 
   @media (min-width: 901px) and (max-height: 760px) {
     #agents {
-      --agents-content-top: 24px;
       --agents-min-pin-h: 0px;
     }
     #agents .agents-pin {
@@ -3998,20 +3997,10 @@
       opacity: 0;
       transform: translateY(-28px);
     }
-    #agents .agents-stage {
-      opacity: 0;
-      transform: translateY(16px);
-      pointer-events: none;
-      transition: opacity .28s ease, transform .28s ease;
-    }
-    #agents.compact-pin-active .agents-stage {
-      opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
-    }
     #agents .agents-side {
       padding-top: var(--agents-content-top);
       padding-bottom: 24px;
+      transition: padding-top .28s ease, transform var(--agents-dur) var(--agents-ease);
     }
     #agents .agents-cards-stage::before {
       display: none;
@@ -12001,7 +11990,7 @@
 
       const stageRect = stage.getBoundingClientRect();
       let contentTop = stableContentTop();
-      if (isCompactPin()) {
+      if (isCompactPin() && section.classList.contains('compact-pin-active')) {
         contentTop = 24;
         section.style.setProperty('--agents-content-top', contentTop + 'px');
       } else if (sectionHead) {
@@ -12073,7 +12062,11 @@
       // skip the per-frame update so the two don't fight.
       if (snapping) return;
       const rawP = sectionProgress();
-      section.classList.toggle('compact-pin-active', isCompactPin() && rawP > 0.02 && rawP < 1.18);
+      const compactActive = isCompactPin() && rawP > 0.02 && section.getBoundingClientRect().bottom > navH();
+      if (section.classList.contains('compact-pin-active') !== compactActive) {
+        section.classList.toggle('compact-pin-active', compactActive);
+        syncAgentsLayout();
+      }
       const p = Math.max(0, Math.min(1, rawP));
       // 4.0 round 6 — continuous map: at p=0 card[0] is centered, at
       // p=1 card[N-1] is centered, linear in between. This makes the
