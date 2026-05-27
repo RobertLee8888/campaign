@@ -1348,9 +1348,17 @@
      parent .marquee-row locks its height so siblings don't shift —
      the grown card just overflows downward into the row gap. */
   .marquee-track .mq-card:hover {
-    transform: translateY(-12px) scale(1.04);
+    /* 4.4 round 94 — translateY(-12) removed; it was causing classic
+       hover flicker because the card lifted out from under the cursor
+       (cursor near the card bottom escaped the hover zone → un-hover
+       → card drops back → cursor inside → hover → oscillation).
+       Card stays geometrically in place; "lift" is now expressed
+       purely via scale(1.05) + a deeper shadow. Original [0,283]
+       area is fully contained within the scaled bounding box so the
+       cursor never escapes the hover zone. */
+    transform: scale(1.05);
     height: calc(var(--mq-base-h) + var(--mq-cta-h));
-    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.6);
     z-index: 3;
   }
   /* 4.4 round 58 — round-40's blanket reset of transform+box-shadow
