@@ -4259,27 +4259,18 @@
     line-height: 1.5;
     letter-spacing: -0.005em;
   }
-  /* 4.4 round 88 — only the active tab is visible; all tab items
-     stack in the same grid cell so opacity cross-fades cleanly when
-     JS toggles `.active` between them. */
+  /* 4.4 round 96 — reverted to the visible tab-list: all 5 tabs
+     show as a stacked list in the left rail, the active tab expands
+     to reveal its detail (subtitle + CTA). The section title now
+     lives in .agents-section-head above the pin (round 91), so the
+     rail's only job is the tab list itself. */
   .agents-tabs-v {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 0;
+    padding: 0;
+    flex-shrink: 0;
   }
-  .agents-tab-item {
-    grid-column: 1;
-    grid-row: 1;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .28s ease;
-  }
-  .agents-tab-item.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  /* keep the single visible tab's borders intact */
-  .agents-tab-item:first-child { border-top: 1px solid rgba(255,255,255,0.10); }
   /* 4.4 round 89 — title/subtitle sized to MATCH Section 2's
      .stage-header. Both items inside .agents-head sit on the same
      horizontal line (flex row + align-items: center). */
@@ -4332,19 +4323,25 @@
      also gets a TOP divider on the first item so the top edge has a
      matching line. Title is white by default, alva only when active.
      Divider color stays constant (no alva on active) per feedback. */
-  /* 4.4 round 90 — tab visual chrome dropped (no top/bottom divider
-     lines, no tab-row affordance). Each item is now a plain info
-     block (title + p + cta) that crossfades in place. */
+  /* 4.4 round 96 — tab list chrome restored: each item is a row in
+     the vertical list, separated by a hairline divider. */
   .agents-tab-item {
     display: flex;
     flex-direction: column;
     gap: 0;
     background: transparent;
     border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 0;
-    padding: 0;
+    padding: 18px 4px;
+    transition: border-color .2s;
   }
-  .agents-tab-item:first-child { border-top: 0; }
+  .agents-tab-item:first-child {
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+  }
+  .agents-tab-item:hover {
+    border-bottom-color: rgba(255, 255, 255, 0.22);
+  }
   .agents-tab-v {
     position: relative;
     padding: 0;
@@ -4379,14 +4376,23 @@
      parent .agents-tab-item is .active. max-height animation gives a
      gentle expand/collapse without layout-jank when the active tab
      changes during scroll-lock progression. */
-  /* 4.4 round 90 — detail is always part of the active info block;
-     no max-height collapse and no Y-translate. The parent
-     .agents-tab-item handles its own opacity crossfade in place. */
+  /* 4.4 round 96 — detail (subtitle + CTA) collapsed by default,
+     expands when its parent .agents-tab-item is .active. */
   .agents-tab-detail {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: max-height .35s ease, opacity .25s ease, transform .25s ease, padding .3s ease;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 16px 0 0;
+  }
+  .agents-tab-item.active .agents-tab-detail {
+    max-height: 280px;
+    opacity: 1;
+    transform: translateY(0);
+    padding: 12px 0 4px;
   }
   .agents-tab-detail p {
     margin: 0;
