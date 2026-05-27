@@ -3585,12 +3585,9 @@
      #agents), producing the visible horizontal step the user sees
      above the leaderboard card. Same story at the top boundary.
      The reveal-neighbour-section effect the user originally wanted is
-     already covered by the round-21 pin-fills-viewport architecture
-     (top:0 / height:100vh) — pin scrolls in/out naturally and
-     neighbours appear at the boundaries without needing a margin
-     overlap. So: sections flush, no negative margin, no z-index trick,
-     no isolation. #agents bg kept as flat 8% alva so the "below pin"
-     area (during exit) doesn't show body-grey. */
+     already covered by the round-21 pin-fills-viewport architecture.
+     Sections stay flush; the sticky pin now owns its own isolated dark
+     slab so shader blending cannot brighten when the pin state engages. */
   #agents {
     position: relative;
     background: rgba(88,195,198,0.08);
@@ -3645,6 +3642,7 @@
     width: 100%;
     overflow: hidden;
     background: var(--bg-soft);
+    isolation: isolate;
   }
   #agents.agents-pin-section,
   #agents .agents-pin {
@@ -3658,8 +3656,8 @@
     z-index: 0;
     pointer-events: none;
     display: block;
-    mix-blend-mode: screen;
-    opacity: 0.55;
+    mix-blend-mode: normal;
+    opacity: 0.46;
   }
   .agents-pin-inner {
     width: 100%;
@@ -7265,15 +7263,15 @@
     z-index: 0;
     pointer-events: none;
     display: block;
-    /* multiply onto dark slab so pattern reads without ever lifting
-       above the section's value; opacity kept moderate so silk feels
-       ambient, not loud. */
-    mix-blend-mode: screen;
-    opacity: 0.85;
+    /* Normal blend keeps the shader tied to the section's own dark
+       slab. screen-blending against a changing page backdrop caused
+       the pin state to read as a sudden brightness jump. */
+    mix-blend-mode: normal;
+    opacity: 0.46;
   }
   #agents .agents-silk {
-    mix-blend-mode: screen !important;
-    opacity: 0.55 !important;
+    mix-blend-mode: normal !important;
+    opacity: 0.46 !important;
   }
   /* Lift the actual content above the canvas. */
   #agents .agents-pin-inner { position: relative; z-index: 1; }
