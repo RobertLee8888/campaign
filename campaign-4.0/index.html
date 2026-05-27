@@ -882,13 +882,19 @@
      the 2.0 left-text / right-cards hero composition.
      ============================================================ */
   .stage.stage-marquee {
+    --s2-pad-y: clamp(28px, 5.4vh, 56px);
+    --s2-bottom-room: clamp(20px, 4vh, 40px);
+    --s2-content-gap: clamp(22px, 3.8vh, 40px);
+    --s2-row-gap: clamp(14px, 2.8vh, 24px);
+    --s2-card-h: 283px;
+    --s2-card-w: 540px;
     /* 3.0 round 23 — section bumped taller per user feedback.
        padding raised 96 → 120 and min-height raised 360 → 560 so
        the marquee rows get more vertical breathing room and the
        headline overlay isn't crammed against the row above/below.
        (Previous tight padding made this section feel rushed
        relative to the hero above and the leaderboard below.) */
-    padding: var(--section-top-pad) 0 var(--section-top-pad);
+    padding: var(--s2-pad-y) 0 calc(var(--s2-pad-y) + var(--s2-bottom-room));
     /* 3.0 round 23 — z-index:2 dropped along with the round-18 overlap
        (see #agents comment). Sections are flush now, so this no longer
        needs to "win" over an overlap zone. */
@@ -910,9 +916,12 @@
        this combo only with `clip`, not `hidden`). */
     overflow-x: clip;
     overflow-y: visible;
-    min-height: 560px;
+    height: calc(100svh - var(--nav-h));
+    max-height: calc(100svh - var(--nav-h));
+    min-height: 0;
     display: flex;
-    align-items: center;
+    align-items: stretch;
+    box-sizing: border-box;
   }
   /* (3.0 round 43 — S2 background animation removed entirely after
      iterating through dot-grid / mesh / particles / ribbons; user
@@ -937,7 +946,7 @@
   .stage-marquee {
     flex-direction: column;
     justify-content: flex-start;
-    gap: var(--section-content-gap);
+    gap: var(--s2-content-gap);
   }
   .stage-marquee .stage-header {
     width: 100%;
@@ -999,7 +1008,7 @@
     flex-direction: column;
     /* 4.4 round 91 — row gap matches the card-to-card horizontal
        margin (24px) so vertical and horizontal gaps read as equal. */
-    gap: 24px;
+    gap: var(--s2-row-gap);
     width: 100%;
     position: relative;
     /* mask-image clips child shadows (no way to opt out), so we use
@@ -1014,7 +1023,7 @@
        change doesn't re-center sibling cards within the row. */
     overflow-x: clip;
     overflow-y: visible;
-    height: var(--mq-row-base-h, 283px);
+    height: var(--mq-row-base-h, var(--s2-card-h));
     display: flex;
     align-items: flex-start;
     /* 4.4 round 93 — row paints in its own stacking context so a
@@ -1091,6 +1100,7 @@
      feedback. Cards support hover (lift + shadow) and the row pauses
      scroll on hover. */
   .marquee-track .mq-card {
+    width: var(--s2-card-w);
     cursor: pointer;
     overflow: visible;
     /* CTA strip lives outside the fixed 1.91:1 panel on marquee cards;
@@ -6602,13 +6612,11 @@
     /* S2 · STAGE MARQUEE                                         */
     /* ---------------------------------------------------------- */
     .stage.stage-marquee {
-      /* Desktop sets `display: flex; align-items: center` which on a
-         narrow viewport would put the headline + marquee side-by-side
-         as a row. Reset to block flow so the headline stacks ABOVE the
-         marquee and each piece gets full viewport width. */
-      display: block;
-      padding: var(--section-top-pad) 0 var(--section-top-pad);
-      min-height: auto;
+      display: flex;
+      padding: var(--s2-pad-y) 0 calc(var(--s2-pad-y) + var(--s2-bottom-room));
+      height: calc(100svh - var(--nav-h));
+      max-height: calc(100svh - var(--nav-h));
+      min-height: 0;
     }
     /* .stage-title-line set to nowrap on desktop so each clause stays on
        one line within the headline column. On a phone the column is too
@@ -11774,7 +11782,40 @@
   (function () {
     const DESIGN_W = 540;
     const ASPECT = 1.91;
+    const MAX_BASE_H = 283;
+    const MIN_BASE_H = 120;
     const observed = new WeakSet();
+
+    function px(value) {
+      const n = Number.parseFloat(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function syncStageMarquee() {
+      const stage = document.querySelector('.stage.stage-marquee');
+      const header = stage?.querySelector('.stage-header');
+      const marquee = stage?.querySelector('.card-marquee');
+      if (!stage || !header || !marquee) return;
+
+      const root = getComputedStyle(document.documentElement);
+      const navH = px(root.getPropertyValue('--nav-h')) || 65;
+      const stageH = Math.max(1, window.innerHeight - navH);
+      const stageStyle = getComputedStyle(stage);
+      const marqueeStyle = getComputedStyle(marquee);
+      const headerH = header.getBoundingClientRect().height;
+      const padY = px(stageStyle.paddingTop) + px(stageStyle.paddingBottom);
+      const contentGap = px(stageStyle.rowGap || stageStyle.gap);
+      const rowGap = px(marqueeStyle.rowGap || marqueeStyle.gap);
+      const available = stageH - padY - headerH - contentGap - rowGap;
+      const baseH = Math.max(MIN_BASE_H, Math.min(MAX_BASE_H, available / 2));
+      const cardW = baseH * ASPECT;
+
+      stage.style.setProperty('--s2-card-h', baseH.toFixed(2) + 'px');
+      stage.style.setProperty('--s2-card-w', cardW.toFixed(2) + 'px');
+      stage.querySelectorAll('.marquee-row').forEach(row => {
+        row.style.setProperty('--mq-row-base-h', baseH.toFixed(2) + 'px');
+      });
+    }
 
     function syncCard(card) {
       const width = card.getBoundingClientRect().width;
@@ -11794,6 +11835,7 @@
     }
 
     function syncAll() {
+      syncStageMarquee();
       document.querySelectorAll('.mq-card').forEach(observe);
     }
 
