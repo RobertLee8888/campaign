@@ -1259,16 +1259,22 @@
     /* 4.4 round 92 — row height LOCKED to card base height; track
        anchored to row top (align-items: flex-start) so that when a
        hovered card grows downward to reveal the CTA, the track height
-       change doesn't re-center sibling cards within the row. The
-       grown card simply spills out the bottom of the row (overflow-y:
-       visible), painting over the gap into row 2 — with hover z-index
-       it sits on top. */
+       change doesn't re-center sibling cards within the row. */
     overflow-x: clip;
     overflow-y: visible;
     height: var(--mq-base-h, 283px);
     display: flex;
     align-items: flex-start;
+    /* 4.4 round 93 — row paints in its own stacking context so a
+       hovered card's z-index 3 actually lifts that card above
+       neighbouring rows. Without this, later-DOM rows always paint on
+       top regardless of the card's local z-index, occluding the
+       grown card's CTA strip. :has() bumps the row when any child
+       card is hovered. */
+    position: relative;
+    z-index: 0;
   }
+  .card-marquee .marquee-row:has(.mq-card:hover) { z-index: 5; }
   .card-marquee .marquee-track { align-items: flex-start; }
   .marquee-track {
     display: flex;
@@ -5201,6 +5207,12 @@
     line-height: 1.5;
     color: rgba(255, 255, 255, 0.7);
   }
+  .about-alva-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
   .btn-outline {
     display: inline-flex;
     align-items: center;
@@ -8358,11 +8370,16 @@
      and the footer. Centered title + subtitle + outline CTA. -->
 <section class="about-alva">
   <div class="about-alva-inner">
-    <h2>Your AI Investing Agent.</h2>
-    <p>Alva equips your agent with 250+ data APIs to power deep market research, create live investing playbooks, or access and act on existing ones — all through a single skill.</p>
-    <a class="btn-outline" href="https://alva.xyz" target="_blank" rel="noreferrer">
-      Learn more about Alva <i class="ph-bold ph-arrow-up-right"></i>
-    </a>
+    <h2>Meet Alva — The AI Investing Agent behind FinTwit Alpha League</h2>
+    <p>Powered by hundreds of institutional-grade data sources and thousands of community playbooks you can follow and remix, Alva is your personal edge in all markets.</p>
+    <div class="about-alva-actions">
+      <a class="btn-primary" href="https://alva.xyz" target="_blank" rel="noreferrer">
+        <i class="ph-bold ph-rocket-launch"></i> Launch Alva
+      </a>
+      <a class="btn-outline" href="https://alva.xyz/explore" target="_blank" rel="noreferrer">
+        Explore Playbooks <i class="ph-bold ph-arrow-up-right"></i>
+      </a>
+    </div>
   </div>
 </section>
 
