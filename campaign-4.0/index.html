@@ -1256,18 +1256,26 @@
        rules below. */
   }
   .marquee-row {
-    /* Same clip-x / visible-y combo as the parent — keeps hover
-       shadows visible above and below each row. */
+    /* 4.4 round 92 — row height LOCKED to card base height; track
+       anchored to row top (align-items: flex-start) so that when a
+       hovered card grows downward to reveal the CTA, the track height
+       change doesn't re-center sibling cards within the row. */
     overflow-x: clip;
     overflow-y: visible;
-    /* 4.4 round 90 — row's reserved height is the card's natural
-       height. Hover effects no longer grow the card box — they only
-       lift / scale / reveal CTA via opacity — so no buffer needed.
-       Restores the tight inter-row spacing the user had before. */
-    min-height: var(--mq-base-h, 283px);
+    height: var(--mq-base-h, 283px);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    /* 4.4 round 93 — row paints in its own stacking context so a
+       hovered card's z-index 3 actually lifts that card above
+       neighbouring rows. Without this, later-DOM rows always paint on
+       top regardless of the card's local z-index, occluding the
+       grown card's CTA strip. :has() bumps the row when any child
+       card is hovered. */
+    position: relative;
+    z-index: 0;
   }
+  .card-marquee .marquee-row:has(.mq-card:hover) { z-index: 5; }
+  .card-marquee .marquee-track { align-items: flex-start; }
   .marquee-track {
     display: flex;
     /* No flex gap — every .mq-card carries margin-right itself so the
@@ -1331,31 +1339,29 @@
      feedback. Cards support hover (lift + shadow) and the row pauses
      scroll on hover. */
   .marquee-track .mq-card { cursor: pointer; }
-  /* 4.4 round 90 — marquee card hover no longer grows height (was
-     pushing the row down). Card stays exactly at --mq-base-h; hover
-     applies translateY(-12px) + scale(1.05) for a clear "lift" plus
-     a stronger shadow. The CTA shows via opacity-fade on a sibling
-     element that's already there but transparent. overflow flipped
-     to visible AND `contain` reset so the CTA (positioned just below
-     the card body) actually paints — the global `contain: paint` on
-     .mq-card was clipping it away despite overflow:visible. */
-  .marquee-track .mq-card {
-    overflow: visible;
-    contain: none;
-  }
+  /* 4.4 round 92 — marquee card hover now MIRRORS the modal-grid
+     card exactly: card height grows by --mq-cta-h to reveal the CTA
+     row INSIDE the card surface (with card bg/gradient extending to
+     fit). Lift + slight scale on top. overflow:hidden is preserved
+     so the CTA strip stays clipped at the new (taller) card edge,
+     reading as a built-in strip rather than a detached row. The
+     parent .marquee-row locks its height so siblings don't shift —
+     the grown card just overflows downward into the row gap. */
   .marquee-track .mq-card:hover {
-    transform: translateY(-12px) scale(1.05);
-    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.55);
+    /* 4.4 round 95 — vertical-center alignment with siblings.
+       Card grows by --mq-cta-h (36px) downward by default; to keep
+       the visual center aligned with non-hovered siblings, the card
+       is also translated up by cta-h/2 (18px). Net effect: growth
+       is symmetric around the original card center, so the hovered
+       card and its row neighbours share the same vertical centerline.
+       Flicker analysis: translateY(-18) + scale(1.05) on a 319-tall
+       box still keeps the original [0, 283] baseline area fully
+       inside the transformed bounding box, so the cursor cannot
+       exit the hover zone. */
+    transform: translateY(calc(var(--mq-cta-h) / -2)) scale(1.05);
+    height: calc(var(--mq-base-h) + var(--mq-cta-h));
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.6);
     z-index: 3;
-  }
-  .marquee-track .mq-card .mq-cta {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s ease;
-  }
-  .marquee-track .mq-card:hover .mq-cta {
-    opacity: 1;
-    pointer-events: auto;
   }
   /* 4.4 round 58 — round-40's blanket reset of transform+box-shadow
      on results-grid hover has been REMOVED. It was clobbering the
@@ -4189,14 +4195,30 @@
     max-width: 1320px;
     height: 100%;
     margin: 0 auto;
-    /* 4.4 round 91 — flex column so the section head sits on top
-       (auto height) and .agents-stage takes the remaining height.
-       padding-top clears the 64px fixed nav. */
-    padding: 72px 16px 40px;
-    display: flex;
-    flex-direction: column;
+    padding: 0 16px;
+    /* 4.4 round 97 — pin-inner is a positioned context. Section
+       title sits as an absolute overlay at the top; stage fills the
+       full pin height. Cards in the right column overlap the title
+       area, so as the user scrolls the cards naturally slide past
+       (and partially occlude) the title. */
+    position: relative;
   }
-  .agents-pin-inner .agents-stage { flex: 1 1 auto; min-height: 0; }
+  .agents-pin-inner .agents-stage {
+    height: 100%;
+    position: relative;
+    z-index: 2;
+  }
+  .agents-section-head {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 1;
+    text-align: center;
+    margin: 0 auto;
+    padding: 80px 24px 0;
+    pointer-events: none;
+  }
+  .agents-section-head h2,
+  .agents-section-head p { pointer-events: auto; }
   /* 2-col grid: left sidebar (heading + tabs) + right card stage.
      3.0 round 15 — left rail widened 380 → 480 (heading at display-l
      wraps cleanly here, tabs in card style have room). Border between
@@ -4214,12 +4236,16 @@
   .agents-side {
     display: flex;
     flex-direction: column;
-    /* 4.4 round 90 — vertically center the current info block in the
-       rail (heading moved above the pin, so the rail only holds the
-       active tab content now). side-shift transform removed. */
-    justify-content: center;
+    justify-content: flex-start;
     height: 100%;
     min-height: 0;
+    /* 4.4 round 97 — side-shift transform restored. JS computes the
+       offset that lands the active tab's vertical center at the
+       rail's vertical center, so the selected tab stays in view
+       even on short viewports where the full tab list wouldn't fit.
+       transition smooths the shift when active tab changes. */
+    transform: translateY(var(--side-shift, 0px));
+    transition: transform .35s cubic-bezier(.22, 1, .36, 1);
   }
   /* 4.4 round 90 — heading moved back ABOVE the pin and centered;
      the in-rail .agents-head is hidden via inline style. New
@@ -4253,27 +4279,18 @@
     line-height: 1.5;
     letter-spacing: -0.005em;
   }
-  /* 4.4 round 88 — only the active tab is visible; all tab items
-     stack in the same grid cell so opacity cross-fades cleanly when
-     JS toggles `.active` between them. */
+  /* 4.4 round 96 — reverted to the visible tab-list: all 5 tabs
+     show as a stacked list in the left rail, the active tab expands
+     to reveal its detail (subtitle + CTA). The section title now
+     lives in .agents-section-head above the pin (round 91), so the
+     rail's only job is the tab list itself. */
   .agents-tabs-v {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 0;
+    padding: 0;
+    flex-shrink: 0;
   }
-  .agents-tab-item {
-    grid-column: 1;
-    grid-row: 1;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .28s ease;
-  }
-  .agents-tab-item.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  /* keep the single visible tab's borders intact */
-  .agents-tab-item:first-child { border-top: 1px solid rgba(255,255,255,0.10); }
   /* 4.4 round 89 — title/subtitle sized to MATCH Section 2's
      .stage-header. Both items inside .agents-head sit on the same
      horizontal line (flex row + align-items: center). */
@@ -4326,19 +4343,25 @@
      also gets a TOP divider on the first item so the top edge has a
      matching line. Title is white by default, alva only when active.
      Divider color stays constant (no alva on active) per feedback. */
-  /* 4.4 round 90 — tab visual chrome dropped (no top/bottom divider
-     lines, no tab-row affordance). Each item is now a plain info
-     block (title + p + cta) that crossfades in place. */
+  /* 4.4 round 96 — tab list chrome restored: each item is a row in
+     the vertical list, separated by a hairline divider. */
   .agents-tab-item {
     display: flex;
     flex-direction: column;
     gap: 0;
     background: transparent;
     border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 0;
-    padding: 0;
+    padding: 18px 4px;
+    transition: border-color .2s;
   }
-  .agents-tab-item:first-child { border-top: 0; }
+  .agents-tab-item:first-child {
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+  }
+  .agents-tab-item:hover {
+    border-bottom-color: rgba(255, 255, 255, 0.22);
+  }
   .agents-tab-v {
     position: relative;
     padding: 0;
@@ -4373,14 +4396,23 @@
      parent .agents-tab-item is .active. max-height animation gives a
      gentle expand/collapse without layout-jank when the active tab
      changes during scroll-lock progression. */
-  /* 4.4 round 90 — detail is always part of the active info block;
-     no max-height collapse and no Y-translate. The parent
-     .agents-tab-item handles its own opacity crossfade in place. */
+  /* 4.4 round 96 — detail (subtitle + CTA) collapsed by default,
+     expands when its parent .agents-tab-item is .active. */
   .agents-tab-detail {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: max-height .35s ease, opacity .25s ease, transform .25s ease, padding .3s ease;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 16px 0 0;
+  }
+  .agents-tab-item.active .agents-tab-detail {
+    max-height: 280px;
+    opacity: 1;
+    transform: translateY(0);
+    padding: 12px 0 4px;
   }
   .agents-tab-detail p {
     margin: 0;
@@ -5210,6 +5242,12 @@
     font-size: clamp(14px, 1.05vw, 16px);
     line-height: 1.5;
     color: rgba(255, 255, 255, 0.7);
+  }
+  .about-alva-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
   }
   .btn-outline {
     display: inline-flex;
@@ -8368,11 +8406,16 @@
      and the footer. Centered title + subtitle + outline CTA. -->
 <section class="about-alva">
   <div class="about-alva-inner">
-    <h2>Your AI Investing Agent.</h2>
-    <p>Alva equips your agent with 250+ data APIs to power deep market research, create live investing playbooks, or access and act on existing ones — all through a single skill.</p>
-    <a class="btn-outline" href="https://alva.xyz" target="_blank" rel="noreferrer">
-      Learn more about Alva <i class="ph-bold ph-arrow-up-right"></i>
-    </a>
+    <h2>Meet Alva — The AI Investing Agent behind FinTwit Alpha League</h2>
+    <p>Powered by hundreds of institutional-grade data sources and thousands of community playbooks you can follow and remix, Alva is your personal edge in all markets.</p>
+    <div class="about-alva-actions">
+      <a class="btn-primary" href="https://alva.xyz" target="_blank" rel="noreferrer">
+        <i class="ph-bold ph-rocket-launch"></i> Launch Alva
+      </a>
+      <a class="btn-outline" href="https://alva.xyz/explore" target="_blank" rel="noreferrer">
+        Explore Playbooks <i class="ph-bold ph-arrow-up-right"></i>
+      </a>
+    </div>
   </div>
 </section>
 
@@ -12693,35 +12736,28 @@
     let lastIdx = -1;
     let raf = 0;
 
-    // 4.0 — align the FIRST tab's top with the active card's top.
-    // The active card sits at (stageH - cardH) / 2 from the stage top,
-    // so the side rail needs that same offset minus the heading block.
+    // 4.4 round 97 — center the ACTIVE tab vertically in the rail.
+    // For short viewports the tab list may exceed the rail height;
+    // we translate the list so the active item's vertical midpoint
+    // lands at the rail's vertical midpoint. JS-driven because tab
+    // heights vary (active item expands its detail block).
     function syncSidePad() {
       if (!side || isMobile()) {
         if (side) side.style.removeProperty('--side-shift');
         return;
       }
-      const stage = track.parentElement;
-      const cardH = cards[0].offsetHeight;
-      const stageH = stage.offsetHeight;
-      const headH = head ? head.offsetHeight : 0;
-      const headMB = head ? parseFloat(getComputedStyle(head).marginBottom) || 0 : 0;
-      // First tab top (relative to side) = headH + headMarginBottom.
-      // Active card top (relative to stage) = (stageH - cardH) / 2.
-      // Sides + stage share the same vertical origin in the grid, so
-      // shift the side by the signed delta so the first tab's top
-      // matches the active card's top.
-      let shift = (stageH - cardH) / 2 - headH - headMB;
-      // 4.3 — guard the H2 so it never slides up behind the fixed 64px
-      // nav on laptop-sized viewports. The .agents-pin-inner has 96px
-      // of padding-top; if shift drops below `(64 - 96) = -32`, the
-      // heading would clip into the nav. Clamping costs a few pixels of
-      // tab/card alignment but keeps the section title fully readable.
-      const NAV_H = 64;
-      const innerPadTop = parseFloat(getComputedStyle(stage.parentElement || stage).paddingTop) || 96;
-      const minShift = -(innerPadTop - NAV_H - 8); // 8px breathing room
-      if (shift < minShift) shift = minShift;
-      side.style.setProperty('--side-shift', Math.round(shift) + 'px');
+      const tabsList = side.querySelector('.agents-tabs-v');
+      const activeTab = side.querySelector('.agents-tab-item.active');
+      if (!tabsList || !activeTab) return;
+      // requestAnimationFrame to let the active class take effect
+      // (detail expansion changes heights) before measuring.
+      requestAnimationFrame(() => {
+        const railH   = side.offsetHeight;
+        const tabTop  = activeTab.offsetTop;
+        const tabH    = activeTab.offsetHeight;
+        const shift   = railH / 2 - (tabTop + tabH / 2);
+        side.style.setProperty('--side-shift', Math.round(shift) + 'px');
+      });
     }
 
     function update() {
