@@ -884,9 +884,10 @@
      the 2.0 left-text / right-cards hero composition.
      ============================================================ */
   .stage.stage-marquee {
-    --s2-pad-y: clamp(28px, 5.4vh, 56px);
+    --s2-pad-top: var(--section-top-pad);
     --s2-bottom-room: clamp(20px, 4vh, 40px);
-    --s2-content-gap: clamp(22px, 3.8vh, 40px);
+    --s2-pad-bottom: var(--s2-bottom-room);
+    --s2-content-gap: var(--section-content-gap);
     --s2-row-gap: clamp(14px, 2.8vh, 24px);
     --s2-card-h: 283px;
     --s2-card-w: 540px;
@@ -896,7 +897,7 @@
        headline overlay isn't crammed against the row above/below.
        (Previous tight padding made this section feel rushed
        relative to the hero above and the leaderboard below.) */
-    padding: var(--s2-pad-y) 0 calc(var(--s2-pad-y) + var(--s2-bottom-room));
+    padding: var(--s2-pad-top) 0 var(--s2-pad-bottom);
     /* 3.0 round 23 — z-index:2 dropped along with the round-18 overlap
        (see #agents comment). Sections are flush now, so this no longer
        needs to "win" over an overlap zone. */
@@ -6723,7 +6724,7 @@
     /* ---------------------------------------------------------- */
     .stage.stage-marquee {
       display: flex;
-      padding: var(--s2-pad-y) 0 calc(var(--s2-pad-y) + var(--s2-bottom-room));
+      padding: var(--s2-pad-top) 0 var(--s2-pad-bottom);
       height: calc(100svh - var(--nav-h));
       max-height: calc(100svh - var(--nav-h));
       min-height: 0;
@@ -7057,7 +7058,7 @@
        32 to give the float-tweet cards even more breathing room. */
     .opening h1 { font-size: 32px; }
     .opening-sub { font-size: 16px; }      /* 15 → 16, iOS body floor */
-    .stage.stage-marquee { padding: var(--section-top-pad) 0 var(--section-top-pad); }
+    .stage.stage-marquee { padding: var(--s2-pad-top) 0 var(--s2-pad-bottom); }
     /* Critical: the 760 block above pushes nav-cta to 40 h for tap
        compliance. The previous SE override SHRANK it back to 24 h,
        which made the worst-touch device get the worst tap target.
