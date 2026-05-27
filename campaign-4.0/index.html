@@ -123,6 +123,13 @@
     --font:         "Delight", system-ui, sans-serif;
     --font-display: "Delight", system-ui, sans-serif;
     --font-mono:    "Delight", ui-monospace, monospace;
+    --nav-h: 65px;
+    --section-top-pad: 120px;
+    --section-title-gap: 12px;
+    --section-content-gap: 56px;
+    --section-title-size: clamp(28px, 3.4vw, 44px);
+    --section-sub-size: clamp(14px, 1.05vw, 16px);
+    --section-sub-color: rgba(255, 255, 255, 0.70);
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -218,45 +225,23 @@
     height: 22px;
     width: auto;
     display: block;
-    color: #ffffff;
+    color: var(--alva);
   }
   .brand-dot {
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.55);
+    background: #ffffff;
     flex-shrink: 0;
     display: inline-block;
   }
-  /* 3.0 round 9 — old .brand-mark logo + 2-line .brand-text replaced
-     by a single SVG wordmark. SVG handles the equal-width trick via
-     textLength + lengthAdjust internally.
-     3.0 round 21 — wordmark now sits to the right of the restored
-     Alva mark. */
   .brand-wordmark {
-    /* 4.4 round 90 — wordmark shrunk to match the new 22px alva
-       horizontal logo height. Proportional width: 84 × 22/26 ≈ 71. */
-    width: 71px;
-    height: 22px;
+    /* 4.4 round 99 — wordmark bumped +2px high so its visual height
+       aligns with the Alva logo block instead of reading low/small. */
+    width: 77px;
+    height: 24px;
     display: block;
     color: var(--text);
-  }
-  /* Legacy .brand-text classes (kept for back-compat with any leftover
-     CSS that targets them — the elements are gone from the DOM). */
-  .brand-text .name {
-    font-family: var(--font);
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    color: var(--text);
-  }
-  .brand-text .sub {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 400;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-    margin-top: 1px;
   }
   /* nav scrollspy tab bar — 3.0 round 9
      Flat text tabs (no pill container, no filled active state) so the
@@ -289,7 +274,7 @@
        4.3 — weight pulled to 400 per feedback. */
     color: var(--text);
     font-family: var(--font);
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 400;
     background: transparent;
     border: 0;
@@ -347,7 +332,7 @@
     padding: 0;
     margin: 0;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.62);
     border-radius: 999px;
     color: var(--text);
     cursor: pointer;
@@ -355,7 +340,7 @@
   }
   .nav-menu-toggle:hover {
     background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.90);
   }
   .nav-menu-toggle i {
     position: absolute; inset: 0;
@@ -477,18 +462,14 @@
   }
   /* secondary ghost button — link to the For-KOLs card */
   /* TS token: btn-s */
-  /* TS token: btn-s — Nav ghost.
-     3.0 round 12: border matches the Section 2 .stage-actions .btn-ghost
-     treatment — same 1px width, but darker ink color (alpha 0.55 vs the
-     near-invisible var(--line) 0.10). "Heavier" in tonal weight, not
-     stroke width. */
+  /* TS token: btn-s — Nav ghost. */
   .nav-cta-ghost {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 9px 16px;
     border-radius: 999px;
     background: transparent;
     color: var(--text);
-    border: 1px solid rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.78);
     font-family: var(--font);
     font-size: 13px;
     font-weight: 500;
@@ -602,7 +583,9 @@
     font-size: 13px;
     filter: none;
     z-index: 3;
-    box-shadow: 0 12px 36px rgba(20,20,30,0.10);
+    box-shadow:
+      0 4px 34px -24px rgba(88, 195, 198, 0.16),
+      0 12px 36px rgba(20,20,30,0.10);
   }
   /* (cat-eye SVG-filter approach reverted — neither Chrome nor Safari
      rendered the displacement reliably. Will be replaced by a proper
@@ -710,11 +693,8 @@
   .opening h1 .line-handle,
   .opening h1 .line-2 {
     display: block;
-    /* 4.4 round 90 — line-height bumped 1.05 → 1.2 because the 'y' in
-       "money?" was still being clipped by the line box at the larger
-       JS-fit font sizes (1.05 isn't enough for Delight Display's
-       descender depth at 100+px). */
-    line-height: 1.2;
+    /* 4.4 round 98 — tighten hero title leading by 25%. */
+    line-height: 0.9;
     min-height: 0;
     white-space: nowrap;
   }
@@ -796,8 +776,7 @@
       0 0  50px rgba(10, 10, 14, 0.35);
   }
   .opening-sub .alva { color: var(--alva); }
-  /* 4.4 round 87 — hero CTA pair. Reuses .btn-primary/.btn-ghost from
-     the section-2 stage-actions block so styling stays in sync. */
+  /* 4.4 round 87 — hero CTA pair. */
   .opening-actions {
     display: flex;
     flex-wrap: wrap;
@@ -808,6 +787,14 @@
     z-index: 6;
   }
   @media (max-width: 760px) {
+    :root {
+      --section-top-pad: 72px;
+      --section-title-size: clamp(26px, 7vw, 34px);
+      --section-sub-size: 16px;
+      --section-title-gap: 12px;
+      --section-content-gap: 40px;
+    }
+
     .opening-sub { max-width: 90%; }
     .opening-actions { gap: 8px; }
   }
@@ -901,7 +888,7 @@
        headline overlay isn't crammed against the row above/below.
        (Previous tight padding made this section feel rushed
        relative to the hero above and the leaderboard below.) */
-    padding: 120px 0 120px;
+    padding: var(--section-top-pad) 0 var(--section-top-pad);
     /* 3.0 round 23 — z-index:2 dropped along with the round-18 overlap
        (see #agents comment). Sections are flush now, so this no longer
        needs to "win" over an overlap zone. */
@@ -950,7 +937,7 @@
   .stage-marquee {
     flex-direction: column;
     justify-content: flex-start;
-    gap: 56px;
+    gap: var(--section-content-gap);
   }
   .stage-marquee .stage-header {
     width: 100%;
@@ -975,19 +962,19 @@
   .stage-marquee .stage-header .stage-title {
     font-family: var(--font-display);
     font-weight: 400;
-    font-size: clamp(28px, 3.4vw, 44px);
+    font-size: var(--section-title-size);
     line-height: 1.1;
     letter-spacing: -0.022em;
     color: var(--text);
-    margin: 0 0 8px;
+    margin: 0 0 var(--section-title-gap);
   }
   .stage-marquee .stage-header .stage-title .alva { color: var(--alva); }
   .stage-marquee .stage-header .stage-sub {
     font-family: var(--font);
     font-weight: 400;
-    font-size: clamp(14px, 1.05vw, 16px);
+    font-size: var(--section-sub-size);
     line-height: 1.5;
-    color: rgba(255,255,255,0.7);
+    color: var(--section-sub-color);
     margin: 0;
   }
   @media (max-width: 900px) {
@@ -996,241 +983,6 @@
       align-items: flex-start;
       gap: 20px;
     }
-  }
-  /* legacy overlay rules disabled — kept compiled away rather than
-     deleted to minimize the diff. */
-  .stage-headline-overlay { display: none; }
-  .stage-marquee .stage-headline-overlay-disabled {
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    display: flex;
-    align-items: center;
-    pointer-events: none;
-    /* 3.0 round 30 — progressive blur, narrowed back to the original
-       plaque footprint. All three layers share the SAME mask-size
-       (1250px) and mask-position-x (`(100vw-1320px)/2 - 359px`) so
-       the blur band is precisely centered on the headline column
-       (text spans inner-left+16 to inner-left+540, mask solid hold
-       covers that exact range). Only the percent stops differ per
-       layer so each higher-blur layer is narrower than the one
-       below. Strength: 15 → 30 → 60 (was 2 → 8 → 20; way too soft
-       under the text — user wanted text to read CLEARLY over a
-       heavily blurred backdrop).
-       Layer 1 = this element (15px, matches old plaque width 30-70%).
-       Layer 2 = ::before (30px, narrower hold 38-62%).
-       Layer 3 = ::after (60px, narrowest hold 45-55% — under text).
-       Inner content sits at z-index:3 (.stage-headline-inner) above
-       all three blur layers. */
-    /* 3.0 round 31 — blur strengths nearly doubled (was 15/30/60 →
-       25/60/120) and left/right fades tightened from 30%/30% wide
-       fade zones to 8% fade zones (~100px instead of ~375px each
-       side). Mask window stays 1250px at the same position so the
-       solid hold still aligns to the headline column. */
-    /* 4.3 round 2 — mask is now mostly transparent per feedback. A
-       very subtle dark tint + light blur dims the marquee cards
-       behind just enough to keep the H2 readable, while letting the
-       cards mostly show through. */
-    background-color: rgba(0, 0, 0, 0.12);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-    /* 3.0 round 35 — LEFT fade-in distance lengthened per user
-       ("前面的遮罩左侧再加点渐变距离"). Outer transparent stop moved
-       22% → 10% so the fade-in zone is now 10% → 30% (20% wide,
-       previously 22% → 30% = 8% wide). Inner opaque stop stays at
-       30% so the text bg coverage is unchanged. Right side stops
-       are untouched — asymmetric on purpose; user only asked about
-       the left side. */
-    /* 4.3 — switched from a fixed 1250px mask window with a
-       viewport-math position to a percentage-based one so the solid
-       hold always covers the widened headline column (h1 max-width
-       760 + 16px left padding). No more left-edge clipping on
-       laptop widths. */
-    -webkit-mask-image: linear-gradient(to right,
-      transparent 0%,
-      transparent 1%,
-      #000        6%,
-      #000        56%,
-      transparent 70%,
-      transparent 100%);
-            mask-image: linear-gradient(to right,
-      transparent 0%,
-      transparent 1%,
-      #000        6%,
-      #000        56%,
-      transparent 70%,
-      transparent 100%);
-    -webkit-mask-size: 100% 100%;
-            mask-size: 100% 100%;
-    -webkit-mask-position: 0 center;
-            mask-position: 0 center;
-    -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-  }
-  .stage-marquee .stage-headline-overlay::before,
-  .stage-marquee .stage-headline-overlay::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    -webkit-mask-size: 100% 100%;
-            mask-size: 100% 100%;
-    -webkit-mask-position: 0 center;
-            mask-position: 0 center;
-    -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-  }
-  /* Layer 2 — was 60px blur; now disabled because Layer 1 paints a
-     solid black band already. Kept for the mask cascade only. */
-  .stage-marquee .stage-headline-overlay::before {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    /* 3.0 round 35 — same LEFT-fade extension as Layer 1.
-       Outer transparent stop 24% → 12% (fade 12% → 32%, 20% wide). */
-    /* 4.3 — rebased on percentage-of-overlay-width like Layer 1. */
-    -webkit-mask-image: linear-gradient(to right,
-      transparent 0%,
-      transparent 2%,
-      #000        8%,
-      #000        54%,
-      transparent 66%,
-      transparent 100%);
-            mask-image: linear-gradient(to right,
-      transparent 0%,
-      transparent 2%,
-      #000        8%,
-      #000        54%,
-      transparent 66%,
-      transparent 100%);
-  }
-  /* Layer 3 — was 120px blur; disabled alongside Layer 2. */
-  .stage-marquee .stage-headline-overlay::after {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    -webkit-mask-image: linear-gradient(to right,
-      transparent 0%,
-      transparent 3%,
-      #000        10%,
-      #000        52%,
-      transparent 62%,
-      transparent 100%);
-            mask-image: linear-gradient(to right,
-      transparent 0%,
-      transparent 3%,
-      #000        10%,
-      #000        52%,
-      transparent 62%,
-      transparent 100%);
-  }
-  .stage-marquee .stage-headline-inner {
-    width: 100%;
-    max-width: 1320px;
-    margin: 0 auto;
-    padding: 0;
-    position: relative;
-    /* Sit above the 3 progressive-blur layers (.stage-headline-overlay
-       + its ::before + ::after), all of which are at z-index:auto
-       under the inset:0 absolutely-positioned overlay. */
-    z-index: 3;
-  }
-  .stage-marquee .stage-headline-inner h1 {
-    display: inline-block;
-    /* 4.3 — max-width widened (540 → 760) because the bigger H2
-       (clamp 36-60) makes the longest line "We built live playbooks"
-       overflow the old box, which on certain laptop widths shifted
-       the inline-block left-edge into the headline-overlay's left
-       fade region — visually clipping the first 1-2 letters. */
-    max-width: 760px;
-    padding-left: 16px;
-    padding-right: 24px;
-    pointer-events: auto;
-  }
-  /* CTA row under the stage headline — sits left-aligned, flush with the
-     headline's first letter (same 16px left padding). pointer-events:auto
-     because the overlay parent is pointer-events:none so the marquee
-     behind stays hoverable. */
-  .stage-marquee .stage-actions {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    padding: 28px 16px 0;
-    pointer-events: auto;
-    position: relative;
-    z-index: 6;
-  }
-  /* Stage's primary + ghost buttons share the SAME padding / font / radius
-     so the pair reads as a paired control, not two random pills with
-     different proportions. Both pick up the global pill (999) radius. */
-  /* TS token: btn — inherits font from .btn-primary / .btn-ghost */
-  .stage-actions .btn-primary,
-  .stage-actions .btn-ghost {
-    padding: 14px 24px;
-    border-radius: 999px;
-  }
-  /* 3.0 round 36 — S2 first button switched to a solid BLACK pill per
-     user. The default .btn-primary uses an animated multi-color
-     shimmer (::before + ::after) that didn't read as serious enough
-     against the mint wash. Override to solid var(--text) bg + white
-     text, and disable both decorative pseudo-elements so no shimmer
-     remains. */
-  .stage-marquee .stage-actions .btn-primary {
-    background: var(--alva);
-    color: var(--on-alva);
-    box-shadow: none;
-  }
-  .stage-marquee .stage-actions .btn-primary::before,
-  .stage-marquee .stage-actions .btn-primary::after {
-    display: none;
-  }
-  .stage-marquee .stage-actions .btn-primary:hover {
-    background: var(--alva);
-    color: var(--on-alva);
-    transform: translateY(-1px);
-    box-shadow: none;
-  }
-  /* Section 2 sits on a mint wash; .btn-ghost defaults to transparent
-     which makes it look grey-tinted by the wash. Force a white fill so
-     the pill reads as a solid white control next to the teal primary.
-     Hover keeps the white pill (so it stays consistent visually) but
-     darkens the border and lifts; color stays dark — the base
-     .btn-ghost:hover rule would set color:#fff and erase the text on
-     a white pill, that's the regression the user hit. */
-  .stage-actions .btn-ghost {
-    /* 4.3 — bg removed per feedback; the pill is outline-only now. */
-    background: transparent;
-    /* 3.0 round 36 — border darkened from rgba(10,10,16,0.10) →
-       rgba(10,10,16,0.55) so the outline is clearly visible against
-       the mint section wash (user: "第二个黑边明显一点"). */
-    border-color: rgba(255, 255, 255,0.55);
-    color: var(--text);
-  }
-  .stage-actions .btn-ghost:hover {
-    background: rgba(255,255,255,0.05);
-    border-color: rgba(255, 255, 255,0.80);
-    color: var(--text);
-  }
-  /* The headline lives on top of the marquee now — kept this older
-     wrapper rule as a no-op fallback in case markup is reverted. */
-  .stage-marquee .stage-headline {
-    max-width: 1100px;
-    margin: 0 auto 48px;
-    padding: 0 32px;
-    text-align: center;
-  }
-  /* TS token: display-l — unified with Section 3 (Use Cases) and
-     Section 4 (Leaderboard) per user 3.0 round 5. Bumped from display-m
-     (clamp 20-28) so all three sections share the same heading scale. */
-  .stage-marquee .stage-title {
-    font-family: var(--font-display);
-    /* 4.4 round 15 — drop one weight step (500 → 400) to match the
-       other section H2s. Earlier sweep missed this rule because it
-       lives in the stage-marquee block, not under .section-head h2. */
-    font-weight: 400;
-    font-size: clamp(36px, 4.4vw, 60px);
-    line-height: 1.08;
-    letter-spacing: -0.022em;
-    margin: 0;
-    color: var(--text);
   }
   /* Each clause is its own nowrap block — guarantees a clean 2-line
      headline regardless of how Space Grotesk measures uppercase glyphs. */
@@ -1262,7 +1014,7 @@
        change doesn't re-center sibling cards within the row. */
     overflow-x: clip;
     overflow-y: visible;
-    height: var(--mq-base-h, 283px);
+    height: var(--mq-row-base-h, 283px);
     display: flex;
     align-items: flex-start;
     /* 4.4 round 93 — row paints in its own stacking context so a
@@ -1338,28 +1090,19 @@
   /* 4.4 round 87 — marquee cards are interactive again per user
      feedback. Cards support hover (lift + shadow) and the row pauses
      scroll on hover. */
-  .marquee-track .mq-card { cursor: pointer; }
-  /* 4.4 round 92 — marquee card hover now MIRRORS the modal-grid
-     card exactly: card height grows by --mq-cta-h to reveal the CTA
-     row INSIDE the card surface (with card bg/gradient extending to
-     fit). Lift + slight scale on top. overflow:hidden is preserved
-     so the CTA strip stays clipped at the new (taller) card edge,
-     reading as a built-in strip rather than a detached row. The
-     parent .marquee-row locks its height so siblings don't shift —
-     the grown card just overflows downward into the row gap. */
+  .marquee-track .mq-card {
+    cursor: pointer;
+    overflow: visible;
+    /* CTA strip lives outside the fixed 1.91:1 panel on marquee cards;
+       paint containment would clip it even when overflow is visible. */
+    contain: layout style;
+  }
+  /* Marquee hover must not change flex item height; changing height
+     makes the animated track reflow and causes the whole row to shimmy.
+     The CTA is rendered outside the fixed 1.91:1 panel instead. */
   .marquee-track .mq-card:hover {
-    /* 4.4 round 95 — vertical-center alignment with siblings.
-       Card grows by --mq-cta-h (36px) downward by default; to keep
-       the visual center aligned with non-hovered siblings, the card
-       is also translated up by cta-h/2 (18px). Net effect: growth
-       is symmetric around the original card center, so the hovered
-       card and its row neighbours share the same vertical centerline.
-       Flicker analysis: translateY(-18) + scale(1.05) on a 319-tall
-       box still keeps the original [0, 283] baseline area fully
-       inside the transformed bounding box, so the cursor cannot
-       exit the hover zone. */
-    transform: translateY(calc(var(--mq-cta-h) / -2)) scale(1.05);
-    height: calc(var(--mq-base-h) + var(--mq-cta-h));
+    transform: translateY(calc(var(--mq-cta-h) / -2));
+    border-radius: 8px 8px 0 0;
     box-shadow: 0 28px 60px rgba(0, 0, 0, 0.6);
     z-index: 3;
   }
@@ -1375,7 +1118,7 @@
      tweaks. */
   .results-grid > .result-card-wrap {
     position: relative;
-    height: 283px;
+    height: var(--mq-row-base-h, 283px);
   }
   /* 4.4 round 56 — anchored at vertical center of wrap (top:50% +
      translateY(-50%)) instead of inset:0. This makes height
@@ -1388,7 +1131,7 @@
     left: 0;
     right: 0;
     --mq-base-h: 283px;
-    height: 283px;
+    height: var(--mq-base-h);
     aspect-ratio: auto;
     z-index: 1;
     transform: translateY(-50%);
@@ -1400,7 +1143,7 @@
        symmetrically above + below the wrap's center. */
     transform: translateY(-50%) scale(1.06);
     transform-origin: center center;
-    height: calc(283px + var(--mq-cta-h));
+    height: calc(var(--mq-base-h) + var(--mq-cta-h));
     z-index: 3;
     /* 4.4 round 60 — plain dark drop shadow per user direction
        (no blue ring, no alva glow). Subtle on the dark backdrop
@@ -1408,10 +1151,10 @@
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
   }
   .results-grid .mq-card .mq-body {
-    height: 283px;
+    height: var(--mq-design-h);
   }
   .results-grid .mq-card .mq-cta {
-    top: 283px;
+    top: var(--mq-base-h);
   }
   /* fk-preview-card sits inside its own wrap, no hover. Keeps the
      landing-marquee 540×283 size since the fk modal is centered and
@@ -1419,10 +1162,10 @@
   .fk-card-wrap .fk-preview-card {
     aspect-ratio: auto;
     --mq-base-h: 283px;
-    height: 283px;
+    height: var(--mq-base-h);
   }
-  .fk-card-wrap .fk-preview-card .mq-body { height: 283px; }
-  .fk-card-wrap .fk-preview-card .mq-cta { top: 283px; }
+  .fk-card-wrap .fk-preview-card .mq-body { height: var(--mq-design-h); }
+  .fk-card-wrap .fk-preview-card .mq-cta { top: var(--mq-base-h); }
   .mq-avatar {
     width: 56px; height: 56px;
     border-radius: 50%;
@@ -1505,7 +1248,7 @@
     /* 4.1 — card uses the Open Graph aspect (1200/630 ≈ 1.905). Width
        fixed for the marquee; the .results-grid override below lets the
        modal card flex with the grid cell via aspect-ratio. */
-    width: 540px;
+    width: var(--mq-card-w, 540px);
     height: var(--mq-base-h);
     /* 4.4 round 6 — padding moved onto .mq-body so the inner layout
        has its own fixed height and doesn't shift when the card grows
@@ -1522,12 +1265,18 @@
     overflow: hidden;
     position: relative;
     isolation: isolate;
+    --mq-design-w: 540px;
+    --mq-design-h: 283px;
+    --mq-scale: 1;
     --mq-base-h: 283px;
     --mq-cta-h: 36px;
     transition: transform .2s cubic-bezier(.22,1,.36,1),
-                height .28s cubic-bezier(.22,1,.36,1),
                 box-shadow .2s ease,
                 border-color .2s ease;
+  }
+  .marquee-track .mq-card {
+    overflow: visible;
+    contain: layout style;
   }
   /* 4.0 round 7 — per-card identity comes from a corner gradient
      instead of a blurred avatar (matches the fullscreen results-modal
@@ -1568,6 +1317,26 @@
   .mq-card .mq-chart,
   .mq-card .mq-foot { position: relative; z-index: 1; }
 
+  .mq-card .mq-base {
+    position: relative;
+    width: 100%;
+    height: var(--mq-base-h);
+    overflow: hidden;
+    border-radius: inherit;
+  }
+  .mq-card:hover .mq-base {
+    border-radius: 8px 8px 0 0;
+  }
+  .mq-card .mq-scale {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--mq-design-w);
+    height: var(--mq-design-h);
+    transform: scale(var(--mq-scale));
+    transform-origin: 0 0;
+  }
+
   /* 4.4 round 6 — body wrapper. Owns the card's inner padding + flex
      layout so the card itself can grow in height (on hover) without
      reflowing the chart's `margin-top: auto` and dragging the foot
@@ -1584,8 +1353,8 @@
     column-gap: 14px;
     padding: 14px 18px 14px;
     box-sizing: border-box;
-    width: 100%;
-    height: 100%;
+    width: var(--mq-design-w);
+    height: var(--mq-design-h);
     position: relative;
     z-index: 1;
   }
@@ -1810,14 +1579,8 @@
     opacity: 0.65;
     pointer-events: none;
   }
-  /* 4.4 round 84 — on hover the card grows by --mq-cta-h to reveal
-     the CTA strip at the bottom. Lift the brand mark by the same
-     amount so it stays at its original position (just above where
-     the original card bottom was), not pushed down with the new edge. */
-  .results-grid .mq-card:hover .mq-brand,
-  .marquee-track .mq-card:hover .mq-brand {
-    bottom: calc(12px + var(--mq-cta-h));
-  }
+  /* Brand mark belongs to the default 1.91:1 panel and scales with it;
+     the hover CTA is a separate fixed-height strip below that panel. */
   .mq-card .mq-brand svg {
     width: 100%;
     height: 100%;
@@ -1825,15 +1588,13 @@
   }
   .mq-card .mq-brand .lg-bg { fill: var(--alva); }
   .mq-card .mq-brand .lg-fg { fill: #ffffff; }
-  .marquee-track .mq-card .mq-body {
-    height: var(--mq-base-h);
-  }
+  .marquee-track .mq-card .mq-body { height: var(--mq-design-h); }
   /* 4.4 round 10 — modal cards pin body to the JS-measured base
      height so the chart's `margin-top: auto` doesn't absorb the
      hover-growth and shift content downward. */
   .results-grid .mq-card.has-base-h .mq-body,
   .fk-preview-card.has-base-h .mq-body {
-    height: var(--card-base-h);
+    height: var(--mq-design-h);
   }
 
   /* 4.4 round 5 — hover CTA: a row that lives INSIDE the card,
@@ -1856,6 +1617,7 @@
     background: transparent;
     border: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0 0 8px 8px;
     color: rgba(255, 255, 255, 0.82);
     text-decoration: none;
     font-family: var(--font);
@@ -1864,6 +1626,21 @@
     letter-spacing: -0.005em;
     transition: color .18s ease, background-color .18s ease;
     z-index: 4;
+  }
+  .marquee-track .mq-card .mq-cta {
+    opacity: 0;
+    transform: translateY(0);
+    background: rgba(31, 31, 41, 0.98);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.36);
+    transition:
+      opacity .22s cubic-bezier(.22,1,.36,1),
+      transform .22s cubic-bezier(.22,1,.36,1),
+      color .18s ease,
+      background-color .18s ease;
+  }
+  .marquee-track .mq-card:hover .mq-cta {
+    opacity: 1;
+    transform: translateY(0);
   }
   /* 4.4 round 88 — marquee cards re-enable CTA. Same hover-grow
      pattern as modal cards: rest = base height (CTA hidden by
@@ -2089,7 +1866,16 @@
   .mq-card .mq-foot .mq-foot-r { text-align: right; opacity: 0.7; }
   @media (max-width: 760px) {
     /* 4.1 — mobile mq-card keeps OG aspect (380 / 199 ≈ 1.91). */
-    .mq-card { width: 380px; height: 199px; padding: 12px 14px; }
+    .mq-card { --mq-card-w: 380px; width: var(--mq-card-w); height: var(--mq-base-h); padding: 0; }
+    .stage-marquee .marquee-row { height: var(--mq-row-base-h, 199px); }
+    .stage-marquee .marquee-track .mq-card {
+      height: var(--mq-base-h);
+      padding: 0;
+      gap: 0;
+    }
+    .stage-marquee .marquee-track .mq-card:hover {
+      transform: translateY(calc(var(--mq-cta-h) / -2));
+    }
     .mq-card .mq-avatar { width: 32px; height: 32px; }
     .mq-card .mq-meta b { font-size: 13px; }
     .mq-card .mq-winrate { margin-top: 8px; grid-template-columns: 42px 1fr; column-gap: 8px; }
@@ -2098,318 +1884,12 @@
     .mq-card .mq-call-val { font-size: 12px; }
   }
 
-  /* ============================================================
-     LEGACY HERO STAGE  (kept for now — no longer rendered, but the
-     CSS is referenced by mobile media queries below and by the
-     audit cards used inside the results modal further down).
-     ============================================================ */
-  /* full-width band — bg extends edge to edge */
+  /* full-width section band — bg extends edge to edge */
   .stage {
     position: relative;
     width: 100%;
     background: var(--bg-soft);
     padding: 120px 0 112px;
-  }
-  /* inner container caps content width and centres it.
-     Single row now — the CTA used to live in a second grid row but it's
-     been folded into the .hero-content column (above .perms). */
-  .stage-inner {
-    max-width: 1440px;
-    margin: 0 auto;
-    padding: 0 48px;
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    column-gap: 72px;     /* generous gap so cards don't crowd the text */
-    align-items: center;
-  }
-  .stage .hero-content { grid-column: 1; }
-  .stage .card-stack   { grid-column: 2; }
-
-  /* Inline CTA row inside .hero-content — Initialize Scan button +
-     social-proof bubble sit side by side, anchored to the left, and
-     stack above the three perms checks. The button uses the standard
-     .btn-primary size (no .btn-big) so it reads as a single, focused CTA
-     rather than a section-wide hero anchor. */
-  .hero-content .hero-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 14px;
-    margin-top: 8px;
-    flex-wrap: wrap;
-  }
-
-  /* ============================================================
-     CTA SOCIAL-PROOF BUBBLE  (stacked avatars + rolling digit counter)
-     Small dark pill that sits immediately to the right of the Initialize
-     Scan button (sibling inside .hero-cta inline-flex row). A left-pointing
-     CSS triangle (::before) connects it visually to the button like a
-     speech-bubble pointer. The counter is a tabular-nums digit roller —
-     each visible digit is a 16px viewport onto a 0..9 column that
-     translateY's into position with a soft transition.
-     ============================================================ */
-  .cta-proof {
-    position: relative;
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 5px 12px 5px 5px;
-    background: var(--card);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 999px;
-    box-shadow: 0 8px 22px rgba(10,10,16,0.20);
-    color: #fff;
-    white-space: nowrap;
-  }
-  /* left-pointing triangle "pointer" — visually anchors the bubble to
-     the button next to it */
-  .cta-proof::before {
-    content: "";
-    position: absolute;
-    left: -6px;
-    top: 50%;
-    width: 7px;
-    height: 12px;
-    background: var(--card);
-    clip-path: polygon(100% 0, 0 50%, 100% 100%);
-    transform: translateY(-50%);
-  }
-  .proof-avatars {
-    display: inline-flex; align-items: center;
-    flex-shrink: 0;
-  }
-  .proof-avatars img {
-    width: 22px; height: 22px; border-radius: 50%;
-    border: 2px solid var(--card);
-    margin-left: -6px;
-    object-fit: cover;
-    background: var(--card-line);
-  }
-  .proof-avatars img:first-child { margin-left: 0; }
-  .proof-count {
-    display: inline-flex;
-    align-items: baseline;
-    font-family: var(--font-display);
-    font-size: 13px;
-    font-weight: 500;
-    color: #fff;
-    letter-spacing: -0.005em;
-    height: 16px;
-  }
-  .proof-count .separator { display: inline-block; padding: 0 1px; }
-  .roller {
-    display: inline-block;
-    height: 16px;
-    width: 8px;
-    overflow: hidden;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-    vertical-align: bottom;
-  }
-  .roller-stack {
-    display: flex;
-    flex-direction: column;
-    transition: transform .7s cubic-bezier(.22,.8,.22,1);
-    will-change: transform;
-  }
-  .roller-stack > span {
-    height: 16px;
-    line-height: 16px;
-    display: block;
-  }
-  .proof-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.55);
-    letter-spacing: 0.06em;
-    margin-left: 2px;
-  }
-
-  /* ============================================================
-     HERO STAT STRIP  (3.0)
-     Solo dark pill carrying the "X calls tracked today" live counter.
-     Replaces the old CTA + speech-bubble combo. No triangle pointer
-     (nothing to point at — the CTA has been moved to Section 3.1).
-     Reuses .proof-avatars / .proof-count / .proof-label styles.
-     ============================================================ */
-  .hero-stat-strip {
-    display: inline-flex; align-items: center; gap: 8px;
-    margin-top: 8px;
-    padding: 5px 12px 5px 5px;
-    background: var(--card);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 999px;
-    box-shadow: 0 8px 22px rgba(10,10,16,0.20);
-    color: #fff;
-    white-space: nowrap;
-  }
-
-  /* horizontal auto-scroll rail (full viewport width, behind veil) */
-  .cards-rail {
-    position: absolute;
-    top: calc(50% + 32px); left: 0; right: 0;
-    transform: translateY(-50%);
-    z-index: 1;
-    padding: 40px 0;
-    /* 3D viewport for the per-card rotateY tilt JS sets on each card */
-    perspective: 1400px;
-    perspective-origin: 50% 50%;
-  }
-  .cards-track {
-    display: flex; gap: 32px;
-    width: max-content;
-    padding-left: 42vw;
-    animation: scrollCards 75s linear infinite;
-    /* keep the rail's perspective alive through this transform so the
-       rotateY on child .perspective-wrap actually renders in 3D, not flat */
-    transform-style: preserve-3d;
-  }
-  .cards-track:hover { animation-play-state: paused; }
-  @keyframes scrollCards {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-  }
-
-  /* left veil — light translucent + backdrop blur so hero text reads clean */
-  .hero-veil {
-    position: absolute;
-    top: 0; left: 0; bottom: 0;
-    width: 60%;
-    z-index: 2;
-    pointer-events: none;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    background: linear-gradient(to right,
-      rgba(245,245,247,0.96) 0%,
-      rgba(245,245,247,0.92) 60%,
-      rgba(245,245,247,0.55) 86%,
-      rgba(245,245,247,0.0)  100%);
-    mask-image: linear-gradient(to right, black 0%, black 72%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, black 0%, black 72%, transparent 100%);
-  }
-
-  .hero-content {
-    width: 100%;
-    max-width: 720px;
-    justify-self: start;
-    text-align: left;
-  }
-  /* H1 is a single declarative paragraph — full prose, one style.
-     Smaller size so the longer sentence wraps cleanly to 3-4 lines
-     within the left column. */
-  h1.hero-title {
-    font-family: var(--font-display);
-    font-weight: 500;
-    font-size: clamp(26px, 3.2vw, 38px);
-    line-height: 1.18;
-    letter-spacing: -0.02em;
-    margin: 0 0 24px;
-    color: var(--text);
-  }
-  .hero-sub {
-    color: var(--muted);
-    font-size: 17px; line-height: 1.6;
-    max-width: 560px; margin: 0 0 28px;
-  }
-  .hero-sub b { color: var(--text); font-weight: 500; }
-  .hero-actions {
-    display: flex; align-items: center; gap: 22px;
-    flex-wrap: wrap;
-    margin-top: 4px;
-  }
-  /* inline link inside the hero subtitle — visually identical to the
-     surrounding text (same colour, same weight), only difference is the
-     underline. Hover nudges colour toward alva. */
-  .hero-sub .sub-link {
-    display: inline;
-    background: transparent;
-    border: 0;
-    padding: 0;
-    margin: 0;
-    color: inherit;
-    font: inherit;
-    text-decoration: underline;
-    text-underline-offset: 0.18em;
-    text-decoration-thickness: 1px;
-    cursor: pointer;
-    transition: color .15s;
-  }
-  .hero-sub .sub-link:hover { color: var(--alva); }
-  .hero-link {
-    display: inline-flex; align-items: center; gap: 6px;
-    color: var(--muted);
-    font-size: 13px; font-weight: 500;
-    cursor: pointer;
-    background: transparent;
-    border: 0;
-    padding: 0;
-    transition: color .15s;
-  }
-  .hero-link:hover { color: var(--text); }
-  .hero-link::after {
-    content: "→";
-    margin-left: 2px;
-    transition: transform .2s;
-    opacity: 0.6;
-  }
-  .hero-link:hover::after { opacity: 1; }
-  .perms {
-    margin-top: 32px;
-    display: flex; flex-wrap: wrap; gap: 18px;
-    font-size: 12px; color: var(--muted); font-weight: 500;
-  }
-  .perms span { display: inline-flex; align-items: center; gap: 6px; }
-  .perms span i { color: var(--alva); font-size: 14px; }
-
-  /* ============================================================
-     CARD STACK  (right column — attachment-style fan of profile cards)
-     5 cards positioned absolutely around the stack centre with varied
-     x / y / rotation. Hover any card: it scales + straightens; the
-     others spread further out via :has(). Pure CSS, no JS.
-     ============================================================ */
-  .card-stack {
-    position: relative;
-    width: 100%;
-    /* Cards are now ~175px tall (head + score only) — was 325px when
-       they had full matrix/providers content. Stack height shrinks
-       to match so the cards don't float in a sea of empty space. */
-    height: clamp(240px, 32vh, 320px);
-    justify-self: end;
-  }
-  .card-stack .perspective-wrap {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 260px;
-    margin: 0;
-    /* Function-list shape MUST match the .is-hovered rule below
-       (translate / translate / scale / rotate) so CSS can interpolate
-       between them smoothly on hover instead of snapping. */
-    transform:
-      translate(-50%, -50%)
-      translate(calc(var(--sx, 0) + var(--push, 0px)), 0)
-      scale(1)
-      rotate(var(--srot, 0deg));
-    transition: transform .45s cubic-bezier(.22,.8,.22,1);
-    cursor: pointer;
-  }
-  /* 4 cards in a horizontal row, ~130px apart; rotation varies per
-     card so it feels hand-laid, not algorithmic. */
-  .card-stack .perspective-wrap:nth-child(1) { --sx: -195px; --srot: -9deg; z-index: 1; }
-  .card-stack .perspective-wrap:nth-child(2) { --sx:  -65px; --srot:  4deg; z-index: 2; }
-  .card-stack .perspective-wrap:nth-child(3) { --sx:   65px; --srot: -3deg; z-index: 3; }
-  .card-stack .perspective-wrap:nth-child(4) { --sx:  195px; --srot:  8deg; z-index: 4; }
-
-  /* Hover state — function-list shape matches the base rule
-     (translate / translate / scale / rotate) so CSS can interpolate
-     smoothly via the .45s transition. The hovered card scales up
-     and flattens its natural rotation to 0; siblings slide aside via
-     the --push offset set inline by JS. */
-  .card-stack .perspective-wrap.is-hovered {
-    transform:
-      translate(-50%, -50%)
-      translate(var(--sx, 0), 0)
-      scale(1.07)
-      rotate(0deg);
-    z-index: 20;
   }
 
   /* ============================================================
@@ -2418,8 +1898,6 @@
   .perspective-wrap {
     flex-shrink: 0;
     width: 380px;
-    /* perspective lives on .cards-rail above so all cards share one
-       viewing camera. The 3D rotateY is set per-card by JS via --tilt. */
   }
   .card {
     /* Light-tone variant: cream/white card with a subtle colored corner
@@ -2452,17 +1930,6 @@
       0 12px 24px -6px rgba(20,20,30,0.12);
     z-index: 5;
   }
-  .cards-track > .perspective-wrap {
-    position: relative; z-index: 1;
-    /* Cover Flow: --tilt sets the 3D rotation, --pull shifts the card
-       toward the viewport centre so edge cards visually compress and
-       overlap their neighbours. Both vars are written per-frame by JS. */
-    transform: translateX(var(--pull, 0px)) rotateY(var(--tilt, 0deg));
-    transform-style: preserve-3d;
-    backface-visibility: hidden;
-  }
-  .cards-track > .perspective-wrap:hover { z-index: 10; }
-
   .card-inner {
     position: relative;
     width: 100%; height: 100%;
@@ -2569,32 +2036,6 @@
   }
 
   /* ============================================================
-     STATS STRIP (between hero and features)
-     ============================================================ */
-  .stats-strip {
-    padding: 56px 32px;
-    background: var(--bg);   /* grey band between stage and leaderboard */
-  }
-  .stats-wrap {
-    max-width: 1280px; margin: 0 auto;
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 24px; text-align: center;
-  }
-  .stats-strip .stat .v {
-    font-weight: 500;
-    font-size: 40px;
-    line-height: 1;
-    letter-spacing: -0.02em;
-    color: var(--text);
-    margin-bottom: 8px;
-  }
-  .stats-strip .stat .l {
-    font-size: 12px; font-weight: 500;
-    color: var(--muted);
-    letter-spacing: 0.06em;
-  }
-
-  /* ============================================================
      SECTION FRAME  (features-style; reused for each Q→A section)
      ============================================================ */
   .section {
@@ -2602,7 +2043,7 @@
     /* 3.0 round 22 — symmetric 96/96 padding so every non-hero section
        has the same top/bottom rhythm. Tab-click anchoring still lands
        cleanly because smoothScrollTo offsets by the 65px nav clearance. */
-    padding: 96px 32px 96px;
+    padding: var(--section-top-pad) 32px 96px;
     /* 3.0 round 19 — default .section stays WHITE; .alt sections (the
        ones that used to be grey) are tinted 8 % alva teal. Adjacent
        sections still alternate white / teal-tint. */
@@ -2610,7 +2051,7 @@
   }
   .section.alt { background: rgba(88, 195, 198, 0.04); }
   .section-wrap { max-width: 1320px; margin: 0 auto; padding: 0 16px; }
-  .section-head { margin-bottom: 48px; max-width: 760px; }
+  .section-head { margin-bottom: var(--section-content-gap); max-width: 760px; }
   /* section-head variant with a right-aligned action button */
   .section-head.with-action {
     max-width: none;
@@ -2668,10 +2109,10 @@
     /* 4.4 round 14 — section H2s drop one weight step (500 → 400)
        per feedback "section主标题再降一点字重". */
     font-weight: 400;
-    font-size: clamp(36px, 4.4vw, 60px);
+    font-size: var(--section-title-size);
     line-height: 1.08;
     letter-spacing: -0.022em;
-    margin: 0 0 22px;
+    margin: 0 0 var(--section-title-gap);
     color: var(--text);
   }
   .section-head h2 .alva { color: var(--alva); }
@@ -2679,10 +2120,10 @@
      (3.0 round 7 — w500 → w400 to match user-wide weight reduction.) */
   .section-head p {
     margin: 0;
-    color: var(--muted);
+    color: var(--section-sub-color);
     font-family: var(--font);
     font-weight: 400;
-    font-size: clamp(16px, 1.4vw, 19px);
+    font-size: var(--section-sub-size);
     line-height: 1.5;
     letter-spacing: -0.005em;
     max-width: 640px;
@@ -2700,7 +2141,7 @@
      ============================================================ */
   .section.section-playbook { overflow: hidden; }
   .section-playbook .section-head {
-    margin: 0 auto 28px;
+    margin: 0 auto var(--section-content-gap);
     max-width: 760px;
     text-align: center;
   }
@@ -3193,7 +2634,7 @@
   }
   .scan-head {
     max-width: 720px;
-    margin-bottom: 36px;
+    margin-bottom: var(--section-content-gap);
   }
   .scan-head .eyebrow {
     display: block;
@@ -3288,7 +2729,7 @@
     border-radius: 999px;
     background: transparent;
     color: var(--text);
-    border: 1px solid var(--line);
+    border: 1px solid rgba(255, 255, 255, 0.78);
     /* TS token: btn — ghost variant */
     font-family: var(--font);
     font-size: 14px;
@@ -3312,31 +2753,24 @@
   /* 4.4 round 91 — leaderboard title + subtitle resized to match
      Section 2/3 (was reading much bigger than the rest of the page). */
   .lb-title {
-    margin: 0 0 12px;
+    margin: 0 0 var(--section-title-gap);
     font-family: var(--font-display);
     font-weight: 400;
-    font-size: clamp(28px, 3.4vw, 44px);
+    font-size: var(--section-title-size);
     line-height: 1.1;
     letter-spacing: -0.022em;
     color: var(--text);
   }
   .lb-sub {
     margin: 0;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--section-sub-color);
     font-family: var(--font);
     font-weight: 400;
-    font-size: clamp(14px, 1.05vw, 16px);
+    font-size: var(--section-sub-size);
     line-height: 1.5;
     letter-spacing: -0.005em;
     max-width: 560px;
   }
-  .lb-sub .alva {
-    color: var(--alva);
-    /* 4.0 — keep the same regular weight as the surrounding text;
-       the alva color alone carries the accent, no weight bump. */
-    font-weight: inherit;
-  }
-
   /* features grid (reused for sub-cards) */
   .features-grid {
     display: grid;
@@ -3385,9 +2819,9 @@
      AUDIT-YOURS  (main CTA section — Q: who's real in your follows?)
      Centered, focused, single primary action.
      ============================================================ */
-  .section.audit-yours { padding-top: 96px; padding-bottom: 96px; }
+  .section.audit-yours { padding-top: var(--section-top-pad); padding-bottom: 96px; }
   .section.audit-yours .section-head {
-    margin: 0 auto 36px;
+    margin: 0 auto var(--section-content-gap);
     text-align: center;
     max-width: 760px;
   }
@@ -3584,7 +3018,7 @@
        Visual symmetry: stage top-padding = leaderboard top-padding
        = 120, so the gap from stage buttons down to the leaderboard
        title reads as the section's own breathing room. */
-    padding-top: 120px;
+    padding-top: var(--section-top-pad);
     /* 3.0 round 38 — overflow flipped back to hidden. User's earlier
        "halo overflows more going down" was about the SHAPE (cone
        wider at the bottom), not literal CSS overflow into the next
@@ -3677,10 +3111,7 @@
     max-width: 1320px;
   }
   #leaderboard .section-head {
-    /* 4.4 round 87 — cut the bottom margin by ~1/3 (120 → 80) per
-       feedback to bring the "View full leaderboard" button closer to
-       the leaderboard card below it. */
-    margin: 0 auto 80px;
+    margin: 0 auto var(--section-content-gap);
     max-width: 760px;
     text-align: center;
   }
@@ -4145,6 +3576,8 @@
   #agents {
     position: relative;
     background: rgba(88,195,198,0.08);
+    --agents-ease: cubic-bezier(.22, 1, .36, 1);
+    --agents-dur: .42s;
   }
 
   /* ============================================================
@@ -4184,11 +3617,27 @@
      instead of next to a transparent gap. */
   .agents-pin {
     position: sticky;
-    top: 0;
-    height: 100vh;
+    top: var(--nav-h);
+    height: calc(100vh - var(--nav-h));
+    height: calc(100svh - var(--nav-h));
     width: 100%;
     overflow: hidden;
     background: var(--bg-soft);
+  }
+  #agents.agents-pin-section,
+  #agents .agents-pin {
+    background: #16161c;
+  }
+  #agents .agents-silk {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+    mix-blend-mode: screen;
+    opacity: 0.55;
   }
   .agents-pin-inner {
     width: 100%;
@@ -4206,19 +3655,8 @@
   .agents-pin-inner .agents-stage {
     height: 100%;
     position: relative;
-    z-index: 2;
+    z-index: 3;
   }
-  .agents-section-head {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    z-index: 1;
-    text-align: center;
-    margin: 0 auto;
-    padding: 80px 24px 0;
-    pointer-events: none;
-  }
-  .agents-section-head h2,
-  .agents-section-head p { pointer-events: auto; }
   /* 2-col grid: left sidebar (heading + tabs) + right card stage.
      3.0 round 15 — left rail widened 380 → 480 (heading at display-l
      wraps cleanly here, tabs in card style have room). Border between
@@ -4239,32 +3677,36 @@
     justify-content: flex-start;
     height: 100%;
     min-height: 0;
-    /* 4.4 round 97 — side-shift transform restored. JS computes the
-       offset that lands the active tab's vertical center at the
-       rail's vertical center, so the selected tab stays in view
-       even on short viewports where the full tab list wouldn't fit.
-       transition smooths the shift when active tab changes. */
+    padding-top: calc(var(--section-top-pad) + 84px + var(--section-content-gap));
+    box-sizing: border-box;
+    /* 4.4 round 101 — JS only applies a small vertical shift when the
+       active tab would otherwise clip on short viewports; the default
+       position stays below the section subtitle instead of centering. */
     transform: translateY(var(--side-shift, 0px));
-    transition: transform .35s cubic-bezier(.22, 1, .36, 1);
+    transition: transform var(--agents-dur) var(--agents-ease);
   }
   /* 4.4 round 90 — heading moved back ABOVE the pin and centered;
      the in-rail .agents-head is hidden via inline style. New
      .agents-section-head block carries the title + subtitle. */
   .agents-head { display: none; }
   .agents-section-head {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
     text-align: center;
     max-width: 880px;
     margin: 0 auto;
-    padding: 32px 24px 24px;
-    position: relative;
-    z-index: 4;
+    padding: var(--section-top-pad) 24px 24px;
+    z-index: 1;
     flex-shrink: 0;
+    pointer-events: none;
   }
   .agents-section-head h2 {
-    margin: 0 0 12px;
+    margin: 0 0 var(--section-title-gap);
     font-family: var(--font-display);
     font-weight: 400;
-    font-size: clamp(28px, 3.4vw, 44px);
+    font-size: var(--section-title-size);
     line-height: 1.1;
     letter-spacing: -0.022em;
     color: var(--text);
@@ -4272,10 +3714,10 @@
   .agents-section-head h2 .alva { color: var(--alva); }
   .agents-section-head p {
     margin: 0;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--section-sub-color);
     font-family: var(--font);
     font-weight: 400;
-    font-size: clamp(14px, 1.05vw, 16px);
+    font-size: var(--section-sub-size);
     line-height: 1.5;
     letter-spacing: -0.005em;
   }
@@ -4290,31 +3732,6 @@
     gap: 0;
     padding: 0;
     flex-shrink: 0;
-  }
-  /* 4.4 round 89 — title/subtitle sized to MATCH Section 2's
-     .stage-header. Both items inside .agents-head sit on the same
-     horizontal line (flex row + align-items: center). */
-  .agents-head h2 {
-    margin: 0;
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: clamp(28px, 3.4vw, 44px);
-    line-height: 1.1;
-    letter-spacing: -0.022em;
-    color: var(--text);
-    flex: 0 0 auto;
-  }
-  .agents-head h2 .alva { color: var(--alva); }
-  .agents-head p {
-    margin: 0;
-    color: rgba(255, 255, 255, 0.7);
-    font-family: var(--font);
-    font-weight: 400;
-    font-size: clamp(14px, 1.05vw, 16px);
-    line-height: 1.5;
-    letter-spacing: -0.005em;
-    flex: 0 1 auto;
-    text-align: right;
   }
   /* 4.4 round 90 — old flex-column tab list rule removed; the new
      grid-stack rule above is now the single source of truth. */
@@ -4374,18 +3791,18 @@
     font-weight: 400;
     line-height: 1.2;
     letter-spacing: -0.01em;
-    /* 4.4 round 12 — title defaults to white; only the active tab
-       picks up the alva color. */
-    color: var(--text);
+    color: rgba(255, 255, 255, 0.48);
     cursor: pointer;
-    transition: color .2s;
+    transition: color .2s, opacity .2s, font-size .2s;
     white-space: normal;
   }
+  .agents-tab-item:not(.active):hover .agents-tab-v,
   .agents-tab-v:hover {
-    color: var(--text);
+    color: rgba(255, 255, 255, 0.78);
   }
   .agents-tab-item.active .agents-tab-v {
     color: var(--alva);
+    font-size: 36px;
     font-weight: 400;
   }
   /* Active tab: no change to divider color — just the title color. */
@@ -4403,7 +3820,11 @@
     max-height: 0;
     opacity: 0;
     transform: translateY(-4px);
-    transition: max-height .35s ease, opacity .25s ease, transform .25s ease, padding .3s ease;
+    transition:
+      max-height var(--agents-dur) var(--agents-ease),
+      opacity var(--agents-dur) var(--agents-ease),
+      transform var(--agents-dur) var(--agents-ease),
+      padding var(--agents-dur) var(--agents-ease);
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -4434,7 +3855,7 @@
     /* 4.3 — outline-only pill so it matches the surrounding tab cards. */
     background: transparent;
     color: var(--text);
-    border: 1px solid rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.78);
     text-decoration: none;
     font-family: var(--font);
     font-size: 14px;
@@ -4496,8 +3917,7 @@
     /* 3:2 banner — matches the original card cover ratio so the cover
        reads as a wide product hero, not a tall poster. */
     aspect-ratio: 3 / 2;
-    /* 4.4 round 26 — corners squared per feedback ("改成直角"). */
-    border-radius: 0;
+    border-radius: 8px;
     display: grid;
     place-items: center;
     position: relative;
@@ -4552,20 +3972,28 @@
           on top of its description. Original covers stay in the stage
           for desktop; the stage itself is hidden on mobile. */
 
-    .agents-pin-section { height: auto; padding: 48px 0; }
-    .agents-pin { position: static; height: auto; overflow: visible; }
+    #agents.agents-pin-section { height: auto; padding: var(--section-top-pad) 0; }
+    #agents .agents-pin { position: static; height: auto; overflow: visible; }
     /* Section bleeds full-width — no LR padding on the inner wrap.
        Section head + tab-item text re-add 18 px LR padding so reading
        columns still feel inset. */
-    .agents-pin-inner { padding: 0; gap: 0; }
-    .agents-stage { grid-template-columns: 1fr; gap: 0; }
-    .agents-side { padding: 0; height: auto; }
-    .agents-head { padding: 0 18px; margin-bottom: 28px; }
+    #agents .agents-pin-inner { padding: 0; gap: 0; height: auto; max-width: none; }
+    #agents .agents-section-head {
+      position: static;
+      max-width: 720px;
+      padding: 0 18px var(--section-content-gap);
+      pointer-events: auto;
+    }
+    #agents .agents-section-head h2 { font-size: var(--section-title-size); }
+    #agents .agents-section-head p { font-size: var(--section-sub-size); line-height: 1.5; }
+    .agents-stage { display: block; height: auto; }
+    .agents-side { padding: 0; height: auto; transform: none !important; }
 
     /* Tabs container becomes a plain vertical stack of cards. */
     .agents-tabs-v {
       flex-direction: column;
-      gap: 36px;                         /* breathing between cards */
+      gap: 40px;                         /* breathing between cards */
+      padding: 0 18px;
     }
     /* Each tab-item is now a "use case card", NOT a tab.
        Layout: cover (full-bleed) → title → body → CTA, all stacked. */
@@ -4582,12 +4010,12 @@
     .agents-tab-item.active { background: transparent; }  /* no active hint */
 
     /* Cover (cloned into tab-item by JS — see setupAgentsMobile).
-       Full-bleed: width 100vw, no border-radius, runs to viewport edges. */
+       Full-bleed: width 100vw, with the same small radius as desktop. */
     .agents-tab-item .agents-card-cover {
-      width: 100vw;
-      max-width: 100vw;
+      width: 100%;
+      max-width: none;
       margin: 0 0 18px;
-      border-radius: 0;
+      border-radius: 8px;
       aspect-ratio: 3 / 2;
     }
     .agents-tab-item .agents-card-cover i {
@@ -4601,12 +4029,12 @@
       font-weight: 500;
       line-height: 1.25;
       color: var(--text);
-      padding: 0 18px;
+      padding: 0;
       margin: 0 0 10px;
       cursor: default;                    /* no click hint */
     }
     .agents-tab-v:hover { color: var(--text); }
-    .agents-tab-item.active .agents-tab-v { color: var(--text); }
+    .agents-tab-item.active .agents-tab-v { color: var(--text); font-size: 22px; }
 
     /* Body — force visible (no max-height/opacity animation), readable
        body floor. */
@@ -4614,8 +4042,14 @@
       max-height: none;
       opacity: 1;
       transform: none;
-      padding: 0 18px;
+      padding: 0;
       gap: 16px;
+    }
+    .agents-tab-item.active .agents-tab-detail {
+      max-height: none;
+      opacity: 1;
+      transform: none;
+      padding: 0;
     }
     .agents-tab-detail p {
       font-size: 16px;
@@ -4839,7 +4273,7 @@
     padding: 12px 22px;
     border-radius: 8px;
     background: transparent; color: rgba(255,255,255,0.85);
-    border: 1px solid rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.62);
     font-family: var(--font);
     font-size: 14px;
     font-weight: 500;
@@ -4849,7 +4283,7 @@
   }
   .btn-on-dark-ghost:hover {
     background: rgba(255,255,255,0.06);
-    border-color: rgba(255,255,255,0.32);
+    border-color: rgba(255,255,255,0.90);
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 14px 28px rgba(0,0,0,0.30);
   }
@@ -4881,7 +4315,7 @@
     padding: 64px 32px 96px;
   }
   .section-do .section-head {
-    margin: 0 auto 56px;
+    margin: 0 auto var(--section-content-gap);
     max-width: 760px;
     text-align: center;
   }
@@ -5216,7 +4650,7 @@
      ============================================================ */
   .about-alva {
     background: #0a0a10;
-    padding: 120px 24px 96px;
+    padding: var(--section-top-pad) 24px 96px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
   .about-alva-inner {
@@ -5227,21 +4661,21 @@
   /* 4.4 round 91 — match Section 2/3 title + subtitle scale so all
      four sections share one type rhythm. */
   .about-alva h2 {
-    margin: 0 0 12px;
+    margin: 0 0 var(--section-title-gap);
     font-family: var(--font-display);
     font-weight: 400;
-    font-size: clamp(28px, 3.4vw, 44px);
+    font-size: var(--section-title-size);
     line-height: 1.1;
     letter-spacing: -0.022em;
     color: var(--text);
   }
   .about-alva p {
-    margin: 0 0 32px;
+    margin: 0 0 var(--section-content-gap);
     font-family: var(--font);
     font-weight: 400;
-    font-size: clamp(14px, 1.05vw, 16px);
+    font-size: var(--section-sub-size);
     line-height: 1.5;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--section-sub-color);
   }
   .about-alva-actions {
     display: inline-flex;
@@ -5255,7 +4689,7 @@
     gap: 10px;
     padding: 14px 28px;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.78);
     background: transparent;
     color: var(--text);
     font-family: var(--font);
@@ -5273,6 +4707,20 @@
   }
   .btn-outline i { font-size: 16px; }
 
+  @media (max-width: 760px) {
+    .about-alva {
+      padding: 64px 20px 56px;
+    }
+    .about-alva-actions {
+      width: 100%;
+    }
+    .about-alva-actions .btn-primary,
+    .about-alva-actions .btn-outline {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
   /* ============================================================
      FOOTER  (4.4 round 87 rewrite)
      Two-column layout matching alva.xyz reference:
@@ -5281,7 +4729,8 @@
      ============================================================ */
   footer.f {
     padding: 56px 32px 40px;
-    background: #1d1d24;
+    background: #000000;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
     color: rgba(255, 255, 255, 0.55);
     font-family: var(--font);
   }
@@ -5589,14 +5038,14 @@
   .sc-close {
     width: 44px; height: 44px;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.62);
     border-radius: 50%;
     color: var(--muted);
     cursor: pointer;
     display: grid; place-items: center;
     transition: color .15s, border-color .15s;
   }
-  .sc-close:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.24); }
+  .sc-close:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.90); }
   .sc-close i { font-size: 16px; }
 
   /* ============================================================
@@ -5623,20 +5072,9 @@
     -webkit-backdrop-filter: blur(10px);
     text-decoration: none;
     color: var(--text);
-    /* 4.4 round 7 — transform composed from two parts: the JS-driven
-       footer-lift (`--badge-lift`, negative pixels) and the hover
-       nudge (`--badge-hover-y`). Listing both via `translateY()` lets
-       a single transform property carry both without one stomping the
-       other. The transition smooths the footer-lift change on scroll. */
-    --badge-lift: 0px;
     --badge-hover-y: 0px;
-    transform: translateY(calc(var(--badge-lift) + var(--badge-hover-y)));
-    /* 4.4 round 8 — transform transition removed. The footer-lift is
-       driven by scroll position via rAF; with a transition the badge
-       lagged behind the scroll and looked jumpy. Without transition,
-       the lift tracks the footer 1:1 each frame. Hover's 2px nudge is
-       small enough to read fine as instant. */
-    transition: box-shadow .15s ease;
+    transform: translateY(var(--badge-hover-y));
+    transition: box-shadow .15s ease, transform .15s ease;
   }
   .alva-badge:hover {
     --badge-hover-y: -2px;
@@ -6434,8 +5872,9 @@
   @media (min-width: 1920px) {
     #modal-results .dialog-full {
       width: min(1780px, calc(100% - 64px));
-    perspective: 1200px;
-    perspective-origin: 50% 0%;
+      perspective: 1200px;
+      perspective-origin: 50% 0%;
+    }
   }
   /* When a results card is upgraded to the mq-card rich layout, drop the
      marquee-only fixed dimensions so the card stretches to fill its
@@ -6730,25 +6169,15 @@
     width: 100%;
     box-shadow: 0 30px 80px rgba(10,10,16,0.40);
   }
-  /* Marquee card inside the lightbox: keep the portrait aspect, scale
-     internal type so it doesn't look anaemic at 440px wide. */
+  /* KOL card inside the lightbox uses the same global component contract:
+     default 1.91:1 panel + fixed-height CTA strip. */
   .cd-card-slot .mq-card {
     width: 100%;
-    height: auto;
-    aspect-ratio: 260 / 220;
-    padding: 38px 30px 30px;
+    height: var(--mq-base-h);
+    padding: 0;
     border-radius: 10px;
-    gap: 18px;
     box-shadow: 0 30px 80px rgba(10,10,16,0.40);
   }
-  .cd-card-slot .mq-avatar {
-    width: 84px; height: 84px;
-  }
-  .cd-card-slot .mq-meta b   { font-size: 24px; max-width: none; }
-  .cd-card-slot .mq-meta span{ font-size: 14px; margin-top: 6px; }
-  .cd-card-slot .mq-metric   { padding-top: 18px; }
-  .cd-card-slot .mq-v        { font-size: 44px; }
-  .cd-card-slot .mq-l        { font-size: 12px; margin-top: 8px; }
   /* Pure scale grow — no opacity fade. The card is fully visible from
      frame 0 at its source size, only the scale changes. Dropping the
      fade was the second half of "make it feel quicker" — the 0.5→1
@@ -7009,40 +6438,13 @@
       align-self: stretch;
       margin-top: 0;        /* no interlock once stacked vertically */
     }
-    /* Section 2 stage collapses to single column on tablet/mobile.
-       (The grid lives on .stage-inner, NOT .stage — earlier rule had
-       wrong selector so the layout never actually collapsed.) */
     .stage { padding: 96px 0 96px; }
-    .stage-inner {
-      grid-template-columns: 1fr;
-      column-gap: 0;
-      row-gap: 28px;
-      padding: 0 32px;
-    }
-    .stage .hero-content { grid-column: 1; grid-row: 1; max-width: none; }
-    .stage .card-stack   { grid-column: 1; grid-row: 2; justify-self: center; }
-    .hero-veil { display: none; }                /* veil only makes sense in 2-col */
-    .card-stack { height: clamp(220px, 30vh, 280px); width: 100%; max-width: 520px; }
-    .card-stack .perspective-wrap { width: 220px; }
-    /* 4 cards, tighter spread to fit the narrower mobile column */
-    .card-stack .perspective-wrap:nth-child(1) { --sx: -135px; }
-    .card-stack .perspective-wrap:nth-child(2) { --sx:  -45px; }
-    .card-stack .perspective-wrap:nth-child(3) { --sx:   45px; }
-    .card-stack .perspective-wrap:nth-child(4) { --sx:  135px; }
     /* drop some floating tweets at tablet width to avoid the centre */
     .float-tweet { width: 240px; }
   }
   /* ============================================================
      PHONE (≤ 760)   — 3.0 round 44 (mobile parity pass)
-     Comprehensive mobile rebuild. Earlier this block was a grab-bag
-     of fixes layered over 2.0 elements that no longer render in 3.0;
-     this version reorganises by section + adds the rules that the
-     3.0 layout was actually missing (S3 table grid match, S2 plaque
-     mask disable, S1 typography tighten, S4 carousel padding).
-     Legacy element rules (.card-stack, .hero-veil, .stats-strip,
-     .bottom-cards, .do-form, .section-do, .agents-search) are kept
-     at the bottom as no-ops in case the markup is ever reintroduced
-     from 2.0.
+     Current mobile layout rules by section.
      ============================================================ */
   @media (max-width: 760px) {
     /* Disable scroll-snap on phones — touch scrolling fights with
@@ -7060,7 +6462,6 @@
        Linear ships 32 h pills on a 64 h nav (similar density); we
        split the difference at 40 h since the CTA carries an icon. */
     .nav-inner { padding: 0 12px; gap: 8px; }
-    .brand-text { display: none; }              /* free up width for CTA + toggle */
 
     /* Tabs and ghost CTA both relocate INTO the drawer below — they
        are NOT deleted, just moved. The previous mobile rule kept the
@@ -7124,8 +6525,8 @@
       z-index: -1;
       pointer-events: none;
     }
-    .opening h1 .line-handle { margin-top: 0.24em; }
-    .opening h1 .line-2      { margin-top: 0.22em; }
+    .opening h1 .line-handle { margin-top: 0.18em; }
+    .opening h1 .line-2      { margin-top: 0.165em; }
     /* mobile: allow the headline to wrap so a 390-wide viewport can
        still fit "Which FinTwit account" / "actually makes money?". */
     .opening h1 .line-1,
@@ -7206,77 +6607,14 @@
          as a row. Reset to block flow so the headline stacks ABOVE the
          marquee and each piece gets full viewport width. */
       display: block;
-      padding: 72px 0 72px;
+      padding: var(--section-top-pad) 0 var(--section-top-pad);
       min-height: auto;
-    }
-    /* The desktop plaque uses a 1250px-wide backdrop-filter mask that
-       engulfs the entire phone viewport on a 390-class screen — so the
-       marquee cards behind get blurred + dimmed to invisibility. On
-       phones we ditch the overlay entirely: the headline sits in the
-       normal flow above the marquee, and the cards stay sharp. */
-    .stage-marquee .stage-headline-overlay {
-      position: relative;
-      inset: auto;
-      display: block;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      -webkit-mask-image: none;
-              mask-image: none;
-      padding: 0 18px 28px;
-      pointer-events: auto;
-    }
-    .stage-marquee .stage-headline-overlay::before,
-    .stage-marquee .stage-headline-overlay::after { display: none; }
-    .stage-marquee .stage-headline-inner {
-      padding: 0;
-      max-width: 100%;
-    }
-    .stage-marquee .stage-headline-inner h1 {
-      max-width: 100%;
-      padding: 0;
-      /* Was clamp(22, 7vw, 30) = 27px on 393w — read like H2 not hero.
-         Pushed to clamp(28, 8.5vw, 36) so it lands at 33px on 393w,
-         in line with mobile stage spec (32-36). Linear /method
-         storytelling page H1 = 40 mobile; we stay a notch lower since
-         this is sub-hero copy, not the page entry. */
-      font-size: clamp(28px, 8.5vw, 36px);
-      line-height: 1.15;
-      letter-spacing: -0.02em;
-      display: block;
     }
     /* .stage-title-line set to nowrap on desktop so each clause stays on
        one line within the headline column. On a phone the column is too
        narrow for "FinTwit's 3,000+" and "most-followed accounts." to fit
        — let them wrap naturally. */
     .stage-marquee .stage-title-line { white-space: normal; }
-    .stage-marquee .stage-actions {
-      padding: 22px 0 0;
-      gap: 10px;
-    }
-    /* Stage actions: vertical stack full-width on mobile.
-       Reason: the round-46 copy update made the ghost CTA
-       "Can't find an Account?" (~23 char) — combined with the
-       primary "Check your following" (~21 char), the two buttons
-       at padding 14×22 + 14 font would exceed 470 px wide on a
-       393 viewport. flex-wrap on the parent helps avoid overflow
-       but produces an ugly mismatched-width pair on the second
-       row. Forcing column + stretch gives a clean stacked pair,
-       both 44 h with matching width — same idiom as the sticky
-       bottom CTA bar and the modal-card-detail share methods. */
-    .stage-marquee .stage-actions {
-      flex-direction: column;
-      align-items: stretch;
-      width: 100%;
-      max-width: 360px;
-    }
-    .stage-actions .btn-primary,
-    .stage-actions .btn-ghost {
-      width: 100%;
-      justify-content: center;
-      padding: 14px 22px;
-      font-size: 14px;
-      min-height: 44px;
-    }
     /* Visual hierarchy for the 4-line stage H1: the last span has
        `.stage-title-sub` (sub-line, set in the markup as the
        "Updated every hour." closer). Desktop didn't ship a CSS
@@ -7293,10 +6631,11 @@
     }
     /* Marquee rows: smaller cards, tighter gap. */
     .mq-card {
-      width: 196px;
-      height: 178px;
-      padding: 18px 14px 16px;
-      gap: 8px;
+      --mq-card-w: 380px;
+      width: var(--mq-card-w);
+      height: var(--mq-base-h);
+      padding: 0;
+      gap: 0;
       margin-right: 14px;
     }
     .mq-avatar { width: 44px; height: 44px; }
@@ -7310,21 +6649,27 @@
                                                   marquee stops dead and the
                                                   label is the only ID hint */
     .card-marquee { gap: 14px; }
+    .stage-marquee .marquee-row { height: var(--mq-row-base-h, 199px); }
+    .stage-marquee .marquee-track .mq-card {
+      height: var(--mq-base-h);
+      padding: 0;
+      gap: 0;
+    }
 
     /* ---------------------------------------------------------- */
     /* S3 · LEADERBOARD                                           */
     /* ---------------------------------------------------------- */
-    #leaderboard { padding-top: 80px; }
+    #leaderboard { padding-top: var(--section-top-pad); }
     #leaderboard .section-head {
-      margin: 0 auto 56px;
+      margin: 0 auto var(--section-content-gap);
       padding: 0 6px;
     }
-    #leaderboard .section-head h2 { font-size: clamp(26px, 7vw, 34px); }
+    #leaderboard .section-head h2 { font-size: var(--section-title-size); }
     /* lb-sub is the section's main subtitle (under H2). 14px is below
        the 16px iOS body floor on a 393w canvas and reads as caption,
        not lead-paragraph. Bumped to 16 — Linear & Anthropic both ship
        16-17 for their hero/section subtitles on mobile. */
-    .lb-sub { font-size: 16px; line-height: 1.5; }
+    .lb-sub { font-size: var(--section-sub-size); line-height: 1.5; }
     /* The aurora halo bleeds in from the section sides — at narrow widths
        pull the inset in tight to the section edge so it sits behind the
        lb-card cleanly instead of running off-canvas. */
@@ -7414,7 +6759,7 @@
     /* ---------------------------------------------------------- */
     .section.section-playbook { padding: 76px 0 88px; overflow: hidden; }
     .section-playbook .section-head {
-      margin: 0 18px 22px;
+      margin: 0 18px var(--section-content-gap);
       padding: 0;
     }
     .section-playbook .section-head h2 { font-size: clamp(26px, 7vw, 34px); }
@@ -7514,6 +6859,15 @@
     /* ---------------------------------------------------------- */
     /* FOOTER                                                     */
     /* ---------------------------------------------------------- */
+    .about-alva { padding: var(--section-top-pad) 20px 56px; }
+    .about-alva-actions {
+      width: 100%;
+    }
+    .about-alva-actions .btn-primary,
+    .about-alva-actions .btn-outline {
+      width: 100%;
+      justify-content: center;
+    }
     footer.f { padding: 28px 18px 32px; }
     .f-inner {
       flex-direction: column;
@@ -7565,51 +6919,12 @@
     .dialog-actions .fk-secondary { width: 100%; justify-content: center; }
     .connect-dialog { padding: 36px 24px 28px; }
 
-    /* ---------------------------------------------------------- */
-    /* LEGACY (kept as no-ops — markup not rendered in 3.0)       */
-    /* ---------------------------------------------------------- */
-    h1.hero-title { font-size: clamp(28px, 7vw, 36px); }
-    .section { padding: 80px 18px; }
-    .section-head h2 { font-size: 32px; }
-    .features-grid { grid-template-columns: 1fr; }
-    .stats-strip { padding: 36px 20px; }
-    .stats-wrap { grid-template-columns: 1fr; gap: 18px; }
-    .stats-strip .stat .v { font-size: 32px; }
+    .section { padding: var(--section-top-pad) 18px; }
+    .section-head h2 { font-size: var(--section-title-size); }
     .closing { padding: 80px 18px; }
     .closing-path { padding: 24px; }
-    .agents-search { flex-wrap: wrap; padding: 8px; border-radius: 8px; }
-    .agents-search > i { margin-left: 10px; }
-    .agents-search input { width: 100%; height: 44px; padding: 0 8px; }
-    .agents-search .btn-primary { width: 100%; height: 44px; justify-content: center; }
-    .agents-chip { font-size: 11px; padding: 5px 10px 5px 5px; }
-    .agents-chip img { width: 20px; height: 20px; }
     .agents-bubbles { display: none; }
     #agents { min-height: 0; }
-    .section-do { padding: 72px 18px; }
-    .section-do .section-head { margin-bottom: 36px; }
-    .do-grid { grid-template-columns: 1fr; gap: 16px; }
-    .do-card { padding: 28px 22px; }
-    .do-card h3 { font-size: 22px; }
-    .do-form { flex-direction: column; gap: 10px; }
-    .do-form .btn-primary { width: 100%; justify-content: center; }
-    .bottom-cards { padding: 56px 18px; }
-    .bottom-cards-inner { border-radius: 0; overflow: visible; box-shadow: none; }
-    .bcard { padding: 32px 24px; border-radius: 20px; }
-    .bcard.bcard-dark { box-shadow: 0 18px 40px rgba(10,10,16,0.16); }
-    .bcard h3 { font-size: 22px; }
-    .bcard-form { flex-direction: column; gap: 10px; }
-    .bcard-form input { width: 100%; }
-    .bcard-form button { width: 100%; justify-content: center; }
-    .hero-content .hero-cta { gap: 12px; }
-    .hero-actions .btn-primary { padding: 13px 22px; font-size: 14px; }
-    .card-stack { height: 210px; max-width: 100%; }
-    .card-stack .perspective-wrap { width: 180px; }
-    .card-stack .perspective-wrap:nth-child(1) { --sx: -100px; --srot: -7deg; }
-    .card-stack .perspective-wrap:nth-child(2) { --sx:  -35px; --srot:  3deg; }
-    .card-stack .perspective-wrap:nth-child(3) { --sx:   35px; --srot: -2deg; }
-    .card-stack .perspective-wrap:nth-child(4) { --sx:  100px; --srot:  6deg; }
-    .stage-inner { padding: 0 20px; row-gap: 24px; }
-    .hero-veil { display: none; }
   }
 
   /* ============================================================
@@ -7624,8 +6939,7 @@
        32 to give the float-tweet cards even more breathing room. */
     .opening h1 { font-size: 32px; }
     .opening-sub { font-size: 16px; }      /* 15 → 16, iOS body floor */
-    .stage.stage-marquee { padding: 68px 0 72px; }
-    .stage-marquee .stage-headline-overlay { padding: 0 14px 22px; }
+    .stage.stage-marquee { padding: var(--section-top-pad) 0 var(--section-top-pad); }
     /* Critical: the 760 block above pushes nav-cta to 40 h for tap
        compliance. The previous SE override SHRANK it back to 24 h,
        which made the worst-touch device get the worst tap target.
@@ -7634,8 +6948,8 @@
     .nav-cta { padding: 10px 13px; font-size: 12px; gap: 5px; min-height: 38px; }
     .nav-cta i { font-size: 13px; }
     .nav-menu-toggle { width: 40px; height: 40px; }   /* slightly tighter on SE */
-    #leaderboard { padding-top: 76px; }
-    #leaderboard .section-head h2 { font-size: 26px; }
+    #leaderboard { padding-top: var(--section-top-pad); }
+    #leaderboard .section-head h2 { font-size: var(--section-title-size); }
     /* Tighter table — give the Risk pill a real chance to render. */
     #leaderboard .lb-header,
     #leaderboard .lb-row,
@@ -7796,15 +7110,18 @@
     background: #000000;
   }
   .stage.stage-marquee .alva { color: var(--alva); }
-  .stage-marquee .stage-headline-overlay,
-  .stage-marquee .stage-title,
-  .stage-marquee .stage-title-sub { color: var(--text); }
+  .stage-marquee .stage-title { color: var(--text); }
   /* CTAs revert to default (alva pill + white) which now reads against
      the dark slab; no need for the white-on-green inversion anymore. */
 
   /* Section 3 — use-cases on a distinct dark-gray slab, with a
      full-bleed Silk shader behind the pinned content (reactbits.dev). */
-  #agents.agents-pin-section { background: #16161c; }
+  #agents.agents-pin-section {
+    background: #16161c;
+  }
+  #agents .agents-pin {
+    background: #16161c;
+  }
   /* Silk canvas — lives inside .agents-pin (the 100vh sticky child)
      so it fills the viewport-sized pin and never bloats the section. */
   .agents-pin { position: sticky; }
@@ -7821,6 +7138,10 @@
        ambient, not loud. */
     mix-blend-mode: screen;
     opacity: 0.85;
+  }
+  #agents .agents-silk {
+    mix-blend-mode: screen !important;
+    opacity: 0.55 !important;
   }
   /* Lift the actual content above the canvas. */
   #agents .agents-pin-inner { position: relative; z-index: 1; }
@@ -7849,8 +7170,6 @@
      flow + significant CPU cost. GPU-accelerated, runs at native
      refresh rate, zero JS overhead. */
   .opening-content h1 { position: relative; z-index: 6; }
-  /* legacy canvas (kept off-DOM): no longer rendered, kept harmless. */
-  .opening-h1-iridescence { display: none; }
   .opening h1.h1-iridescent {
     /* alva-anchored stops with frequent excursions to purple / orange /
        lime so the iridescent feel is preserved while green stays the
@@ -7959,9 +7278,9 @@
     </a>
     <nav class="nav-tabs" id="nav-tabs" aria-label="Section tabs">
       <span class="nav-tab-indicator" id="nav-indicator"></span>
-      <a class="nav-tab" href="#audit-yours" data-section="audit-yours"><i class="ph ph-book-open"></i><span>Playbooks</span></a>
-      <a class="nav-tab" href="#agents" data-section="agents"><i class="ph ph-squares-four"></i><span>Use Cases</span></a>
-      <a class="nav-tab" href="#leaderboard" data-section="leaderboard"><i class="ph ph-trophy"></i><span>Leaderboard</span></a>
+      <a class="nav-tab" href="#audit-yours" data-section="audit-yours"><span>Playbooks</span></a>
+      <a class="nav-tab" href="#agents" data-section="agents"><span>Use Cases</span></a>
+      <a class="nav-tab" href="#leaderboard" data-section="leaderboard"><span>Leaderboard</span></a>
     </nav>
     <div class="nav-actions">
       <button class="nav-cta-ghost" type="button" data-open="for-kols"><i class="ph-bold ph-megaphone"></i> For FinTwit Traders</button>
@@ -8122,10 +7441,7 @@
     </div>
 
     <div class="opening-content">
-      <h1>
-        <!-- 4.0 — iridescence shader overlay, blended onto the H1
-             letters so the headline shimmers with shifting colors. -->
-        <canvas class="opening-h1-iridescence" aria-hidden="true"></canvas>
+      <h1 class="h1-iridescent">
         <span class="line-1">Which FinTwit account</span>
         <span class="line-2">actually makes money?</span>
       </h1>
@@ -8151,20 +7467,10 @@
     </div>
   </section>
 
-  <!-- ============================================================ SECTION 2 · BACKTEST CLAIM + MARQUEE  (3.0 round 2)
-       Per Feedback Round 1 Section 2 — headline ("We backtested XXX
-       tweets from XXX FinTwit's most-followed accounts.") above three
-       rows of card marquee, adjacent rows scrolling in opposite
-       directions. The 2.0 hero-content + audit-card-stack are gone;
-       the marquee speaks for the page.
+  <!-- ============================================================ SECTION 2 · PLAYBOOK MARQUEE
+       Header + CTA pair above three KOL-card marquee rows.
        ============================================================ -->
   <section class="stage stage-marquee" id="audit-yours">
-    <!-- Headline lives on top of the marquee as an absolute overlay
-         (left side). The .stage-headline-inner mimics the global
-         .section-wrap so the text's left edge matches THE FINTWIT
-         ALPHA LEAGUE / leaderboard column directly below. A short
-         gradient backdrop only covers the text width — cards remain
-         visible across most of the section. -->
     <!-- 4.4 round 88 — section header is now horizontal: title +
          subtitle on the left, CTA pair on the right. Saves vertical
          height compared to a stacked centered version. No more
@@ -8369,7 +7675,7 @@
       <div class="section-head with-action">
         <div>
           <h2 class="lb-title">The FinTwit Alpha League</h2>
-          <p class="lb-sub"><span class="alva">Who should you follow on X?</span> See which FinTwit accounts make the most money. Updated every hour.</p>
+          <p class="lb-sub">See which FinTwit accounts make the most money. Updated every hour.</p>
         </div>
         <a class="section-action" href="#" target="_blank" rel="noreferrer">
           View full leaderboard <i class="ph-bold ph-arrow-up-right"></i>
@@ -9160,37 +8466,6 @@
   });
 
   /* ============================================================
-     SECTION 2 CARD-STACK HOVER — JS-driven for stability
-     Pure CSS :hover ~ siblings retriggered as moved cards slid under
-     the cursor (classic "jumping cards" bug). JS-managed instead:
-     mouseenter on any card adds .is-hovered + writes --push on each
-     sibling; mouseleave on the stack wipes both.
-     ============================================================ */
-  (() => {
-    const stack = document.querySelector('.card-stack');
-    if (!stack) return;
-    const cards = Array.from(stack.querySelectorAll('.perspective-wrap'));
-    const PUSH = 130;
-
-    cards.forEach((card, idx) => {
-      card.addEventListener('mouseenter', () => {
-        cards.forEach((c, i) => {
-          c.classList.toggle('is-hovered', i === idx);
-          if (i === idx)        c.style.setProperty('--push', '0px');
-          else if (i < idx)     c.style.setProperty('--push', -PUSH + 'px');
-          else                  c.style.setProperty('--push',  PUSH + 'px');
-        });
-      });
-    });
-    stack.addEventListener('mouseleave', () => {
-      cards.forEach(c => {
-        c.classList.remove('is-hovered');
-        c.style.removeProperty('--push');
-      });
-    });
-  })();
-
-  /* ============================================================
      LEADERBOARD DATA + RENDER  (4.4 round 20)
      Placeholder roster of 10 FinTwit personas. The same 10 entries
      appear in every tab — each tab sorts on its own metric and
@@ -9234,73 +8509,6 @@
       metricSub:  null
     }
   };
-  // Legacy reference (now unused): the old per-tab row arrays were
-  // replaced by a single roster + sort-per-tab so all four tabs share
-  // identity, which keeps the layout (and the page scroll position)
-  // stable when the user clicks between tabs.
-  const _LEGACY_LB_TABS = {
-    allTimeWin: {
-      metricLabel: 'ALL-TIME WIN RATE',
-      rows: [
-        { rank:4,  name:'Kailash Concepts',         handle:'@kailashconcepts', tags:['US Equities','Value'],                          topTk:['GOOG','META','MRVL'],   metric:90, sub:'10 signals',  winRate:90, recentWin:100, bestTk:'VAL',  bestRoi:134  },
-        { rank:5,  name:'qinbafrank',               handle:'@qinbafrank',      tags:['US Equities','Semis','AI Infra'],               topTk:['CRWD','ETH','BTC'],     metric:88, sub:'26 signals',  winRate:88, recentWin:86,  bestTk:'INTC', bestRoi:91   },
-        { rank:6,  name:'Ben Pouladian',            handle:'@benitoz',         tags:['US Equities','Semis','AI Infra'],               topTk:['COIN','CRWD','MRVL'],   metric:86, sub:'29 signals',  winRate:86, recentWin:100, bestTk:'SNDK', bestRoi:369  },
-        { rank:7,  name:'Warren Pies',              handle:'@warrenpies',      tags:['US Equities','Macro'],                          topTk:['SNOW','AVGO','PLTR'],   metric:83, sub:'6 signals',   winRate:83, recentWin:0,   bestTk:'AVGO', bestRoi:100  },
-        { rank:8,  name:'flyingwhale-飞鲸投资笔记', handle:'@flyingwhale919',  tags:['US Equities','Semis','AI Infra'],               topTk:['AVGO','GOOG','MRVL'],   metric:80, sub:'50 signals',  winRate:80, recentWin:100, bestTk:'AVGO', bestRoi:830  },
-        { rank:9,  name:'WallStreetVet',            handle:'@sly_dawg33',      tags:['US Equities','Frontier Tech','AI Infra'],       topTk:['ARM','RKLB','ADBE'],    metric:75, sub:'52 signals',  winRate:75, recentWin:75,  bestTk:'QCOM', bestRoi:70.9 },
-        { rank:10, name:'Diamond Rapids',           handle:'@diamondrapids',   tags:['US Equities','Semis'],                          topTk:['CRWD','AVGO','SMCI'],   metric:75, sub:'8 signals',   winRate:75, recentWin:0,   bestTk:'INTC', bestRoi:279  },
-        { rank:11, name:'铁柱',                     handle:'@tiezhucrypto',    tags:['US Equities','Semis','AI Infra','Rates'],       topTk:['NET','GOOG','SHOP'],    metric:75, sub:'4 signals',   winRate:75, recentWin:0,   bestTk:'SNDK', bestRoi:148  },
-        { rank:12, name:'Nico投资有道',             handle:'@tychozzz',        tags:['US Equities','AI Infra'],                       topTk:['BTC','AAPL','META'],    metric:73, sub:'41 signals',  winRate:73, recentWin:76,  bestTk:'AMD',  bestRoi:154  },
-        { rank:13, name:'Matt Giannino',            handle:'@marketmovesmatt', tags:['US Equities','Index/ETF'],                      topTk:['HOOD','SQ','META'],     metric:70, sub:'43 signals',  winRate:70, recentWin:76,  bestTk:'SOXL', bestRoi:415  },
-        { rank:14, name:'Herman Jin',               handle:'@shanghaojin',     tags:['US Equities','Semis','AI Infra'],               topTk:['CRWD','AVGO','SMCI'],   metric:69, sub:'26 signals',  winRate:69, recentWin:0,   bestTk:'INTC', bestRoi:233  }
-      ]
-    },
-    recentWin: {
-      metricLabel: 'LAST 30 DAYS WIN RATE',
-      rows: [
-        { rank:4,  name:'Manchurius Hao — Greeks.live首席赌狗', handle:'@antonlavay',     tags:['US Equities','Semis','AI Infra','Energy'], topTk:['COIN','CRWD','MRVL'], metric:88, sub:'8 signals in last 30 days',  winRate:67, recentWin:88, bestTk:'AXTI', bestRoi:238   },
-        { rank:5,  name:'qinbafrank',                          handle:'@qinbafrank',     tags:['US Equities','Semis','AI Infra'],          topTk:['CRWD','ETH','BTC'],   metric:86, sub:'7 signals in last 30 days',  winRate:88, recentWin:86, bestTk:'INTC', bestRoi:91    },
-        { rank:6,  name:'Jukan',                               handle:'@jukan05',        tags:['US Equities','Semis','AI Infra'],          topTk:['AMD','CRWD','MRVL'],  metric:80, sub:'5 signals in last 30 days',  winRate:90, recentWin:80, bestTk:'INTC', bestRoi:201   },
-        { rank:7,  name:'Matt Giannino',                       handle:'@marketmovesmatt',tags:['US Equities','Index/ETF'],                 topTk:['HOOD','SQ','META'],   metric:76, sub:'17 signals in last 30 days', winRate:70, recentWin:76, bestTk:'SOXL', bestRoi:415   },
-        { rank:8,  name:'Nico投资有道',                        handle:'@tychozzz',       tags:['US Equities','AI Infra'],                  topTk:['BTC','AAPL','META'],  metric:76, sub:'17 signals in last 30 days', winRate:73, recentWin:76, bestTk:'AMD',  bestRoi:154   },
-        { rank:9,  name:'WallStreetVet',                       handle:'@sly_dawg33',     tags:['US Equities','Frontier Tech','AI Infra'],  topTk:['ARM','RKLB','ADBE'],  metric:75, sub:'51 signals in last 30 days', winRate:75, recentWin:75, bestTk:'QCOM', bestRoi:70.9  },
-        { rank:10, name:'美股仙人',                            handle:'@hanking66',      tags:['US Equities','General'],                   topTk:['GOOG','CRWD','META'], metric:71, sub:'7 signals in last 30 days',  winRate:63, recentWin:71, bestTk:'INTC', bestRoi:264   },
-        { rank:11, name:'高买低卖的神！',                      handle:'@dearbaibabybus', tags:['US Equities','Semis','AI Infra','Software'],topTk:['CRM','RKLB','ADBE'], metric:71, sub:'14 signals in last 30 days', winRate:65, recentWin:71, bestTk:'AMD',  bestRoi:81.6  },
-        { rank:12, name:'3X Long Labubu',                      handle:'@labubu_trader',  tags:['US Equities','Semis','AI Infra','Commodities'], topTk:['CRWD','AMD','AVGO'], metric:68, sub:'19 signals in last 30 days', winRate:57, recentWin:68, bestTk:'AXTI', bestRoi:1100  },
-        { rank:13, name:'川沐 | Trumoo🐮',                     handle:'@xiaomustock',    tags:['US Equities','Semis','AI Infra'],          topTk:['ARM','INTC','SMCI'],  metric:67, sub:'6 signals in last 30 days',  winRate:64, recentWin:67, bestTk:'AVGO', bestRoi:825   }
-      ]
-    },
-    bestRoi: {
-      metricLabel: 'BEST ROI',
-      rows: [
-        { rank:4,  name:'Rihard Jarc',          handle:'@rihardjarc',     tags:['US Equities','Semis','AI Infra'],          topTk:['GOOG','CRWD','META'],  metric:64.5, isPct:true, sub:'19 signals', winRate:63, recentWin:0,   bestTk:'MRVL', bestRoi:547 },
-        { rank:5,  name:'川沐 | Trumoo🐮',      handle:'@xiaomustock',    tags:['US Equities','Semis','AI Infra'],          topTk:['ARM','INTC','SMCI'],   metric:54.0, isPct:true, sub:'39 signals', winRate:64, recentWin:67,  bestTk:'AVGO', bestRoi:825 },
-        { rank:6,  name:'Ryan Leung 梁興盛, CFA',handle:'@ryanhingshing', tags:['US Equities','Semis','AI Infra'],          topTk:['CRWD','SMCI','ADBE'],  metric:44.7, isPct:true, sub:'33 signals', winRate:58, recentWin:0,   bestTk:'AAOI', bestRoi:697 },
-        { rank:7,  name:'铁柱',                 handle:'@tiezhucrypto',   tags:['US Equities','Semis','AI Infra','Rates'],  topTk:['NET','GOOG','SHOP'],   metric:41.8, isPct:true, sub:'4 signals',  winRate:75, recentWin:0,   bestTk:'SNDK', bestRoi:148 },
-        { rank:8,  name:'Jukan',                handle:'@jukan05',        tags:['US Equities','Semis','AI Infra'],          topTk:['AMD','CRWD','MRVL'],   metric:38.4, isPct:true, sub:'21 signals', winRate:90, recentWin:80,  bestTk:'INTC', bestRoi:201 },
-        { rank:9,  name:'Nullable',             handle:'@nullablex',      tags:['US Equities','Semis','Commodities'],       topTk:['SNOW','SHOP','ADBE'],  metric:37.1, isPct:true, sub:'51 signals', winRate:57, recentWin:100, bestTk:'SNDK', bestRoi:668 },
-        { rank:10, name:'Kailash Concepts',     handle:'@kailashconcepts',tags:['US Equities','Value'],                     topTk:['GOOG','META','MRVL'],  metric:35.8, isPct:true, sub:'10 signals', winRate:90, recentWin:100, bestTk:'VAL',  bestRoi:134 },
-        { rank:11, name:'NullOreo',             handle:'@nulloreo_',      tags:['US Equities','AI Infra','Energy','Rates'], topTk:['SNOW','CRWD','PANW'],  metric:32.3, isPct:true, sub:'43 signals', winRate:53, recentWin:44,  bestTk:'SNDK', bestRoi:985 },
-        { rank:12, name:'Herman Jin',           handle:'@shanghaojin',    tags:['US Equities','Semis','AI Infra'],          topTk:['CRWD','AVGO','SMCI'],  metric:31.7, isPct:true, sub:'26 signals', winRate:69, recentWin:0,   bestTk:'INTC', bestRoi:233 }
-      ]
-    },
-    bestCall: {
-      metricLabel: 'BEST CALL',
-      rows: [
-        { rank:4,  name:'flyingwhale-飞鲸投资笔记', handle:'@flyingwhale919',  tags:['US Equities','Semis','AI Infra'],  topTk:['AVGO','GOOG','MRVL'],     callTk:'AVGO', callRoi:830, winRate:80, recentWin:100, bestTk:'AVGO', bestRoi:830 },
-        { rank:5,  name:'川沐 | Trumoo🐮',         handle:'@xiaomustock',     tags:['US Equities','Semis','AI Infra'],  topTk:['ARM','INTC','SMCI'],      callTk:'AVGO', callRoi:825, winRate:64, recentWin:67,  bestTk:'AVGO', bestRoi:825 },
-        { rank:6,  name:'Ryan Leung 梁興盛, CFA',   handle:'@ryanhingshing',  tags:['US Equities','Semis','AI Infra'],  topTk:['CRWD','SMCI','ADBE'],     callTk:'AAOI', callRoi:697, winRate:58, recentWin:0,   bestTk:'AAOI', bestRoi:697 },
-        { rank:7,  name:'Nullable',                 handle:'@nullablex',      tags:['US Equities','Semis','Commodities'],topTk:['SNOW','SHOP','ADBE'],    callTk:'SNDK', callRoi:668, winRate:57, recentWin:100, bestTk:'SNDK', bestRoi:668 },
-        { rank:8,  name:'shu fen',                  handle:'@shufen46250836', tags:['US Equities','Semis','AI Infra','Energy'], topTk:['CRWD','GOOG','AAPL'], callTk:'SNDK', callRoi:620, winRate:64, recentWin:100, bestTk:'SNDK', bestRoi:620 },
-        { rank:9,  name:'Rihard Jarc',              handle:'@rihardjarc',     tags:['US Equities','Semis','AI Infra'],  topTk:['GOOG','CRWD','META'],     callTk:'MRVL', callRoi:547, winRate:63, recentWin:0,   bestTk:'MRVL', bestRoi:547 },
-        { rank:10, name:'Arthur Hayes',             handle:'@cryptohayes',    tags:['Crypto','Majors','Rates'],          topTk:['BTC','ETH','SOL'],       callTk:'ETH',  callRoi:471, winRate:25, recentWin:100, bestTk:'ETH',  bestRoi:471 },
-        { rank:11, name:'郭明錤 | Ming-Chi Kuo',    handle:'@mingchikuo',     tags:['US Equities','Semis','AI Infra'],  topTk:['CRWD','SMCI','ADBE'],     callTk:'INTC', callRoi:421, winRate:100,recentWin:100, bestTk:'INTC', bestRoi:421 },
-        { rank:12, name:'Matt Giannino',            handle:'@marketmovesmatt',tags:['US Equities','Index/ETF'],          topTk:['HOOD','SQ','META'],      callTk:'SOXL', callRoi:415, winRate:70, recentWin:76,  bestTk:'SOXL', bestRoi:415 },
-        { rank:13, name:'Ben Pouladian',            handle:'@benitoz',        tags:['US Equities','Semis','AI Infra'],  topTk:['COIN','CRWD','MRVL'],     callTk:'SNDK', callRoi:369, winRate:86, recentWin:100, bestTk:'SNDK', bestRoi:369 }
-      ]
-    }
-  };
-
   function _lbTickerEl(tk, cls) {
     const url = (typeof window._tickerLogoUrl === 'function') ? window._tickerLogoUrl(tk) : '';
     const fbHtml = '<span class="' + cls + ' lb-tk-fb">' + tk.charAt(0) + '</span>';
@@ -9742,7 +8950,11 @@
 
       // Clone the card content so the grid copy stays intact
       slot.innerHTML = '';
-      slot.appendChild(sourceCardEl.cloneNode(true));
+      const clonedCard = sourceCardEl.cloneNode(true);
+      slot.appendChild(clonedCard);
+      if (typeof window._syncKolCards === 'function') {
+        requestAnimationFrame(window._syncKolCards);
+      }
 
       // Populate the "View more about [name]" card with the clicked
       // creator's display name. Source can be a .card (results modal)
@@ -10321,6 +9533,9 @@
       for (let i = 0; i < handle.length; i++) h = (h * 31 + handle.charCodeAt(i)) | 0;
       const roi = 120 + (Math.abs(h) % 380); // 120..499
       window._buildRichCard(card, { name, handle, roi, avatarSrc, onerr });
+      if (typeof window._syncKolCards === 'function') {
+        requestAnimationFrame(window._syncKolCards);
+      }
       // 4.4 round 10 — re-measure the preview card's natural height
       // so the hover-grow rule has a fresh --card-base-h to add the
       // CTA height to. Two rAFs to clear layout + paint.
@@ -10620,105 +9835,80 @@
   })();
 
   /* ============================================================
-     CTA PROOF COUNTER  (rolling digits on the section-2 hero CTA)
-     - 4-digit count (e.g. 1247) padded; commas inserted between thousand
-       groups. Each digit is a .roller (viewport) containing a 0..9 column
-       (.roller-stack); we translateY the column to show the right digit
-       with a smooth ease.
-     - On a random 4–9s interval, the count bumps by 1–3 to feel "live".
+     WEBGL CANVAS RESIZE GUARD
+     Window drags can briefly report stale/zero canvas boxes while CSS
+     layout is settling. All shader backdrops share this scheduler so
+     their drawing buffers and resolution uniforms recover after width
+     changes instead of freezing at the previous size.
      ============================================================ */
-  (() => {
-    const counter = document.getElementById('proof-count');
-    if (!counter) return;
-    const DIGIT_HEIGHT = 16;       // matches .roller height in CSS
-    const stacks = [];             // one .roller-stack per visible digit slot
+  window.__alvaBindWebglResize = function bindWebglResize(canvas, renderer, uniforms, opts) {
+    opts = opts || {};
+    if (opts.fill) {
+      Object.assign(canvas.style, {
+        position: 'absolute',
+        inset: '0',
+        width: '100%',
+        height: '100%',
+        display: 'block',
+        pointerEvents: 'none',
+      });
+    }
+    let lastW = 0;
+    let lastH = 0;
+    let raf = 0;
+    const dprCap = opts.dpr || 2;
 
-    function buildRoller() {
-      const r = document.createElement('span');
-      r.className = 'roller';
-      const stack = document.createElement('span');
-      stack.className = 'roller-stack';
-      for (let i = 0; i <= 9; i++) {
-        const s = document.createElement('span');
-        s.textContent = String(i);
-        stack.appendChild(s);
-      }
-      r.appendChild(stack);
-      return { roller: r, stack };
-    }
-    function buildSeparator(ch) {
-      const s = document.createElement('span');
-      s.className = 'separator';
-      s.textContent = ch;
-      return s;
-    }
-    // Format a number with comma separators, return array of {type:'d'|'s',val}
-    function format(n) {
-      const digits = String(n);
-      const parts = [];
-      for (let i = 0; i < digits.length; i++) {
-        parts.push({ type: 'd', val: digits[i] });
-        const fromRight = digits.length - 1 - i;
-        if (fromRight > 0 && fromRight % 3 === 0) {
-          parts.push({ type: 's', val: ',' });
-        }
-      }
-      return parts;
+    function readBox() {
+      const r = canvas.getBoundingClientRect();
+      const parent = canvas.parentElement && canvas.parentElement.getBoundingClientRect();
+      const w = Math.round(r.width || (parent && parent.width) || canvas.clientWidth || window.innerWidth || 1);
+      const h = Math.round(r.height || (parent && parent.height) || canvas.clientHeight || window.innerHeight || 1);
+      return { w: Math.max(2, w), h: Math.max(2, h) };
     }
 
-    let value = 1200 + Math.floor(Math.random() * 200);  // ~1247 starting feel
-    function render(initial) {
-      const parts = format(value);
-      counter.innerHTML = '';
-      stacks.length = 0;
-      parts.forEach(p => {
-        if (p.type === 's') {
-          counter.appendChild(buildSeparator(p.val));
+    function sync() {
+      raf = 0;
+      const box = readBox();
+      renderer.setPixelRatio(Math.min(dprCap, window.devicePixelRatio || 1));
+      if (box.w !== lastW || box.h !== lastH || opts.forceEverySync) {
+        renderer.setSize(box.w, box.h, false);
+        lastW = box.w;
+        lastH = box.h;
+      }
+      if (uniforms && uniforms.uResolution) {
+        const pr = renderer.getPixelRatio();
+        if ('z' in uniforms.uResolution.value) {
+          uniforms.uResolution.value.set(box.w * pr, box.h * pr, box.w / box.h);
         } else {
-          const { roller, stack } = buildRoller();
-          counter.appendChild(roller);
-          stacks.push(stack);
+          uniforms.uResolution.value.set(box.w * pr, box.h * pr);
         }
-      });
-      // position digits — on first render do it without animation
-      const digitChars = parts.filter(p => p.type === 'd').map(p => p.val);
-      stacks.forEach((stack, i) => {
-        const d = parseInt(digitChars[i], 10);
-        if (initial) stack.style.transition = 'none';
-        stack.style.transform = `translateY(-${d * DIGIT_HEIGHT}px)`;
-        if (initial) {
-          // re-enable transition on next frame so subsequent updates animate
-          requestAnimationFrame(() => { stack.style.transition = ''; });
-        }
-      });
-    }
-    function updateInPlace() {
-      const parts = format(value);
-      const digitChars = parts.filter(p => p.type === 'd').map(p => p.val);
-      // if number of digits grew (e.g. crossed 9999 → 10000), re-render
-      if (digitChars.length !== stacks.length) {
-        render(false);
-        return;
       }
-      stacks.forEach((stack, i) => {
-        const d = parseInt(digitChars[i], 10);
-        stack.style.transform = `translateY(-${d * DIGIT_HEIGHT}px)`;
-      });
+      if (opts.onResize) opts.onResize(box.w, box.h, renderer.getPixelRatio());
     }
 
-    render(true);
-
-    // Live increment: random pause + random bump (1..3) so it feels organic.
-    function scheduleTick() {
-      const wait = 4000 + Math.random() * 5000;
-      setTimeout(() => {
-        value += 1 + Math.floor(Math.random() * 3);
-        updateInPlace();
-        scheduleTick();
-      }, wait);
+    function schedule() {
+      if (!raf) raf = requestAnimationFrame(sync);
     }
-    scheduleTick();
-  })();
+
+    function settle() {
+      schedule();
+      setTimeout(schedule, 80);
+      setTimeout(schedule, 240);
+    }
+
+    settle();
+    window.addEventListener('resize', settle, { passive: true });
+    window.addEventListener('orientationchange', settle, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', settle, { passive: true });
+    }
+    if ('ResizeObserver' in window) {
+      const ro = new ResizeObserver(settle);
+      ro.observe(canvas);
+      if (canvas.parentElement) ro.observe(canvas.parentElement);
+    }
+    return { sync, schedule: settle };
+  };
 
   /* ============================================================
      3.0 round 18 — CAT-EYE LENS via Three.js WebGL fragment shader.
@@ -10959,6 +10149,18 @@
       roundRect(ctx, -1, -1, w + 2, h + 2, 6);
       ctx.fill();
       ctx.restore();
+      // Very weak centered light so dark tweet cards keep a readable
+      // silhouette without looking underlit.
+      ctx.save();
+      ctx.filter = 'blur(14px)';
+      const centerGlow = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w * 0.48);
+      centerGlow.addColorStop(0, 'rgba(88, 195, 198, 0.10)');
+      centerGlow.addColorStop(0.56, 'rgba(88, 195, 198, 0.045)');
+      centerGlow.addColorStop(1, 'rgba(88, 195, 198, 0)');
+      ctx.fillStyle = centerGlow;
+      roundRect(ctx, 16, 10, w - 32, h - 20, 10);
+      ctx.fill();
+      ctx.restore();
       // Sharp border + dark card on top, in the regular ctx state
       ctx.fillStyle = '#2a2a32';
       roundRect(ctx, -1, -1, w + 2, h + 2, 6);
@@ -11029,6 +10231,14 @@
           return { ...t, kind: 'tweet', durS: TIER[t.tier].durS,
                    canvas: r.canvas, w: r.w, h: r.h };
         });
+        // Evenly seed the visible cards around the drift loop. The old
+        // per-card delays were hand-tuned and could bunch several cards
+        // into the same horizontal band at load.
+        [...items]
+          .sort((a, b) => (a.y - b.y) || (a.name > b.name ? 1 : -1))
+          .forEach((item, i, arr) => {
+            item.phase0 = ((i + 0.5) / arr.length + (i % 3) * 0.018) % 1;
+          });
 
         // -------- 3b. hide the DOM tweets --------
         tweetEls.forEach(el => { el.style.visibility = 'hidden'; });
@@ -11328,6 +10538,23 @@
       // ----- per-frame size update + render -----
       const startT = performance.now() / 1000;
       let lastW = 0, lastH = 0;
+      const lensResize = window.__alvaBindWebglResize(lensCanvas, renderer, null, {
+        dpr: 2,
+        onResize(cssW, cssH, pr) {
+          camera.right = cssW;
+          camera.top   = cssH;
+          camera.updateProjectionMatrix();
+          ensureRT(Math.round(cssW * pr), Math.round(cssH * pr));
+          postMat.uniforms.uAspect.value = cssW / cssH;
+          postMat.uniforms.uTexel.value.set(
+            1 / Math.round(cssW * pr),
+            1 / Math.round(cssH * pr)
+          );
+          lastW = cssW;
+          lastH = cssH;
+        }
+      });
+      lensResize.sync();
 
       function frame() {
         requestAnimationFrame(frame);
@@ -11336,17 +10563,7 @@
         if (w === 0 || h === 0) return;
 
         if (w !== lastW || h !== lastH) {
-          renderer.setSize(w, h, false);
-          camera.right = w;
-          camera.top   = h;
-          camera.updateProjectionMatrix();
-          ensureRT(Math.round(w * DPR), Math.round(h * DPR));
-          postMat.uniforms.uAspect.value = w / h;
-          postMat.uniforms.uTexel.value.set(
-            1 / Math.round(w * DPR),
-            1 / Math.round(h * DPR)
-          );
-          lastW = w; lastH = h;
+          lensResize.schedule();
         }
 
         // Drive each plane's drift. Ghosts and real tweets share the
@@ -11354,7 +10571,7 @@
         const t = performance.now() / 1000 - startT;
         for (const m of meshes) {
           const dur   = m.t.durS;
-          const phase = (((t - m.t.d) % dur) + dur) % dur / dur;
+          const phase = ((t / dur) + (m.t.phase0 || 0)) % 1;
           const xLeft = -w + phase * 2 * w;
           const yTop  = (m.t.y / 100) * h;
           // 3.0 round 46.19 — snap plane positions to integer device
@@ -11497,10 +10714,9 @@
   /* ============================================================
      STICKY BOTTOM CTA — IntersectionObserver wiring
      ============================================================
-     The bar enters view once the user scrolls past .stage-actions
-     (the hero's second-screen CTA block) and exits view when the
-     footer becomes visible. A session-scoped dismiss flag honours
-     the close button so the bar doesn't keep popping back.
+     The bar enters view once the user scrolls past the hero CTA row
+     and tucks away over the footer. A session-scoped dismiss flag
+     honours the close button so the bar doesn't keep popping back.
      Mobile-only: the bar is display:none on desktop via CSS, so the
      observer is a no-op there but harmless.
      Reference: Tesla `tcl-permanent-cta` observation, Stripe.com
@@ -11516,8 +10732,7 @@
     }
     bar.removeAttribute('hidden');                  // CSS will reveal as flex
 
-    const heroCta = document.querySelector('.stage-actions') ||
-                    document.querySelector('.opening-arrow');
+    const heroCta = document.querySelector('.opening-actions');
     const footer  = document.querySelector('footer.f');
     if (!heroCta || !footer) return;
 
@@ -11732,23 +10947,7 @@
       const mat = new THREE.ShaderMaterial({ uniforms, vertexShader: VERT, fragmentShader: FRAG });
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
       scene.add(mesh);
-      function resize() {
-        const r = canvas.getBoundingClientRect();
-        if (r.width > 0 && r.height > 0) {
-          renderer.setSize(r.width, r.height, false);
-        }
-      }
-      resize();
-      window.addEventListener('resize', resize);
-      // 4.4 round 86 — canvas can init before its container has its
-      // final layout (esp. on file:// where timing differs from https).
-      // Window resize won't fire to fix it, leaving the WebGL buffer
-      // locked to the small initial size. ResizeObserver catches all
-      // post-layout size changes.
-      if ('ResizeObserver' in window) {
-        const ro = new ResizeObserver(() => resize());
-        ro.observe(canvas);
-      }
+      window.__alvaBindWebglResize(canvas, renderer, null, { dpr: 2, fill: true }).sync();
       // 4.0 round 4 — pause when the section isn't on screen.
       let visible = true;
       if ('IntersectionObserver' in window) {
@@ -11800,27 +10999,7 @@
       });
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
       scene.add(mesh);
-      function resize() {
-        const r = canvas.getBoundingClientRect();
-        if (r.width > 0 && r.height > 0) {
-          renderer.setSize(r.width, r.height, false);
-          if (uniforms.uResolution) {
-            uniforms.uResolution.value.x = r.width * renderer.getPixelRatio();
-            uniforms.uResolution.value.y = r.height * renderer.getPixelRatio();
-          }
-        }
-      }
-      resize();
-      window.addEventListener('resize', resize);
-      // 4.4 round 86 — canvas can init before its container has its
-      // final layout (esp. on file:// where timing differs from https).
-      // Window resize won't fire to fix it, leaving the WebGL buffer
-      // locked to the small initial size. ResizeObserver catches all
-      // post-layout size changes.
-      if ('ResizeObserver' in window) {
-        const ro = new ResizeObserver(() => resize());
-        ro.observe(canvas);
-      }
+      window.__alvaBindWebglResize(canvas, renderer, uniforms, { dpr: dprCap, fill: opts && opts.fill }).sync();
       // 4.0 round 4 — pause when scrolled offscreen. The PrismaticBurst
       // raymarch + aurora noise each cost real GPU time per frame;
       // skipping render() when the canvas isn't visible recovers most
@@ -11912,137 +11091,10 @@
       };
       makeShaderCanvas(canvas, VERT, FRAG, uniforms, () => {
         // uTime base is in seconds; aurora wants slow drift — already scaled in shader.
-      });
+      }, { fill: true });
     }
 
-    // ------- 2. IRIDESCENCE (hero H1) ------- //
-    // 4.0 round 4 — iridescence is now pure CSS (see .h1-iridescent
-    // rule). The WebGL pipeline below is kept dormant; we just add
-    // the activating class and bail out, avoiding the expensive
-    // toDataURL pump that was making the headline color flow stutter.
-    function initIridescence() {
-      const h1 = document.querySelector('.opening-content h1');
-      if (h1) h1.classList.add('h1-iridescent');
-      return;
-      /* legacy WebGL path below — intentionally unreachable */ // eslint-disable-line
-      // eslint-disable-next-line no-unreachable
-      const canvas = document.querySelector('.opening-h1-iridescence');
-      if (!canvas) return;
-      const VERT = `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = vec4(position.xy, 0.0, 1.0);
-        }
-      `;
-      const FRAG = `
-        precision highp float;
-        uniform float uTime;
-        uniform vec3 uColor;
-        uniform vec3 uResolution;
-        uniform vec2 uMouse;
-        uniform float uAmplitude;
-        uniform float uSpeed;
-        varying vec2 vUv;
-        void main() {
-          float mr = min(uResolution.x, uResolution.y);
-          vec2 uv = (vUv.xy * 2.0 - 1.0) * uResolution.xy / mr;
-          uv += (uMouse - vec2(0.5)) * uAmplitude;
-          float d = -uTime * 0.5 * uSpeed;
-          float a = 0.0;
-          for (float i = 0.0; i < 8.0; ++i) {
-            a += cos(i - d - a * uv.x);
-            d += sin(uv.y * i + a);
-          }
-          d += uTime * 0.5 * uSpeed;
-          vec3 col = vec3(cos(uv * vec2(d, a)) * 0.6 + 0.4, cos(a + d) * 0.5 + 0.5);
-          col = cos(col * cos(vec3(d, a, 2.5)) * 0.5 + 0.5) * uColor;
-          gl_FragColor = vec4(col, 1.0);
-        }
-      `;
-      const uniforms = {
-        uTime:       { value: 0 },
-        // mild green push so the multi-hue iridescent pattern keeps
-        // its variety; the bg-blend-mode: overlay above lets other
-        // colors flash through against the alva-green base.
-        uColor:      { value: new THREE.Color(0.85, 1.10, 1.0) },
-        uResolution: { value: new THREE.Vector3(1, 1, 1) },
-        uMouse:      { value: new THREE.Vector2(0.5, 0.5) },
-        uAmplitude:  { value: 0.1 },
-        uSpeed:      { value: 1.0 },
-      };
-      // Size the offscreen canvas to roughly the H1's visual footprint
-      // so the texture covers the headline without unnecessary cost.
-      function targetSize() {
-        const r = h1.getBoundingClientRect();
-        return {
-          w: Math.max(320, Math.round(r.width)),
-          h: Math.max(120, Math.round(r.height))
-        };
-      }
-      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
-      renderer.setPixelRatio(1); // toDataURL cost scales with pixels — keep DPR low
-      renderer.setClearColor(0x000000, 0);
-      const scene = new THREE.Scene();
-      const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
-      const mat = new THREE.ShaderMaterial({ uniforms, vertexShader: VERT, fragmentShader: FRAG, transparent: true });
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
-      scene.add(mesh);
-      function resize() {
-        const s = targetSize();
-        renderer.setSize(s.w, s.h, false);
-        uniforms.uResolution.value.set(s.w, s.h, s.w / s.h);
-      }
-      resize();
-      window.addEventListener('resize', resize);
-      // 4.4 round 86 — canvas can init before its container has its
-      // final layout (esp. on file:// where timing differs from https).
-      // Window resize won't fire to fix it, leaving the WebGL buffer
-      // locked to the small initial size. ResizeObserver catches all
-      // post-layout size changes.
-      if ('ResizeObserver' in window) {
-        const ro = new ResizeObserver(() => resize());
-        ro.observe(canvas);
-      }
-      let last = performance.now();
-      let syncEvery = 0;
-      let pushing = false; // single-flight to avoid stacked decodes
-      function pushToH1() {
-        if (pushing) return;
-        let url;
-        try { url = canvas.toDataURL('image/png'); }
-        catch (e) { return; }
-        pushing = true;
-        // Pre-decode the new texture so the H1 swaps with a fully
-        // ready image — eliminates the one-frame "no bg" flash that
-        // was making the headline flicker.
-        const img = new Image();
-        img.decoding = 'async';
-        img.onload = img.onerror = () => {
-          h1.style.backgroundImage = 'url("' + url + '")';
-          pushing = false;
-        };
-        img.src = url;
-      }
-      function tick(now) {
-        const dt = Math.min(0.05, (now - last) * 0.001);
-        last = now;
-        uniforms.uTime.value += dt;
-        renderer.render(scene, camera);
-        // ~5 fps sync — slow enough that decode-driven flicker is
-        // imperceptible and toDataURL CPU is bounded.
-        if (++syncEvery >= 12) {
-          syncEvery = 0;
-          pushToH1();
-        }
-        requestAnimationFrame(tick);
-      }
-      // first push immediately so the H1 isn't flat-teal on load
-      requestAnimationFrame(() => { renderer.render(scene, camera); pushToH1(); });
-      requestAnimationFrame(tick);
-    }
-
-    // ------- 3. PRISMATIC BURST (hero bg) ------- //
+    // ------- 2. PRISMATIC BURST (hero bg) ------- //
     function initPrismaticBurst() {
       const canvas = document.querySelector('.opening-burst');
       if (!canvas) return;
@@ -12160,12 +11212,11 @@
       };
       // 28-step raymarch is fill-rate bound; capping DPR to 1 cuts
       // total fragments to ~25% of DPR=2, keeping the hero scrollable.
-      makeShaderCanvas(canvas, VERT, FRAG, uniforms, null, { dpr: 1 });
+      makeShaderCanvas(canvas, VERT, FRAG, uniforms, null, { dpr: 1, fill: true });
     }
 
     waitForThree(() => {
       initAurora();
-      initIridescence();
       initPrismaticBurst();
     });
   })();
@@ -12606,6 +11657,8 @@
         // column = 3 best calls stacked, first one is the featured
         // big tile with a CALL→PEAK mini chart. Old bottom sparkline
         // + foot caption removed.
+        '<div class="mq-base">' +
+        '<div class="mq-scale">' +
         '<div class="mq-body">' +
           '<div class="mq-left">' +
             '<div class="mq-id">' +
@@ -12628,6 +11681,8 @@
         '</div>' /* /.mq-body */ +
         // 4.4 round 76 — small alva brand mark, bottom-left of card.
         '<div class="mq-brand" aria-hidden="true">' + ALVA_LOGO_SVG + '</div>' +
+        '</div>' /* /.mq-scale */ +
+        '</div>' /* /.mq-base */ +
         // 4.4 round 2 — hover CTA. Single row that grows below the
         // card on :hover. Left: "{Name}'s Playbook" · Right: external
         // arrow icon. target=_blank + rel=noopener — it leads to an
@@ -12636,6 +11691,7 @@
           '<span class="mq-cta-name">' + name + '’s Playbook</span>' +
           '<i class="ph-bold ph-arrow-up-right mq-cta-icon" aria-hidden="true"></i>' +
         '</a>';
+      if (window._syncKolCards) requestAnimationFrame(window._syncKolCards);
     }
 
     // Pass 1 — landing marquee.
@@ -12707,11 +11763,63 @@
   })();
 
   /* ============================================================
+     KOL CARD COMPONENT SIZER
+     One component contract for every KOL card:
+       - default panel keeps a fixed 1.91:1 ratio
+       - all default content, including the bottom-left logo, scales
+         from a 540×283 design canvas with the card width
+       - hover CTA is an unscaled fixed-height strip below the default
+         panel, but keeps the card width
+     ============================================================ */
+  (function () {
+    const DESIGN_W = 540;
+    const ASPECT = 1.91;
+    const observed = new WeakSet();
+
+    function syncCard(card) {
+      const width = card.getBoundingClientRect().width;
+      if (!width || width < 20) return;
+      const baseH = width / ASPECT;
+      card.style.setProperty('--mq-scale', (width / DESIGN_W).toFixed(5));
+      card.style.setProperty('--mq-base-h', baseH.toFixed(2) + 'px');
+
+      const row = card.closest('.marquee-row');
+      if (row) row.style.setProperty('--mq-row-base-h', baseH.toFixed(2) + 'px');
+
+      const wrap = card.closest('.result-card-wrap');
+      if (wrap) {
+        wrap.style.setProperty('--mq-row-base-h', baseH.toFixed(2) + 'px');
+        wrap.style.height = baseH.toFixed(2) + 'px';
+      }
+    }
+
+    function syncAll() {
+      document.querySelectorAll('.mq-card').forEach(observe);
+    }
+
+    function observe(card) {
+      syncCard(card);
+      if (observed.has(card)) return;
+      observed.add(card);
+      if ('ResizeObserver' in window) {
+        const ro = new ResizeObserver(() => syncCard(card));
+        ro.observe(card);
+      }
+    }
+
+    requestAnimationFrame(() => {
+      syncAll();
+    });
+    window.addEventListener('resize', () => requestAnimationFrame(syncAll), { passive: true });
+    window._syncKolCards = syncAll;
+  })();
+
+  /* ============================================================
      USE CASES PIN-SCROLL CONTROLLER  (3.0 round 13)
-     #agents is 600vh tall; .agents-pin sticks at top:64px across that
-     full range. As section's getBoundingClientRect().top moves from
-     0 (sticky engages) to -(sectionH - viewportH) (sticky releases),
-     we map that progress to a card index 0..(N-1) and translateX the
+     #agents owns the scroll range; .agents-pin sticks below the fixed
+     navbar across that range. As section progress moves from the nav
+     contact point to the end of the pin range,
+     we map that progress to a card index 0..(N-1) and translateY the
      .agents-track to show the active card.
      Mobile: disabled (CSS collapses to static stack).
      ============================================================ */
@@ -12732,15 +11840,34 @@
     if (!track || !N) return;
 
     const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+    const navH = () => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 65;
+    const pinH = () => Math.max(1, window.innerHeight - navH());
+    const scrollRange = () => Math.max(1, section.offsetHeight - pinH());
+    const activeRange = () => {
+      const hold = Math.min(260, Math.max(140, pinH() * 0.22));
+      return Math.max(1, scrollRange() - hold);
+    };
+    const sectionProgress = () => {
+      const rect = section.getBoundingClientRect();
+      return (navH() - rect.top) / activeRange();
+    };
+    const scrollYForProgress = (p) => {
+      const sectionTop = section.getBoundingClientRect().top + window.scrollY;
+      return Math.round(sectionTop - navH() + p * activeRange());
+    };
+    const cardAnchorTop = (stageH, cardH) => {
+      const lift = Math.min(96, Math.max(56, stageH * 0.10));
+      return (stageH - cardH) / 2 - lift;
+    };
 
     let lastIdx = -1;
     let raf = 0;
 
-    // 4.4 round 97 — center the ACTIVE tab vertically in the rail.
-    // For short viewports the tab list may exceed the rail height;
-    // we translate the list so the active item's vertical midpoint
-    // lands at the rail's vertical midpoint. JS-driven because tab
-    // heights vary (active item expands its detail block).
+    // 4.4 round 100 — keep the active tab fully visible without
+    // forcing it to the rail center. Centering the first active tab
+    // created a large empty pocket above the list on entry; this
+    // only moves the list when a short viewport would clip the
+    // selected tab.
     function syncSidePad() {
       if (!side || isMobile()) {
         if (side) side.style.removeProperty('--side-shift');
@@ -12752,10 +11879,25 @@
       // requestAnimationFrame to let the active class take effect
       // (detail expansion changes heights) before measuring.
       requestAnimationFrame(() => {
-        const railH   = side.offsetHeight;
-        const tabTop  = activeTab.offsetTop;
-        const tabH    = activeTab.offsetHeight;
-        const shift   = railH / 2 - (tabTop + tabH / 2);
+        const railH = side.offsetHeight;
+        const pad = 16;
+        const railRect = side.getBoundingClientRect();
+        const listRect = tabsList.getBoundingClientRect();
+        const tabRect = activeTab.getBoundingClientRect();
+        const listBottom = listRect.bottom - railRect.top;
+        const minShift = Math.min(0, railH - pad - listBottom);
+        const maxShift = 0;
+        const currentShift = Number.parseFloat(getComputedStyle(side).getPropertyValue('--side-shift')) || 0;
+        const tabTop = tabRect.top - railRect.top;
+        const tabBottom = tabRect.bottom - railRect.top;
+        let shift = Math.max(minShift, Math.min(maxShift, currentShift));
+
+        if (tabTop + shift < pad) {
+          shift = pad - tabTop;
+        } else if (tabBottom + shift > railH - pad) {
+          shift = railH - pad - tabBottom;
+        }
+        shift = Math.max(minShift, Math.min(maxShift, shift));
         side.style.setProperty('--side-shift', Math.round(shift) + 'px');
       });
     }
@@ -12770,9 +11912,7 @@
       // transform via CSS transition (set inside snapToNearest);
       // skip the per-frame update so the two don't fight.
       if (snapping) return;
-      const rect = section.getBoundingClientRect();
-      const total = Math.max(1, section.offsetHeight - window.innerHeight);
-      const p = Math.max(0, Math.min(1, -rect.top / total));
+      const p = Math.max(0, Math.min(1, sectionProgress()));
       // 4.0 round 6 — continuous map: at p=0 card[0] is centered, at
       // p=1 card[N-1] is centered, linear in between. This makes the
       // slice center for index i fall at p = i / (N-1) — see snap
@@ -12784,7 +11924,7 @@
       const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
       const stageH = stage.offsetHeight;
       const tCont = p * (N - 1);                  // 0 .. N-1 continuous
-      const offset = (stageH - cardH) / 2 - tCont * (cardH + gap);
+      const offset = cardAnchorTop(stageH, cardH) - tCont * (cardH + gap);
       track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
       const idx = Math.min(N - 1, Math.max(0, Math.round(tCont)));
       if (idx !== lastIdx) {
@@ -12808,15 +11948,12 @@
     let snapStop = 0;
     function snapToNearest() {
       if (isMobile()) return;
-      const rect = section.getBoundingClientRect();
-      const total = Math.max(1, section.offsetHeight - window.innerHeight);
-      const p = -rect.top / total;
+      const p = sectionProgress();
       if (p <= 0.001 || p >= 0.999) return;
       const denom = Math.max(1, N - 1);
       const idx = Math.min(N - 1, Math.max(0, Math.round(p * denom)));
       const anchorP = idx / denom;
-      const sectionTop = section.getBoundingClientRect().top + window.scrollY;
-      const target = Math.round(sectionTop + anchorP * total);
+      const target = scrollYForProgress(anchorP);
       if (Math.abs(target - window.scrollY) < 2) return;
       snapping = true;
       snapStop = target;
@@ -12829,7 +11966,7 @@
       const cardH = cards[0].offsetHeight;
       const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
       const stageH = stage.offsetHeight;
-      const offset = (stageH - cardH) / 2 - idx * (cardH + gap);
+      const offset = cardAnchorTop(stageH, cardH) - idx * (cardH + gap);
       track.classList.add('snapping');
       track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
       items.forEach((t, i) => t.classList.toggle('active', i === idx));
@@ -12880,13 +12017,25 @@
           cards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
           return;
         }
-        const sectionTop = section.getBoundingClientRect().top + window.scrollY;
-        const total = section.offsetHeight - window.innerHeight;
         const denom = Math.max(1, N - 1);
         const anchorP = i / denom;
         snapping = true;
-        snapStop = Math.round(sectionTop + anchorP * total);
+        snapStop = scrollYForProgress(anchorP);
+        const stage = track.parentElement;
+        const cardH = cards[0].offsetHeight;
+        const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
+        const stageH = stage.offsetHeight;
+        const offset = cardAnchorTop(stageH, cardH) - i * (cardH + gap);
+        track.classList.add('snapping');
+        track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
+        items.forEach((t, itemIdx) => t.classList.toggle('active', itemIdx === i));
+        lastIdx = i;
+        syncSidePad();
         window.scrollTo({ top: snapStop, behavior: 'smooth' });
+        setTimeout(() => {
+          snapping = false;
+          track.classList.remove('snapping');
+        }, 880);
       });
     });
   })();
@@ -12996,44 +12145,6 @@
       // Fallback: refit after window load.
       window.addEventListener('load', schedule);
     }
-  })();
-
-  /* ============================================================
-     ALVA BADGE — footer-aware lift  (4.4 round 7)
-     The persistent bottom-right .alva-badge is `position: fixed` at
-     `bottom: 20px`. Without intervention it covers the footer's
-     rightmost content when the user reaches the page bottom. This
-     IIFE listens on scroll/resize, measures how much the badge would
-     overlap the footer, and translates the badge upward by exactly
-     that amount so it appears to be "pushed up" by the footer.
-     ============================================================ */
-  (function () {
-    const badge = document.querySelector('.alva-badge');
-    const footer = document.querySelector('footer.f');
-    if (!badge || !footer) return;
-    // The badge has its own hover transform (translateY(-2px)). Apply
-    // the lift via a CSS variable consumed by an inline transform so
-    // the two don't fight. See the matching CSS tweak.
-    badge.style.setProperty('--badge-lift', '0px');
-    const GAP = 16; // breathing room between badge and footer top edge
-    let raf = 0;
-    function update() {
-      raf = 0;
-      const footerTop = footer.getBoundingClientRect().top;
-      const vh = window.innerHeight;
-      // badge bottom anchor lives at vh - 20 (its `bottom: 20px`).
-      // overlap = how far the badge bottom sits below the footer top.
-      const badgeBottom = vh - 20;
-      const overlap = Math.max(0, badgeBottom - footerTop + GAP);
-      badge.style.setProperty('--badge-lift', '-' + overlap.toFixed(1) + 'px');
-    }
-    function schedule() {
-      if (raf) return;
-      raf = requestAnimationFrame(update);
-    }
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
-    update();
   })();
 
 </script>
