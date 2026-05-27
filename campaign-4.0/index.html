@@ -4195,14 +4195,30 @@
     max-width: 1320px;
     height: 100%;
     margin: 0 auto;
-    /* 4.4 round 91 — flex column so the section head sits on top
-       (auto height) and .agents-stage takes the remaining height.
-       padding-top clears the 64px fixed nav. */
-    padding: 72px 16px 40px;
-    display: flex;
-    flex-direction: column;
+    padding: 0 16px;
+    /* 4.4 round 97 — pin-inner is a positioned context. Section
+       title sits as an absolute overlay at the top; stage fills the
+       full pin height. Cards in the right column overlap the title
+       area, so as the user scrolls the cards naturally slide past
+       (and partially occlude) the title. */
+    position: relative;
   }
-  .agents-pin-inner .agents-stage { flex: 1 1 auto; min-height: 0; }
+  .agents-pin-inner .agents-stage {
+    height: 100%;
+    position: relative;
+    z-index: 2;
+  }
+  .agents-section-head {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 1;
+    text-align: center;
+    margin: 0 auto;
+    padding: 80px 24px 0;
+    pointer-events: none;
+  }
+  .agents-section-head h2,
+  .agents-section-head p { pointer-events: auto; }
   /* 2-col grid: left sidebar (heading + tabs) + right card stage.
      3.0 round 15 — left rail widened 380 → 480 (heading at display-l
      wraps cleanly here, tabs in card style have room). Border between
@@ -4220,12 +4236,16 @@
   .agents-side {
     display: flex;
     flex-direction: column;
-    /* 4.4 round 90 — vertically center the current info block in the
-       rail (heading moved above the pin, so the rail only holds the
-       active tab content now). side-shift transform removed. */
-    justify-content: center;
+    justify-content: flex-start;
     height: 100%;
     min-height: 0;
+    /* 4.4 round 97 — side-shift transform restored. JS computes the
+       offset that lands the active tab's vertical center at the
+       rail's vertical center, so the selected tab stays in view
+       even on short viewports where the full tab list wouldn't fit.
+       transition smooths the shift when active tab changes. */
+    transform: translateY(var(--side-shift, 0px));
+    transition: transform .35s cubic-bezier(.22, 1, .36, 1);
   }
   /* 4.4 round 90 — heading moved back ABOVE the pin and centered;
      the in-rail .agents-head is hidden via inline style. New
@@ -12716,35 +12736,28 @@
     let lastIdx = -1;
     let raf = 0;
 
-    // 4.0 — align the FIRST tab's top with the active card's top.
-    // The active card sits at (stageH - cardH) / 2 from the stage top,
-    // so the side rail needs that same offset minus the heading block.
+    // 4.4 round 97 — center the ACTIVE tab vertically in the rail.
+    // For short viewports the tab list may exceed the rail height;
+    // we translate the list so the active item's vertical midpoint
+    // lands at the rail's vertical midpoint. JS-driven because tab
+    // heights vary (active item expands its detail block).
     function syncSidePad() {
       if (!side || isMobile()) {
         if (side) side.style.removeProperty('--side-shift');
         return;
       }
-      const stage = track.parentElement;
-      const cardH = cards[0].offsetHeight;
-      const stageH = stage.offsetHeight;
-      const headH = head ? head.offsetHeight : 0;
-      const headMB = head ? parseFloat(getComputedStyle(head).marginBottom) || 0 : 0;
-      // First tab top (relative to side) = headH + headMarginBottom.
-      // Active card top (relative to stage) = (stageH - cardH) / 2.
-      // Sides + stage share the same vertical origin in the grid, so
-      // shift the side by the signed delta so the first tab's top
-      // matches the active card's top.
-      let shift = (stageH - cardH) / 2 - headH - headMB;
-      // 4.3 — guard the H2 so it never slides up behind the fixed 64px
-      // nav on laptop-sized viewports. The .agents-pin-inner has 96px
-      // of padding-top; if shift drops below `(64 - 96) = -32`, the
-      // heading would clip into the nav. Clamping costs a few pixels of
-      // tab/card alignment but keeps the section title fully readable.
-      const NAV_H = 64;
-      const innerPadTop = parseFloat(getComputedStyle(stage.parentElement || stage).paddingTop) || 96;
-      const minShift = -(innerPadTop - NAV_H - 8); // 8px breathing room
-      if (shift < minShift) shift = minShift;
-      side.style.setProperty('--side-shift', Math.round(shift) + 'px');
+      const tabsList = side.querySelector('.agents-tabs-v');
+      const activeTab = side.querySelector('.agents-tab-item.active');
+      if (!tabsList || !activeTab) return;
+      // requestAnimationFrame to let the active class take effect
+      // (detail expansion changes heights) before measuring.
+      requestAnimationFrame(() => {
+        const railH   = side.offsetHeight;
+        const tabTop  = activeTab.offsetTop;
+        const tabH    = activeTab.offsetHeight;
+        const shift   = railH / 2 - (tabTop + tabH / 2);
+        side.style.setProperty('--side-shift', Math.round(shift) + 'px');
+      });
     }
 
     function update() {
