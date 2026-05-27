@@ -3893,6 +3893,10 @@
     min-width: 0;
     min-height: 0;
     overflow: visible;
+    /* Keep the right reel visually inside the content lane. The track can
+       still move continuously, but reverse scroll no longer lets covers
+       pass back over the section title/subtitle area. */
+    clip-path: inset(var(--agents-content-top) 0 0 0);
   }
   .agents-track {
     display: flex;
@@ -11903,6 +11907,10 @@
       const sectionTop = section.getBoundingClientRect().top + window.scrollY;
       return Math.round(sectionTop - navH() + p * activeRange());
     };
+    const stableContentTop = () => Math.max(
+      0,
+      Number.parseFloat(getComputedStyle(section).getPropertyValue('--agents-content-top')) || 0
+    );
     function syncAgentsLayout() {
       if (isMobile()) {
         section.style.removeProperty('--agents-card-w');
@@ -11910,33 +11918,24 @@
         return;
       }
       const stage = track.parentElement;
-      const tabsList = side?.querySelector('.agents-tabs-v');
-      if (!stage || !tabsList) return;
+      if (!stage) return;
 
       const stageRect = stage.getBoundingClientRect();
+      let contentTop = stableContentTop();
       if (sectionHead) {
         const headRect = sectionHead.getBoundingClientRect();
         const gap = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--section-content-gap')) || 56;
-        const contentTop = Math.max(0, headRect.bottom - stageRect.top + gap);
+        contentTop = Math.max(0, headRect.bottom - stageRect.top + gap);
         section.style.setProperty('--agents-content-top', Math.round(contentTop) + 'px');
       }
 
-      const tabsRect = tabsList.getBoundingClientRect();
-      const anchorTop = Math.max(0, tabsRect.top - stageRect.top);
       const bottomPad = Math.min(44, Math.max(24, stageRect.height * 0.06));
-      const maxByHeight = Math.max(220, (stageRect.height - anchorTop - bottomPad) * 1.5);
+      const maxByHeight = Math.max(220, (stageRect.height - contentTop - bottomPad) * 1.5);
       const maxByColumn = Math.max(220, stageRect.width);
       const cardW = Math.min(760, maxByColumn, maxByHeight);
       section.style.setProperty('--agents-card-w', Math.round(cardW) + 'px');
     }
-    const cardAnchorTop = () => {
-      const stage = track.parentElement;
-      const tabsList = side?.querySelector('.agents-tabs-v');
-      if (!stage || !tabsList) return 0;
-      const stageRect = stage.getBoundingClientRect();
-      const tabsRect = tabsList.getBoundingClientRect();
-      return Math.max(0, tabsRect.top - stageRect.top);
-    };
+    const cardAnchorTop = stableContentTop;
 
     let lastIdx = -1;
     let raf = 0;
@@ -11977,7 +11976,6 @@
         }
         shift = Math.max(minShift, Math.min(maxShift, shift));
         side.style.setProperty('--side-shift', Math.round(shift) + 'px');
-        syncAgentsLayout();
         schedule();
       });
     }
