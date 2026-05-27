@@ -3982,6 +3982,66 @@
      subtitle + CTA now live in the left column under each tab title,
      not in the right-column card. The card is just the visual cover.) */
 
+  @media (min-width: 901px) and (max-height: 760px) {
+    #agents {
+      --agents-content-top: 24px;
+      --agents-min-pin-h: 0px;
+    }
+    #agents .agents-pin {
+      min-height: 0;
+    }
+    #agents .agents-section-head {
+      z-index: 4;
+      transition: opacity .28s ease, transform .28s ease;
+    }
+    #agents.compact-pin-active .agents-section-head {
+      opacity: 0;
+      transform: translateY(-28px);
+    }
+    #agents .agents-stage {
+      opacity: 0;
+      transform: translateY(16px);
+      pointer-events: none;
+      transition: opacity .28s ease, transform .28s ease;
+    }
+    #agents.compact-pin-active .agents-stage {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    #agents .agents-side {
+      padding-top: var(--agents-content-top);
+      padding-bottom: 24px;
+    }
+    #agents .agents-cards-stage::before {
+      display: none;
+    }
+    #agents .agents-tab-item {
+      padding: clamp(10px, 2.2vh, 16px) 4px;
+    }
+    #agents .agents-tab-v {
+      font-size: clamp(24px, 4.6vh, 32px);
+      line-height: 1.12;
+    }
+    #agents .agents-tab-item.active .agents-tab-v {
+      font-size: clamp(28px, 5.2vh, 36px);
+    }
+    #agents .agents-tab-item.active .agents-tab-detail {
+      max-height: 220px;
+      padding: 10px 0 2px;
+    }
+    #agents .agents-tab-detail {
+      gap: 12px;
+    }
+    #agents .agents-tab-detail p {
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    #agents .agents-tab-cta {
+      padding: 10px 20px;
+    }
+  }
+
   /* Mobile fallback — pin doesn't make sense on narrow screens; the
      section collapses to a static stack. 3.0 round 19 — since each tab
      now carries its own detail (subtitle + CTA), and the right-column
@@ -11910,6 +11970,7 @@
     if (!track || !N) return;
 
     const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+    const isCompactPin = () => window.matchMedia('(min-width: 901px) and (max-height: 760px)').matches;
     const navH = () => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 65;
     const pinH = () => Math.max(1, pin?.getBoundingClientRect().height || (window.innerHeight - navH()));
     const scrollRange = () => Math.max(1, section.offsetHeight - pinH());
@@ -11940,7 +12001,10 @@
 
       const stageRect = stage.getBoundingClientRect();
       let contentTop = stableContentTop();
-      if (sectionHead) {
+      if (isCompactPin()) {
+        contentTop = 24;
+        section.style.setProperty('--agents-content-top', contentTop + 'px');
+      } else if (sectionHead) {
         const headRect = sectionHead.getBoundingClientRect();
         const gap = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--section-content-gap')) || 56;
         contentTop = Math.max(0, headRect.bottom - stageRect.top + gap);
@@ -12001,13 +12065,16 @@
       raf = 0;
       if (isMobile()) {
         track.style.transform = '';
+        section.classList.remove('compact-pin-active');
         return;
       }
       // 4.3 — while the snap animation is running we drive the
       // transform via CSS transition (set inside snapToNearest);
       // skip the per-frame update so the two don't fight.
       if (snapping) return;
-      const p = Math.max(0, Math.min(1, sectionProgress()));
+      const rawP = sectionProgress();
+      section.classList.toggle('compact-pin-active', isCompactPin() && rawP > 0.02 && rawP < 1.18);
+      const p = Math.max(0, Math.min(1, rawP));
       // 4.0 round 6 — continuous map: at p=0 card[0] is centered, at
       // p=1 card[N-1] is centered, linear in between. This makes the
       // slice center for index i fall at p = i / (N-1) — see snap
@@ -12017,9 +12084,10 @@
       const cardH = cards[0].offsetHeight;
       const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
       const tCont = p * (N - 1);                  // 0 .. N-1 continuous
-      const offset = cardAnchorTop() - tCont * (cardH + gap);
-      track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
       const idx = Math.min(N - 1, Math.max(0, Math.round(tCont)));
+      const motionIndex = isCompactPin() ? idx : tCont;
+      const offset = cardAnchorTop() - motionIndex * (cardH + gap);
+      track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
       if (idx !== lastIdx) {
         items.forEach((t, i) => t.classList.toggle('active', i === idx));
         lastIdx = idx;
