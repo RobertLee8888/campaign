@@ -127,6 +127,7 @@
     --section-top-pad: 120px;
     --section-title-gap: 12px;
     --section-content-gap: 56px;
+    --section-action-gap: 24px;
     --section-title-size: clamp(28px, 3.4vw, 44px);
     --section-sub-size: clamp(14px, 1.05vw, 16px);
     --section-sub-color: rgba(255, 255, 255, 0.70);
@@ -679,7 +680,8 @@
     font-size: clamp(64px, 7.5vw, 132px);
     line-height: 0.92;
     letter-spacing: -0.035em;
-    margin: 0 0 32px;
+    margin: 0 0 calc(32px - 0.08em);
+    padding-bottom: 0.08em;
     /* 4.4 round 87 — was teal (var(--alva)); switched to white per
        feedback ("绿色字去掉"). The .alva inline-span is still teal
        for any per-word accent we want to keep on later iterations. */
@@ -882,13 +884,19 @@
      the 2.0 left-text / right-cards hero composition.
      ============================================================ */
   .stage.stage-marquee {
+    --s2-pad-y: clamp(28px, 5.4vh, 56px);
+    --s2-bottom-room: clamp(20px, 4vh, 40px);
+    --s2-content-gap: clamp(22px, 3.8vh, 40px);
+    --s2-row-gap: clamp(14px, 2.8vh, 24px);
+    --s2-card-h: 283px;
+    --s2-card-w: 540px;
     /* 3.0 round 23 — section bumped taller per user feedback.
        padding raised 96 → 120 and min-height raised 360 → 560 so
        the marquee rows get more vertical breathing room and the
        headline overlay isn't crammed against the row above/below.
        (Previous tight padding made this section feel rushed
        relative to the hero above and the leaderboard below.) */
-    padding: var(--section-top-pad) 0 var(--section-top-pad);
+    padding: var(--s2-pad-y) 0 calc(var(--s2-pad-y) + var(--s2-bottom-room));
     /* 3.0 round 23 — z-index:2 dropped along with the round-18 overlap
        (see #agents comment). Sections are flush now, so this no longer
        needs to "win" over an overlap zone. */
@@ -910,9 +918,14 @@
        this combo only with `clip`, not `hidden`). */
     overflow-x: clip;
     overflow-y: visible;
-    min-height: 560px;
+    min-height: 0;
     display: flex;
-    align-items: center;
+    align-items: stretch;
+    box-sizing: border-box;
+  }
+  .stage.stage-marquee.s2-constrained {
+    height: calc(100svh - var(--nav-h));
+    max-height: calc(100svh - var(--nav-h));
   }
   /* (3.0 round 43 — S2 background animation removed entirely after
      iterating through dot-grid / mesh / particles / ribbons; user
@@ -937,7 +950,7 @@
   .stage-marquee {
     flex-direction: column;
     justify-content: flex-start;
-    gap: var(--section-content-gap);
+    gap: var(--s2-content-gap);
   }
   .stage-marquee .stage-header {
     width: 100%;
@@ -999,7 +1012,7 @@
     flex-direction: column;
     /* 4.4 round 91 — row gap matches the card-to-card horizontal
        margin (24px) so vertical and horizontal gaps read as equal. */
-    gap: 24px;
+    gap: var(--s2-row-gap);
     width: 100%;
     position: relative;
     /* mask-image clips child shadows (no way to opt out), so we use
@@ -1014,7 +1027,7 @@
        change doesn't re-center sibling cards within the row. */
     overflow-x: clip;
     overflow-y: visible;
-    height: var(--mq-row-base-h, 283px);
+    height: var(--mq-row-base-h, var(--s2-card-h));
     display: flex;
     align-items: flex-start;
     /* 4.4 round 93 — row paints in its own stacking context so a
@@ -1091,11 +1104,16 @@
      feedback. Cards support hover (lift + shadow) and the row pauses
      scroll on hover. */
   .marquee-track .mq-card {
+    width: var(--s2-card-w);
     cursor: pointer;
     overflow: visible;
     /* CTA strip lives outside the fixed 1.91:1 panel on marquee cards;
        paint containment would clip it even when overflow is visible. */
     contain: layout style;
+    transition:
+      transform .32s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow .32s cubic-bezier(0.16, 1, 0.3, 1),
+      border-radius .32s cubic-bezier(0.16, 1, 0.3, 1);
   }
   /* Marquee hover must not change flex item height; changing height
      makes the animated track reflow and causes the whole row to shimmy.
@@ -1323,6 +1341,7 @@
     height: var(--mq-base-h);
     overflow: hidden;
     border-radius: inherit;
+    transition: border-radius .32s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .mq-card:hover .mq-base {
     border-radius: 8px 8px 0 0;
@@ -1633,8 +1652,8 @@
     background: rgba(31, 31, 41, 0.98);
     box-shadow: 0 18px 36px rgba(0, 0, 0, 0.36);
     transition:
-      opacity .22s cubic-bezier(.22,1,.36,1),
-      transform .22s cubic-bezier(.22,1,.36,1),
+      opacity .3s cubic-bezier(0.16, 1, 0.3, 1),
+      transform .3s cubic-bezier(0.16, 1, 0.3, 1),
       color .18s ease,
       background-color .18s ease;
   }
@@ -3124,7 +3143,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 24px;
+    gap: var(--section-action-gap);
   }
   #leaderboard .section-head.with-action > div { max-width: 760px; }
   #leaderboard .lb-sub { margin-left: auto; margin-right: auto; }
@@ -3567,17 +3586,17 @@
      #agents), producing the visible horizontal step the user sees
      above the leaderboard card. Same story at the top boundary.
      The reveal-neighbour-section effect the user originally wanted is
-     already covered by the round-21 pin-fills-viewport architecture
-     (top:0 / height:100vh) — pin scrolls in/out naturally and
-     neighbours appear at the boundaries without needing a margin
-     overlap. So: sections flush, no negative margin, no z-index trick,
-     no isolation. #agents bg kept as flat 8% alva so the "below pin"
-     area (during exit) doesn't show body-grey. */
+     already covered by the round-21 pin-fills-viewport architecture.
+     Sections stay flush; the sticky pin now owns its own isolated dark
+     slab so shader blending cannot brighten when the pin state engages. */
   #agents {
     position: relative;
     background: rgba(88,195,198,0.08);
     --agents-ease: cubic-bezier(.22, 1, .36, 1);
     --agents-dur: .42s;
+    --agents-card-w: 760px;
+    --agents-content-top: calc(var(--section-top-pad) + 84px + var(--section-content-gap));
+    --agents-min-pin-h: 680px;
   }
 
   /* ============================================================
@@ -3620,9 +3639,11 @@
     top: var(--nav-h);
     height: calc(100vh - var(--nav-h));
     height: calc(100svh - var(--nav-h));
+    min-height: var(--agents-min-pin-h);
     width: 100%;
     overflow: hidden;
     background: var(--bg-soft);
+    isolation: isolate;
   }
   #agents.agents-pin-section,
   #agents .agents-pin {
@@ -3636,8 +3657,8 @@
     z-index: 0;
     pointer-events: none;
     display: block;
-    mix-blend-mode: screen;
-    opacity: 0.55;
+    mix-blend-mode: normal;
+    opacity: 0.46;
   }
   .agents-pin-inner {
     width: 100%;
@@ -3655,7 +3676,7 @@
   .agents-pin-inner .agents-stage {
     height: 100%;
     position: relative;
-    z-index: 3;
+    z-index: 2;
   }
   /* 2-col grid: left sidebar (heading + tabs) + right card stage.
      3.0 round 15 — left rail widened 380 → 480 (heading at display-l
@@ -3677,7 +3698,7 @@
     justify-content: flex-start;
     height: 100%;
     min-height: 0;
-    padding-top: calc(var(--section-top-pad) + 84px + var(--section-content-gap));
+    padding-top: var(--agents-content-top);
     box-sizing: border-box;
     /* 4.4 round 101 — JS only applies a small vertical shift when the
        active tab would otherwise clip on short viewports; the default
@@ -3698,7 +3719,7 @@
     max-width: 880px;
     margin: 0 auto;
     padding: var(--section-top-pad) 24px 24px;
-    z-index: 1;
+    z-index: 4;
     flex-shrink: 0;
     pointer-events: none;
   }
@@ -3880,9 +3901,33 @@
     min-height: 0;
     overflow: visible;
   }
+  .agents-cards-stage::before {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    width: max(160vw, calc(100% + 720px));
+    transform: translateX(-50%);
+    top: 0;
+    height: max(120px, calc(var(--agents-content-top) - 18px));
+    pointer-events: none;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: linear-gradient(
+      to bottom,
+      rgba(22, 22, 28, 0.12) 0%,
+      rgba(22, 22, 28, 0.07) 45%,
+      rgba(22, 22, 28, 0.02) 76%,
+      rgba(22, 22, 28, 0) 100%
+    );
+    mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%);
+  }
   .agents-track {
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: 1;
     /* 3.0 round 24 — gap pulled in 80 → 32 so adjacent cards sit
        close, reading as a tight vertical reel. */
     gap: 32px;
@@ -3908,7 +3953,7 @@
        margin-left:auto so the card's right edge still matches the
        leaderboard's right edge. */
     width: 100%;
-    max-width: 760px;
+    max-width: var(--agents-card-w);
     margin: 0 0 0 auto;
     display: block;
     padding-right: 0;
@@ -3946,6 +3991,55 @@
      subtitle + CTA now live in the left column under each tab title,
      not in the right-column card. The card is just the visual cover.) */
 
+  @media (min-width: 901px) and (max-height: 760px) {
+    #agents {
+      --agents-min-pin-h: 0px;
+    }
+    #agents .agents-pin {
+      min-height: 0;
+    }
+    #agents .agents-section-head {
+      z-index: 4;
+      transition: opacity .28s ease, transform .28s ease;
+    }
+    #agents.compact-pin-active .agents-section-head {
+      opacity: 0;
+      transform: translateY(-28px);
+    }
+    #agents .agents-side {
+      padding-top: var(--agents-content-top);
+      padding-bottom: 24px;
+      transition: padding-top .28s ease, transform var(--agents-dur) var(--agents-ease);
+    }
+    #agents .agents-cards-stage::before {
+      display: none;
+    }
+    #agents .agents-tab-item {
+      padding: clamp(10px, 2.2vh, 16px) 4px;
+    }
+    #agents .agents-tab-v {
+      font-size: clamp(24px, 4.6vh, 32px);
+      line-height: 1.12;
+    }
+    #agents .agents-tab-item.active .agents-tab-v {
+      font-size: clamp(28px, 5.2vh, 36px);
+    }
+    #agents .agents-tab-item.active .agents-tab-detail {
+      max-height: 220px;
+      padding: 10px 0 2px;
+    }
+    #agents .agents-tab-detail {
+      gap: 12px;
+    }
+    #agents .agents-tab-detail p {
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    #agents .agents-tab-cta {
+      padding: 10px 20px;
+    }
+  }
+
   /* Mobile fallback — pin doesn't make sense on narrow screens; the
      section collapses to a static stack. 3.0 round 19 — since each tab
      now carries its own detail (subtitle + CTA), and the right-column
@@ -3973,7 +4067,7 @@
           for desktop; the stage itself is hidden on mobile. */
 
     #agents.agents-pin-section { height: auto; padding: var(--section-top-pad) 0; }
-    #agents .agents-pin { position: static; height: auto; overflow: visible; }
+    #agents .agents-pin { position: static; height: auto; min-height: 0; overflow: visible; }
     /* Section bleeds full-width — no LR padding on the inner wrap.
        Section head + tab-item text re-add 18 px LR padding so reading
        columns still feel inset. */
@@ -4649,11 +4743,37 @@
      user direction.
      ============================================================ */
   .about-alva {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     background: #0a0a10;
     padding: var(--section-top-pad) 24px 96px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
+  .about-waves {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+    opacity: 0.9;
+  }
+  .about-alva::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(54% 74% at 50% 40%, rgba(10, 10, 16, 0.64) 0%, rgba(10, 10, 16, 0.46) 42%, rgba(10, 10, 16, 0.10) 66%, transparent 82%),
+      linear-gradient(90deg, rgba(88, 195, 198, 0.08) 0%, rgba(88, 195, 198, 0) 28%, rgba(88, 195, 198, 0) 72%, rgba(88, 195, 198, 0.08) 100%),
+      linear-gradient(180deg, rgba(10, 10, 16, 0.02), rgba(10, 10, 16, 0.58));
+  }
   .about-alva-inner {
+    position: relative;
+    z-index: 1;
     max-width: 760px;
     margin: 0 auto;
     text-align: center;
@@ -4670,7 +4790,7 @@
     color: var(--text);
   }
   .about-alva p {
-    margin: 0 0 var(--section-content-gap);
+    margin: 0 0 var(--section-action-gap);
     font-family: var(--font);
     font-weight: 400;
     font-size: var(--section-sub-size);
@@ -6602,13 +6722,11 @@
     /* S2 · STAGE MARQUEE                                         */
     /* ---------------------------------------------------------- */
     .stage.stage-marquee {
-      /* Desktop sets `display: flex; align-items: center` which on a
-         narrow viewport would put the headline + marquee side-by-side
-         as a row. Reset to block flow so the headline stacks ABOVE the
-         marquee and each piece gets full viewport width. */
-      display: block;
-      padding: var(--section-top-pad) 0 var(--section-top-pad);
-      min-height: auto;
+      display: flex;
+      padding: var(--s2-pad-y) 0 calc(var(--s2-pad-y) + var(--s2-bottom-room));
+      height: calc(100svh - var(--nav-h));
+      max-height: calc(100svh - var(--nav-h));
+      min-height: 0;
     }
     /* .stage-title-line set to nowrap on desktop so each clause stays on
        one line within the headline column. On a phone the column is too
@@ -7133,15 +7251,15 @@
     z-index: 0;
     pointer-events: none;
     display: block;
-    /* multiply onto dark slab so pattern reads without ever lifting
-       above the section's value; opacity kept moderate so silk feels
-       ambient, not loud. */
-    mix-blend-mode: screen;
-    opacity: 0.85;
+    /* Normal blend keeps the shader tied to the section's own dark
+       slab. screen-blending against a changing page backdrop caused
+       the pin state to read as a sudden brightness jump. */
+    mix-blend-mode: normal;
+    opacity: 0.46;
   }
   #agents .agents-silk {
-    mix-blend-mode: screen !important;
-    opacity: 0.55 !important;
+    mix-blend-mode: normal !important;
+    opacity: 0.46 !important;
   }
   /* Lift the actual content above the canvas. */
   #agents .agents-pin-inner { position: relative; z-index: 1; }
@@ -7711,6 +7829,7 @@
 <!-- 4.4 round 87 — About-Alva section sits between the leaderboard
      and the footer. Centered title + subtitle + outline CTA. -->
 <section class="about-alva">
+  <canvas class="about-waves" aria-hidden="true"></canvas>
   <div class="about-alva-inner">
     <h2>Meet Alva — The AI Investing Agent behind FinTwit Alpha League</h2>
     <p>Powered by hundreds of institutional-grade data sources and thousands of community playbooks you can follow and remix, Alva is your personal edge in all markets.</p>
@@ -9012,52 +9131,85 @@
   })();
 
   /* ============================================================
-     SECTION 2 MARQUEE — Web Animations API for jitter-free pause.
-       1. Each .marquee-track gets a WAA animation (linear, 110s, infinite),
-          direction depends on data-dir on the parent row.
-       2. Hovering any .mq-card pauses its track's animation precisely at
-          the current frame; mouseleave resumes from the same frame.
-       3. Click on a card opens the shared card-detail lightbox
-          (window.openCardLightbox, defined in the results-grid IIFE above).
-     CSS keyframes were dropped because animation-play-state has a known
-     issue where toggling it produces a 1-2 frame transform reset that
-     appears as a "horizontal jump" — WAA does not have this issue.
+     SECTION 2 MARQUEE — manual phase controller.
+       Each row owns one continuous phase value. Hover changes only the
+       target speed; the actual speed eases toward it, so the row slows
+       without handing transform timing back to the browser and without
+       a one-frame position compensation jump.
      ============================================================ */
   (() => {
-    const tracks = document.querySelectorAll('.card-marquee .marquee-track');
-    tracks.forEach(track => {
-      const dir = track.closest('.marquee-row')?.dataset.dir || 'left';
-      const keyframes = dir === 'right'
-        ? [{ transform: 'translate3d(-50%, 0, 0)' },
-           { transform: 'translate3d(0, 0, 0)' }]
-        : [{ transform: 'translate3d(0, 0, 0)' },
-           { transform: 'translate3d(-50%, 0, 0)' }];
-      const anim = track.animate(keyframes, {
-        duration: 110000,
-        iterations: Infinity,
-        easing: 'linear',
-      });
-      track._marqueeAnim = anim;
-    });
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
 
-    /* 4.4 round 87 — marquee cards interactive again per user
-       feedback. Hovering a row pauses its track; cards keep their own
-       hover lift via CSS. */
-    document.querySelectorAll('.card-marquee .marquee-row').forEach(row => {
+    const DURATION = 110000;
+    const DECEL_MS = 280;
+    const ACCEL_MS = 320;
+    const controllers = [];
+
+    document.querySelectorAll('.card-marquee .marquee-row').forEach((row, i) => {
       const track = row.querySelector('.marquee-track');
-      if (!track || !track._marqueeAnim) return;
-      row.addEventListener('mouseenter', () => track._marqueeAnim.pause());
-      row.addEventListener('mouseleave', () => track._marqueeAnim.play());
+      if (!track) return;
+      const dir = row.dataset.dir || 'left';
+      const state = {
+        dir,
+        track,
+        half: 1,
+        phase: dir === 'right' ? 1 : (i * 0.08) % 1,
+        rate: 1,
+        targetRate: 1,
+      };
+      const measure = () => {
+        state.half = Math.max(1, track.scrollWidth / 2);
+        render(state);
+      };
+      const render = (s) => {
+        track.style.transform = 'translate3d(' + (-s.phase * s.half).toFixed(2) + 'px, 0, 0)';
+      };
+      measure();
+      controllers.push(state);
+
+      row.addEventListener('mouseenter', () => { state.targetRate = 0; });
+      row.addEventListener('mouseleave', () => { state.targetRate = 1; });
+
+      if ('ResizeObserver' in window) {
+        const ro = new ResizeObserver(measure);
+        ro.observe(track);
+        ro.observe(row);
+      }
     });
 
-    // Pause every track when the page is hidden — no point burning CPU.
+    let last = performance.now();
+    function tick(now) {
+      const dt = Math.min(64, Math.max(0, now - last));
+      last = now;
+
+      if (!document.hidden) {
+        controllers.forEach(state => {
+          const tau = state.targetRate < state.rate ? DECEL_MS : ACCEL_MS;
+          const k = 1 - Math.exp(-dt / tau);
+          state.rate += (state.targetRate - state.rate) * k;
+          if (Math.abs(state.rate - state.targetRate) < 0.001) state.rate = state.targetRate;
+
+          const delta = (dt / DURATION) * state.rate;
+          if (state.dir === 'right') {
+            state.phase -= delta;
+            if (state.phase <= 0) state.phase += 1;
+          } else {
+            state.phase += delta;
+            if (state.phase >= 1) state.phase -= 1;
+          }
+          state.track.style.transform =
+            'translate3d(' + (-state.phase * state.half).toFixed(2) + 'px, 0, 0)';
+        });
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    // When the page returns, restart timing from "now" so the hidden
+    // interval does not get applied as one huge movement step.
     document.addEventListener('visibilitychange', () => {
-      tracks.forEach(t => {
-        const a = t._marqueeAnim;
-        if (!a) return;
-        if (document.hidden) a.pause();
-        else a.play();
-      });
+      last = performance.now();
     });
   })();
 
@@ -11222,6 +11374,145 @@
   })();
 
   /* ============================================================
+     ABOUT ALVA WAVES  (ReactBits Background Studio "Waves" inspired)
+     Lightweight 2D canvas wave field for the final CTA section. Uses
+     only Alva brand teals at low alpha so the background adds motion
+     without competing with the copy.
+     ============================================================ */
+  (() => {
+    const canvas = document.querySelector('.about-waves');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) return;
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const colors = [
+      [88, 195, 198],
+      [73, 163, 166],
+      [122, 211, 214]
+    ];
+    let w = 1;
+    let h = 1;
+    let dpr = 1;
+    let raf = 0;
+    let visible = true;
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      w = Math.max(1, Math.round(rect.width));
+      h = Math.max(1, Math.round(rect.height));
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function fieldOffset(baseX, y, time) {
+      const t = time * 0.00016;
+      const fields = [
+        { cx: w * (0.04 + 0.03 * Math.sin(t * 0.7)), cy: h * (0.76 + 0.04 * Math.cos(t * 0.5)), r: h * 0.62, force: 280 },
+        { cx: w * (0.50 + 0.03 * Math.sin(t * 0.45 + 1.4)), cy: h * (0.42 + 0.03 * Math.sin(t * 0.6)), r: h * 0.64, force: -96 },
+        { cx: w * (0.96 + 0.04 * Math.cos(t * 0.5)), cy: h * (0.58 + 0.05 * Math.sin(t * 0.4 + 2.0)), r: h * 0.66, force: 300 }
+      ];
+      let offset = Math.sin(y * 0.012 + t * 2.2) * 18;
+      fields.forEach((f, i) => {
+        const dx = baseX - f.cx;
+        const dy = y - f.cy;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        const pull = Math.exp(-Math.pow(d / f.r, 2.0));
+        const curl = Math.sin(d * 0.018 - t * (2.4 + i * 0.5));
+        offset += f.force * pull * (0.45 + 0.55 * curl);
+      });
+      return offset;
+    }
+
+    function sideEmphasis(x) {
+      const nx = Math.max(0, Math.min(1, x / Math.max(1, w)));
+      const side = Math.abs(nx - 0.5) * 2;
+      return 0.16 + Math.pow(side, 0.58) * 0.84;
+    }
+
+    function draw(time = 0) {
+      ctx.clearRect(0, 0, w, h);
+      ctx.save();
+      ctx.fillStyle = '#0a0a10';
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'screen';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      const lineGap = Math.max(16, Math.min(26, w / 68));
+      const stepY = 12;
+      const primary = colors[0];
+      const secondary = colors[2];
+
+      for (let pass = 0; pass < 2; pass += 1) {
+        const glow = pass === 0;
+        ctx.lineWidth = glow ? 5.5 : 1.25;
+
+        for (let baseX = -w * 0.18; baseX <= w * 1.18; baseX += lineGap) {
+          ctx.globalAlpha = (glow ? 0.18 : 0.82) * sideEmphasis(baseX);
+          const grad = ctx.createLinearGradient(0, 0, w, 0);
+          grad.addColorStop(0, `rgba(${secondary[0]}, ${secondary[1]}, ${secondary[2]}, ${glow ? 0.46 : 0.96})`);
+          grad.addColorStop(0.43, `rgba(${primary[0]}, ${primary[1]}, ${primary[2]}, ${glow ? 0.10 : 0.28})`);
+          grad.addColorStop(0.57, `rgba(${primary[0]}, ${primary[1]}, ${primary[2]}, ${glow ? 0.08 : 0.22})`);
+          grad.addColorStop(1, `rgba(${secondary[0]}, ${secondary[1]}, ${secondary[2]}, ${glow ? 0.42 : 0.92})`);
+          ctx.strokeStyle = grad;
+
+          ctx.beginPath();
+          for (let y = -40; y <= h + 40; y += stepY) {
+            const x = baseX + fieldOffset(baseX, y, time);
+            if (y === -40) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+
+      const centerGuard = ctx.createRadialGradient(w * 0.5, h * 0.42, h * 0.08, w * 0.5, h * 0.42, Math.max(w, h) * 0.45);
+      centerGuard.addColorStop(0, 'rgba(10, 10, 16, 0.74)');
+      centerGuard.addColorStop(0.42, 'rgba(10, 10, 16, 0.50)');
+      centerGuard.addColorStop(0.72, 'rgba(10, 10, 16, 0.12)');
+      centerGuard.addColorStop(1, 'rgba(10, 10, 16, 0)');
+      ctx.fillStyle = centerGuard;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    function tick(time) {
+      if (visible && !document.hidden) draw(time);
+      if (!reduced) raf = requestAnimationFrame(tick);
+    }
+
+    resize();
+    draw(0);
+    if (!reduced) raf = requestAnimationFrame(tick);
+
+    const ro = new ResizeObserver(() => {
+      resize();
+      draw(0);
+    });
+    ro.observe(canvas);
+    if (canvas.parentElement) ro.observe(canvas.parentElement);
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(([entry]) => {
+        visible = !!(entry && entry.isIntersecting);
+      });
+      io.observe(canvas);
+    }
+
+    window.addEventListener('resize', () => {
+      resize();
+      draw(0);
+    }, { passive: true });
+    window.addEventListener('beforeunload', () => {
+      if (raf) cancelAnimationFrame(raf);
+      ro.disconnect();
+    });
+  })();
+
+  /* ============================================================
      KOL CARD V2 UPGRADER  (4.0)
      Walks every .mq-card and replaces its simple innerHTML with a
      rich playbook preview: avatar/name/handle + win-rate donut on
@@ -11774,7 +12065,47 @@
   (function () {
     const DESIGN_W = 540;
     const ASPECT = 1.91;
+    const MAX_BASE_H = 283;
+    const MIN_BASE_H = 120;
     const observed = new WeakSet();
+
+    function px(value) {
+      const n = Number.parseFloat(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function syncStageMarquee() {
+      const stage = document.querySelector('.stage.stage-marquee');
+      const header = stage?.querySelector('.stage-header');
+      const marquee = stage?.querySelector('.card-marquee');
+      if (!stage || !header || !marquee) return;
+
+      const root = getComputedStyle(document.documentElement);
+      const navH = px(root.getPropertyValue('--nav-h')) || 65;
+      const stageH = Math.max(1, window.innerHeight - navH);
+      const stageStyle = getComputedStyle(stage);
+      const marqueeStyle = getComputedStyle(marquee);
+      const headerH = header.getBoundingClientRect().height;
+      const padY = px(stageStyle.paddingTop) + px(stageStyle.paddingBottom);
+      const contentGap = px(stageStyle.rowGap || stageStyle.gap);
+      const rowGap = px(marqueeStyle.rowGap || marqueeStyle.gap);
+      const rows = Math.max(1, stage.querySelectorAll('.marquee-row').length || 2);
+      const totalRowGap = rowGap * Math.max(0, rows - 1);
+      const naturalH = padY + headerH + contentGap + totalRowGap + MAX_BASE_H * rows;
+      const constrained = naturalH > stageH;
+      const available = stageH - padY - headerH - contentGap - totalRowGap;
+      const baseH = constrained
+        ? Math.max(MIN_BASE_H, Math.min(MAX_BASE_H, available / rows))
+        : MAX_BASE_H;
+      const cardW = baseH * ASPECT;
+
+      stage.classList.toggle('s2-constrained', constrained);
+      stage.style.setProperty('--s2-card-h', baseH.toFixed(2) + 'px');
+      stage.style.setProperty('--s2-card-w', cardW.toFixed(2) + 'px');
+      stage.querySelectorAll('.marquee-row').forEach(row => {
+        row.style.setProperty('--mq-row-base-h', baseH.toFixed(2) + 'px');
+      });
+    }
 
     function syncCard(card) {
       const width = card.getBoundingClientRect().width;
@@ -11794,6 +12125,7 @@
     }
 
     function syncAll() {
+      syncStageMarquee();
       document.querySelectorAll('.mq-card').forEach(observe);
     }
 
@@ -11835,13 +12167,16 @@
     const buttons = section.querySelectorAll('.agents-tab-v');
     const cards = section.querySelectorAll('.agents-card');
     const side = section.querySelector('.agents-side');
+    const pin = section.querySelector('.agents-pin');
+    const sectionHead = section.querySelector('.agents-section-head');
     const head = section.querySelector('.agents-head');
     const N = cards.length;
     if (!track || !N) return;
 
     const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+    const isCompactPin = () => window.matchMedia('(min-width: 901px) and (max-height: 760px)').matches;
     const navH = () => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 65;
-    const pinH = () => Math.max(1, window.innerHeight - navH());
+    const pinH = () => Math.max(1, pin?.getBoundingClientRect().height || (window.innerHeight - navH()));
     const scrollRange = () => Math.max(1, section.offsetHeight - pinH());
     const activeRange = () => {
       const hold = Math.min(260, Math.max(140, pinH() * 0.22));
@@ -11855,10 +12190,38 @@
       const sectionTop = section.getBoundingClientRect().top + window.scrollY;
       return Math.round(sectionTop - navH() + p * activeRange());
     };
-    const cardAnchorTop = (stageH, cardH) => {
-      const lift = Math.min(96, Math.max(56, stageH * 0.10));
-      return (stageH - cardH) / 2 - lift;
-    };
+    const stableContentTop = () => Math.max(
+      0,
+      Number.parseFloat(getComputedStyle(section).getPropertyValue('--agents-content-top')) || 0
+    );
+    function syncAgentsLayout() {
+      if (isMobile()) {
+        section.style.removeProperty('--agents-card-w');
+        section.style.removeProperty('--agents-content-top');
+        return;
+      }
+      const stage = track.parentElement;
+      if (!stage) return;
+
+      const stageRect = stage.getBoundingClientRect();
+      let contentTop = stableContentTop();
+      if (isCompactPin() && section.classList.contains('compact-pin-active')) {
+        contentTop = 24;
+        section.style.setProperty('--agents-content-top', contentTop + 'px');
+      } else if (sectionHead) {
+        const headRect = sectionHead.getBoundingClientRect();
+        const gap = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--section-content-gap')) || 56;
+        contentTop = Math.max(0, headRect.bottom - stageRect.top + gap);
+        section.style.setProperty('--agents-content-top', Math.round(contentTop) + 'px');
+      }
+
+      const bottomPad = Math.min(44, Math.max(24, stageRect.height * 0.06));
+      const maxByHeight = Math.max(220, (stageRect.height - contentTop - bottomPad) * 1.5);
+      const maxByColumn = Math.max(220, stageRect.width);
+      const cardW = Math.min(760, maxByColumn, maxByHeight);
+      section.style.setProperty('--agents-card-w', Math.round(cardW) + 'px');
+    }
+    const cardAnchorTop = stableContentTop;
 
     let lastIdx = -1;
     let raf = 0;
@@ -11887,10 +12250,9 @@
         const listBottom = listRect.bottom - railRect.top;
         const minShift = Math.min(0, railH - pad - listBottom);
         const maxShift = 0;
-        const currentShift = Number.parseFloat(getComputedStyle(side).getPropertyValue('--side-shift')) || 0;
         const tabTop = tabRect.top - railRect.top;
         const tabBottom = tabRect.bottom - railRect.top;
-        let shift = Math.max(minShift, Math.min(maxShift, currentShift));
+        let shift = 0;
 
         if (tabTop + shift < pad) {
           shift = pad - tabTop;
@@ -11899,6 +12261,7 @@
         }
         shift = Math.max(minShift, Math.min(maxShift, shift));
         side.style.setProperty('--side-shift', Math.round(shift) + 'px');
+        schedule();
       });
     }
 
@@ -11906,27 +12269,33 @@
       raf = 0;
       if (isMobile()) {
         track.style.transform = '';
+        section.classList.remove('compact-pin-active');
         return;
       }
       // 4.3 — while the snap animation is running we drive the
       // transform via CSS transition (set inside snapToNearest);
       // skip the per-frame update so the two don't fight.
       if (snapping) return;
-      const p = Math.max(0, Math.min(1, sectionProgress()));
+      const rawP = sectionProgress();
+      const compactActive = isCompactPin() && rawP > 0.02 && section.getBoundingClientRect().bottom > navH();
+      if (section.classList.contains('compact-pin-active') !== compactActive) {
+        section.classList.toggle('compact-pin-active', compactActive);
+        syncAgentsLayout();
+      }
+      const p = Math.max(0, Math.min(1, rawP));
       // 4.0 round 6 — continuous map: at p=0 card[0] is centered, at
       // p=1 card[N-1] is centered, linear in between. This makes the
       // slice center for index i fall at p = i / (N-1) — see snap
       // logic + tab clicks below; all three now use the same anchor
       // so free-scroll stops AND the auto-snap leave the right card
       // perfectly centered with the matching left tab.
-      const stage = track.parentElement;
       const cardH = cards[0].offsetHeight;
       const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
-      const stageH = stage.offsetHeight;
       const tCont = p * (N - 1);                  // 0 .. N-1 continuous
-      const offset = cardAnchorTop(stageH, cardH) - tCont * (cardH + gap);
-      track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
       const idx = Math.min(N - 1, Math.max(0, Math.round(tCont)));
+      const motionIndex = isCompactPin() ? idx : tCont;
+      const offset = cardAnchorTop() - motionIndex * (cardH + gap);
+      track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
       if (idx !== lastIdx) {
         items.forEach((t, i) => t.classList.toggle('active', i === idx));
         lastIdx = idx;
@@ -11962,11 +12331,9 @@
       // `snapping === true`. We also animate the document scroll for
       // continuity but the track's eased transform is what the eye
       // actually follows.
-      const stage = track.parentElement;
       const cardH = cards[0].offsetHeight;
       const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
-      const stageH = stage.offsetHeight;
-      const offset = cardAnchorTop(stageH, cardH) - idx * (cardH + gap);
+      const offset = cardAnchorTop() - idx * (cardH + gap);
       track.classList.add('snapping');
       track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
       items.forEach((t, i) => t.classList.toggle('active', i === idx));
@@ -12000,9 +12367,11 @@
     window.addEventListener('resize', () => {
       // Force re-compute (stageH / cardH may have changed)
       lastIdx = -1;
+      syncAgentsLayout();
       syncSidePad();
       schedule();
     });
+    syncAgentsLayout();
     syncSidePad();
     schedule();
 
@@ -12021,11 +12390,9 @@
         const anchorP = i / denom;
         snapping = true;
         snapStop = scrollYForProgress(anchorP);
-        const stage = track.parentElement;
         const cardH = cards[0].offsetHeight;
         const gap = parseFloat(getComputedStyle(track).rowGap || '40') || 40;
-        const stageH = stage.offsetHeight;
-        const offset = cardAnchorTop(stageH, cardH) - i * (cardH + gap);
+        const offset = cardAnchorTop() - i * (cardH + gap);
         track.classList.add('snapping');
         track.style.transform = 'translateY(' + offset.toFixed(2) + 'px)';
         items.forEach((t, itemIdx) => t.classList.toggle('active', itemIdx === i));
