@@ -3905,8 +3905,9 @@
     content: '';
     position: absolute;
     z-index: 2;
-    left: -240px;
-    right: -240px;
+    left: 50%;
+    width: max(160vw, calc(100% + 720px));
+    transform: translateX(-50%);
     top: 0;
     height: max(120px, calc(var(--agents-content-top) - 18px));
     pointer-events: none;
