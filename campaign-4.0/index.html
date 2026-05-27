@@ -679,7 +679,8 @@
     font-size: clamp(64px, 7.5vw, 132px);
     line-height: 0.92;
     letter-spacing: -0.035em;
-    margin: 0 0 32px;
+    margin: 0 0 calc(32px - 0.08em);
+    padding-bottom: 0.08em;
     /* 4.4 round 87 — was teal (var(--alva)); switched to white per
        feedback ("绿色字去掉"). The .alva inline-span is still teal
        for any per-word accent we want to keep on later iterations. */
