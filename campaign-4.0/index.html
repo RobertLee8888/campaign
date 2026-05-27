@@ -1256,18 +1256,20 @@
        rules below. */
   }
   .marquee-row {
-    /* Same clip-x / visible-y combo as the parent — keeps hover
-       shadows visible above and below each row. */
+    /* 4.4 round 92 — row height LOCKED to card base height; track
+       anchored to row top (align-items: flex-start) so that when a
+       hovered card grows downward to reveal the CTA, the track height
+       change doesn't re-center sibling cards within the row. The
+       grown card simply spills out the bottom of the row (overflow-y:
+       visible), painting over the gap into row 2 — with hover z-index
+       it sits on top. */
     overflow-x: clip;
     overflow-y: visible;
-    /* 4.4 round 90 — row's reserved height is the card's natural
-       height. Hover effects no longer grow the card box — they only
-       lift / scale / reveal CTA via opacity — so no buffer needed.
-       Restores the tight inter-row spacing the user had before. */
-    min-height: var(--mq-base-h, 283px);
+    height: var(--mq-base-h, 283px);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
   }
+  .card-marquee .marquee-track { align-items: flex-start; }
   .marquee-track {
     display: flex;
     /* No flex gap — every .mq-card carries margin-right itself so the
@@ -1331,31 +1333,19 @@
      feedback. Cards support hover (lift + shadow) and the row pauses
      scroll on hover. */
   .marquee-track .mq-card { cursor: pointer; }
-  /* 4.4 round 90 — marquee card hover no longer grows height (was
-     pushing the row down). Card stays exactly at --mq-base-h; hover
-     applies translateY(-12px) + scale(1.05) for a clear "lift" plus
-     a stronger shadow. The CTA shows via opacity-fade on a sibling
-     element that's already there but transparent. overflow flipped
-     to visible AND `contain` reset so the CTA (positioned just below
-     the card body) actually paints — the global `contain: paint` on
-     .mq-card was clipping it away despite overflow:visible. */
-  .marquee-track .mq-card {
-    overflow: visible;
-    contain: none;
-  }
+  /* 4.4 round 92 — marquee card hover now MIRRORS the modal-grid
+     card exactly: card height grows by --mq-cta-h to reveal the CTA
+     row INSIDE the card surface (with card bg/gradient extending to
+     fit). Lift + slight scale on top. overflow:hidden is preserved
+     so the CTA strip stays clipped at the new (taller) card edge,
+     reading as a built-in strip rather than a detached row. The
+     parent .marquee-row locks its height so siblings don't shift —
+     the grown card just overflows downward into the row gap. */
   .marquee-track .mq-card:hover {
-    transform: translateY(-12px) scale(1.05);
+    transform: translateY(-12px) scale(1.04);
+    height: calc(var(--mq-base-h) + var(--mq-cta-h));
     box-shadow: 0 22px 48px rgba(0, 0, 0, 0.55);
     z-index: 3;
-  }
-  .marquee-track .mq-card .mq-cta {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s ease;
-  }
-  .marquee-track .mq-card:hover .mq-cta {
-    opacity: 1;
-    pointer-events: auto;
   }
   /* 4.4 round 58 — round-40's blanket reset of transform+box-shadow
      on results-grid hover has been REMOVED. It was clobbering the
