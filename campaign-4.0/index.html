@@ -4734,11 +4734,36 @@
      user direction.
      ============================================================ */
   .about-alva {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     background: #0a0a10;
     padding: var(--section-top-pad) 24px 96px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
+  .about-waves {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+    opacity: 0.62;
+  }
+  .about-alva::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(70% 80% at 50% 35%, rgba(88, 195, 198, 0.08), transparent 62%),
+      linear-gradient(180deg, rgba(10, 10, 16, 0.08), rgba(10, 10, 16, 0.78));
+  }
   .about-alva-inner {
+    position: relative;
+    z-index: 1;
     max-width: 760px;
     margin: 0 auto;
     text-align: center;
@@ -7794,6 +7819,7 @@
 <!-- 4.4 round 87 — About-Alva section sits between the leaderboard
      and the footer. Centered title + subtitle + outline CTA. -->
 <section class="about-alva">
+  <canvas class="about-waves" aria-hidden="true"></canvas>
   <div class="about-alva-inner">
     <h2>Meet Alva — The AI Investing Agent behind FinTwit Alpha League</h2>
     <p>Powered by hundreds of institutional-grade data sources and thousands of community playbooks you can follow and remix, Alva is your personal edge in all markets.</p>
@@ -11301,6 +11327,122 @@
     waitForThree(() => {
       initAurora();
       initPrismaticBurst();
+    });
+  })();
+
+  /* ============================================================
+     ABOUT ALVA WAVES  (ReactBits Background Studio "Waves" inspired)
+     Lightweight 2D canvas wave field for the final CTA section. Uses
+     only Alva brand teals at low alpha so the background adds motion
+     without competing with the copy.
+     ============================================================ */
+  (() => {
+    const canvas = document.querySelector('.about-waves');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) return;
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const colors = [
+      [88, 195, 198],
+      [73, 163, 166],
+      [122, 211, 214]
+    ];
+    let w = 1;
+    let h = 1;
+    let dpr = 1;
+    let raf = 0;
+    let visible = true;
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      w = Math.max(1, Math.round(rect.width));
+      h = Math.max(1, Math.round(rect.height));
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function waveY(x, layer, time) {
+      const nx = x / Math.max(1, w);
+      const base = h * (0.42 + layer * 0.065);
+      const amp = h * (0.035 + layer * 0.006);
+      const speed = time * (0.00016 + layer * 0.000025);
+      return base
+        + Math.sin(nx * Math.PI * (2.2 + layer * 0.38) + speed + layer * 0.9) * amp
+        + Math.sin(nx * Math.PI * (5.0 + layer * 0.26) - speed * 1.7) * amp * 0.32;
+    }
+
+    function draw(time = 0) {
+      ctx.clearRect(0, 0, w, h);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineCap = 'round';
+
+      for (let layer = 0; layer < 8; layer += 1) {
+        const color = colors[layer % colors.length];
+        const alpha = 0.045 + layer * 0.006;
+        const grad = ctx.createLinearGradient(0, 0, w, 0);
+        grad.addColorStop(0, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0)`);
+        grad.addColorStop(0.28, `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`);
+        grad.addColorStop(0.72, `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha * 0.85})`);
+        grad.addColorStop(1, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0)`);
+
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.2 + layer * 0.25;
+        ctx.beginPath();
+        for (let x = -24; x <= w + 24; x += 18) {
+          const y = waveY(x, layer, time);
+          if (x === -24) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        ctx.lineWidth = 18 + layer * 3;
+        ctx.globalAlpha = 0.16;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      ctx.restore();
+
+      const vignette = ctx.createRadialGradient(w * 0.5, h * 0.55, h * 0.12, w * 0.5, h * 0.55, Math.max(w, h) * 0.62);
+      vignette.addColorStop(0, 'rgba(88, 195, 198, 0.045)');
+      vignette.addColorStop(1, 'rgba(88, 195, 198, 0)');
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    function tick(time) {
+      if (visible && !document.hidden) draw(time);
+      if (!reduced) raf = requestAnimationFrame(tick);
+    }
+
+    resize();
+    draw(0);
+    if (!reduced) raf = requestAnimationFrame(tick);
+
+    const ro = new ResizeObserver(() => {
+      resize();
+      draw(0);
+    });
+    ro.observe(canvas);
+    if (canvas.parentElement) ro.observe(canvas.parentElement);
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(([entry]) => {
+        visible = !!(entry && entry.isIntersecting);
+      });
+      io.observe(canvas);
+    }
+
+    window.addEventListener('resize', () => {
+      resize();
+      draw(0);
+    }, { passive: true });
+    window.addEventListener('beforeunload', () => {
+      if (raf) cancelAnimationFrame(raf);
+      ro.disconnect();
     });
   })();
 
