@@ -185,7 +185,7 @@
 
   *, *::before, *::after { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-  html { background: var(--bg); scroll-behavior: smooth; overflow-x: hidden; }
+  html { background: var(--bg); scroll-behavior: smooth; overflow-x: clip; }
 
   /* Balance the wrap on hero-class headings so the last line never ends
      in a one-word orphan. Zero cost, modern browsers only (Chrome 114+,
@@ -231,7 +231,7 @@
     font-family: var(--font);
     background: var(--bg);
     color: var(--text);
-    overflow-x: hidden;
+    overflow-x: clip;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
