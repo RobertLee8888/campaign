@@ -2255,12 +2255,13 @@
     font-size: 10px;
     letter-spacing: 0.11em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.62);
+    color: var(--mq-winrate-color, rgba(255, 255, 255, 0.62));
+    opacity: 0.72;
   }
   .mq-card .mq-signal-count {
     font-size: 18px;
     letter-spacing: -0.03em;
-    color: rgba(255, 255, 255, 0.76);
+    color: var(--mq-winrate-color, rgba(255, 255, 255, 0.76));
   }
   .mq-card .mq-calls {
     display: flex;
@@ -15394,7 +15395,7 @@
                 '<img class="mq-avatar" loading="lazy" decoding="async" src="' + avatarSrc + '" alt="" ' + (onerr ? 'onerror="' + onerr.replace(/"/g, '&quot;') + '"' : '') + '>' +
                 '<div class="mq-meta"><b>' + name + '</b><span>' + handle + '</span></div>' +
               '</div>' +
-              '<div class="mq-winrate">' +
+              '<div class="mq-winrate" style="--mq-winrate-color:' + pctColor + '">' +
                 '<span class="mq-winrate-main"><span class="mq-winrate-title">Win rate</span><span class="mq-winrate-pct" style="color:' + pctColor + '">' + winRate + '%</span></span>' +
                 '<span class="mq-winrate-sub"><span class="mq-signal-label">signals</span><span class="mq-signal-count">' + winCalls + '/' + totalCalls + '</span></span>' +
               '</div>' +
