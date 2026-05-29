@@ -185,7 +185,7 @@
 
   *, *::before, *::after { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-  html { background: var(--bg); scroll-behavior: smooth; }
+  html { background: var(--bg); scroll-behavior: smooth; overflow-x: hidden; }
 
   /* Balance the wrap on hero-class headings so the last line never ends
      in a one-word orphan. Zero cost, modern browsers only (Chrome 114+,
@@ -1060,9 +1060,9 @@
       drop-shadow(0 0 22px rgba(10,10,14,0.35));
   }
 
-  /* 4.4 round 22 — opening scroll cue. Non-interactive double-chevron
-     pinned to the bottom of section 1, bobbing up-down. No ring, no
-     hover, no click. Pure decorative wayfinding. */
+  /* 4.4 round 22 — opening scroll cue. Double-chevron pinned to the
+     bottom of section 1, bobbing up-down. Mobile turns it into a
+     tap target that hands off to the next section. */
   .opening-cue {
     position: absolute;
     left: 50%;
@@ -1075,6 +1075,11 @@
     justify-content: center;
     pointer-events: none;
     z-index: 4;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
   }
   .opening-cue i {
     /* 4.4 round 24 — switched to the regular (non-bold) Phosphor
@@ -7517,8 +7522,10 @@
     .nav-drawer {
       padding: 10px 20px calc(18px + env(safe-area-inset-bottom));
       gap: 0;
-      background: rgba(8, 9, 13, 0.96);
-      border-bottom-color: rgba(255, 255, 255, 0.10);
+      background: rgba(10, 10, 14, 0.55);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+              backdrop-filter: blur(14px) saturate(140%);
+      border-bottom-color: rgba(255, 255, 255, 0.06);
       box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28);
     }
     .nav-drawer-row {
@@ -7679,7 +7686,14 @@
     }
     /* 4.4 round 22/24 — opening-arrow replaced by .opening-cue;
        mobile inset proportionally smaller. */
-    .opening-cue { bottom: 40px; }
+    .opening-cue {
+      bottom: 40px;
+      width: 44px;
+      height: 44px;
+      pointer-events: auto;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
     .opening-cue i { font-size: 26px; }
     /* Drop tweet card density — a few small stickers are enough texture without
        crowding the H1. They're also smaller so the H1 reads cleanly. */
@@ -8472,7 +8486,8 @@
       height: calc(var(--lb-mobile-pin-h) + var(--lb-mobile-scroll-range)) !important;
       min-height: calc(var(--lb-mobile-pin-h) + var(--lb-mobile-scroll-range)) !important;
       max-height: none !important;
-      overflow: visible !important;
+      overflow-x: clip !important;
+      overflow-y: visible !important;
     }
     #leaderboard .section-wrap {
       position: sticky !important;
@@ -8518,7 +8533,7 @@
       min-height: 0;
       width: 100%;
       margin-top: 24px;
-      overflow: visible;
+      overflow: hidden;
       position: relative;
     }
     #leaderboard .lb-mobile-board {
@@ -8723,7 +8738,7 @@
     }
 
     #agents.agents-pin-section {
-      padding: 0 0 var(--section-bottom-pad) !important;
+      padding: 0 !important;
       overflow: hidden !important;
     }
     #agents .agents-pin {
@@ -8733,6 +8748,7 @@
       min-height: 0 !important;
       overflow: visible !important;
       padding-top: var(--section-top-pad) !important;
+      padding-bottom: var(--section-bottom-pad) !important;
     }
     #agents .agents-pin-inner {
       height: auto !important;
@@ -8998,6 +9014,7 @@
 	    }
 	    #leaderboard .lb-mobile-board-shell {
 	      margin-top: 24px !important;
+	      overflow: hidden !important;
 	    }
 	    #leaderboard .lb-mobile-board {
 	      z-index: 1;
@@ -9384,12 +9401,11 @@
         </a>
       </div>
     </div>
-    <!-- 4.4 round 22 — non-interactive scroll cue at the bottom of
-         section 1. Two stacked chevrons, faint white, bobbing
-         gently up-down. No click, no ring, no hover. -->
-    <div class="opening-cue" aria-hidden="true">
+    <!-- 4.4 round 22 — scroll cue at the bottom of section 1.
+         On mobile it is tappable and hands off to the next section. -->
+    <button class="opening-cue" type="button" data-mobile-scroll-to="audit-yours" aria-label="Scroll to Playbooks" tabindex="-1">
       <i class="ph ph-caret-double-down"></i>
-    </div>
+    </button>
   </section>
 
   <!-- ============================================================ SECTION 2 · PLAYBOOK MARQUEE
@@ -12475,6 +12491,22 @@
         e.preventDefault();
         smoothScrollTo(el.dataset.scrollTo);
       });
+    });
+
+    const mobileCueMq = matchMedia('(max-width: 760px)');
+    document.querySelectorAll('[data-mobile-scroll-to]').forEach(el => {
+      const syncCue = () => {
+        const enabled = mobileCueMq.matches;
+        el.tabIndex = enabled ? 0 : -1;
+        el.setAttribute('aria-hidden', enabled ? 'false' : 'true');
+      };
+      el.addEventListener('click', e => {
+        if (!mobileCueMq.matches) return;
+        e.preventDefault();
+        smoothScrollTo(el.dataset.mobileScrollTo);
+      });
+      syncCue();
+      mobileCueMq.addEventListener?.('change', syncCue);
     });
 
     // scrollspy — pick the section whose top is closest to (but at or above) the
