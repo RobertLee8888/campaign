@@ -12485,6 +12485,12 @@
         smoothScrollTo(t.dataset.section);
       });
     });
+    document.querySelectorAll('.nav-drawer-item[data-section]').forEach(el => {
+      el.addEventListener('click', e => {
+        e.preventDefault();
+        smoothScrollTo(el.dataset.section);
+      });
+    });
     // any element with data-scroll-to anywhere on the page uses the same handler
     document.querySelectorAll('[data-scroll-to]').forEach(el => {
       el.addEventListener('click', e => {
