@@ -1159,9 +1159,10 @@
   }
   @media (min-width: 761px) and (max-width: 1512px), (min-width: 761px) and (max-height: 982px) {
     .stage.stage-marquee {
-      height: calc(100svh - var(--nav-h));
-      min-height: 0;
-      max-height: none;
+      --s2-section-h: calc(100svh - var(--nav-h));
+      height: var(--s2-section-h);
+      min-height: var(--s2-section-h);
+      max-height: var(--s2-section-h);
     }
   }
   /* (3.0 round 43 — S2 background animation removed entirely after
@@ -2177,7 +2178,7 @@
   .mq-card .mq-profile {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
   }
   .mq-card .mq-id {
@@ -2212,10 +2213,24 @@
   }
   .mq-card .mq-winrate {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 10px;
-    margin: 8px 0 0;
+    margin: 5px 0 0;
     line-height: 1;
+  }
+  .mq-card .mq-winrate-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .mq-card .mq-winrate-title {
+    font-family: var(--font);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.11em;
+    color: rgba(255, 255, 255, 0.62);
+    text-transform: uppercase;
   }
   .mq-card .mq-winrate-pct {
     font-family: var(--font);
@@ -2230,10 +2245,11 @@
     justify-content: center;
     gap: 3px;
     font-family: var(--font-mono);
-    color: rgba(255, 255, 255, 0.58);
+    color: rgba(255, 255, 255, 0.76);
     letter-spacing: 0.02em;
     white-space: nowrap;
     line-height: 1;
+    padding-bottom: 3px;
   }
   .mq-card .mq-signal-label {
     font-size: 10px;
@@ -7719,18 +7735,19 @@
     .stage.stage-marquee {
       --s2-card-w: min(330px, calc(100vw - 64px));
       --s2-card-h: calc(var(--s2-card-w) / 1.91);
-      --s2-content-gap: 20px;
+      --s2-content-gap: var(--section-title-content-gap);
       --s2-row-gap: clamp(7px, 1.4svh, 10px);
-      --s2-pad-top: clamp(34px, 5.4svh, 48px);
-      --s2-pad-bottom: var(--s2-pad-top);
+      --s2-pad-top: var(--section-top-pad);
+      --s2-pad-bottom: var(--section-bottom-pad);
+      --s2-section-h: calc(100svh - var(--nav-h));
       display: flex;
       justify-content: center;
       padding: var(--s2-pad-top) 0 var(--s2-pad-bottom);
-      height: calc(100svh - var(--nav-h));
-      max-height: none;
-      min-height: 0;
+      height: var(--s2-section-h);
+      min-height: var(--s2-section-h);
+      max-height: var(--s2-section-h);
       overflow-x: clip;
-      overflow-y: hidden;
+      overflow-y: visible;
     }
     .stage-marquee .stage-header {
       padding: 0 18px;
@@ -8716,11 +8733,14 @@
     .stage.stage-marquee {
       --s2-content-gap: var(--section-title-content-gap);
       --s2-row-gap: clamp(7px, 1.4svh, 10px);
+      --s2-section-h: calc(100svh - var(--nav-h));
       justify-content: flex-start !important;
-      height: calc(100svh - var(--nav-h)) !important;
+      height: var(--s2-section-h) !important;
+      min-height: var(--s2-section-h) !important;
+      max-height: var(--s2-section-h) !important;
       padding-top: var(--s2-pad-top) !important;
       padding-bottom: var(--s2-pad-bottom) !important;
-      overflow-y: hidden !important;
+      overflow-y: visible !important;
     }
     .stage-marquee .card-marquee {
       gap: var(--s2-row-gap) !important;
@@ -15461,7 +15481,6 @@
 
       if (mobile || compactDesktop) {
         const viewportW = document.documentElement.clientWidth || window.innerWidth;
-        const maxWForThree = Math.max(MIN_BASE_H * ASPECT, (viewportW - rowGap * 2 - 4) / 3);
         const maxWForMobile = Math.max(MIN_BASE_H * ASPECT, viewportW - 64);
         const visibleRows = Array.from(stage.querySelectorAll('.marquee-row'))
           .filter(row => getComputedStyle(row).display !== 'none');
@@ -15472,25 +15491,11 @@
         const headerH = header.getBoundingClientRect().height;
         const availableForRows = stage.clientHeight - padTop - padBottom -
           headerH - sectionGap - rowGap * Math.max(0, rowCount - 1);
-        const maxHForBottomPad = Math.max(MIN_BASE_H, availableForRows / rowCount);
-        const maxHForWidth = (mobile ? maxWForMobile : maxWForThree) / ASPECT;
-        baseH = Math.max(MIN_BASE_H, Math.min(MAX_BASE_H, maxHForBottomPad, maxHForWidth));
+        const maxHForRows = Math.max(MIN_BASE_H, availableForRows / rowCount);
+        const maxHForWidth = mobile ? maxWForMobile / ASPECT : Number.POSITIVE_INFINITY;
+        baseH = Math.max(MIN_BASE_H, Math.min(MAX_BASE_H, maxHForRows, maxHForWidth));
         cardW = baseH * ASPECT;
-
-        if (mobile) {
-          stage.style.setProperty('--s2-content-gap', sectionGap.toFixed(2) + 'px');
-        } else {
-          const contentGapForBottomPad = stage.clientHeight - padTop - padBottom -
-            headerH - rowGap * Math.max(0, rowCount - 1) - baseH * rowCount;
-          stage.style.setProperty(
-            '--s2-content-gap',
-            Math.max(sectionGap, contentGapForBottomPad).toFixed(2) + 'px'
-          );
-        }
-        if (!mobile && cardW > maxWForThree) {
-          cardW = maxWForThree;
-          baseH = cardW / ASPECT;
-        }
+        stage.style.setProperty('--s2-content-gap', sectionGap.toFixed(2) + 'px');
       } else {
         stage.style.removeProperty('--s2-content-gap');
       }
