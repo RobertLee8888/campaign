@@ -537,6 +537,25 @@
     background: var(--line);
     margin: 6px 22px;
   }
+  .nav-drawer-hero-actions {
+    display: grid;
+    gap: 10px;
+  }
+  .nav-drawer-action-primary {
+    background: var(--alva);
+    border: 1px solid var(--alva);
+    color: var(--on-alva);
+  }
+  .nav-drawer-action-primary:hover,
+  .nav-drawer-action-primary:active {
+    background: var(--alva-hi);
+    border-color: var(--alva-hi);
+    color: var(--on-alva);
+  }
+  .nav-drawer-action-secondary {
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: var(--text);
+  }
 
   /* TS token: btn-s */
   .nav-cta {
@@ -4806,7 +4825,7 @@
       top: auto;
       height: auto;
       min-height: 0;
-      overflow: hidden;
+      overflow: visible;
       padding-top: var(--section-top-pad);
       background:
         radial-gradient(80% 42% at 18% 16%, rgba(88,195,198,0.18) 0%, transparent 70%),
@@ -7564,6 +7583,25 @@
       border-color: var(--text);
       color: var(--text);
     }
+    .nav-drawer-hero-actions {
+      margin: 16px 0 0;
+      gap: 10px;
+    }
+    .nav-drawer-hero-actions .nav-drawer-action {
+      margin: 0;
+    }
+    .nav-drawer-action-primary,
+    .nav-drawer-action-primary:hover,
+    .nav-drawer-action-primary:active {
+      background: var(--alva);
+      border-color: var(--alva);
+      color: var(--on-alva);
+    }
+    .nav-drawer-action-secondary {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.24);
+      color: var(--text);
+    }
 
     /* ---------------------------------------------------------- */
     /* S1 · OPENING (hero)                                        */
@@ -8424,14 +8462,21 @@
       --lb-mobile-scale: 0.58;
       --lb-mobile-pin-h: calc(100svh - var(--nav-h));
       --lb-mobile-travel: 0px;
-      --lb-mobile-bottom-gap: clamp(34px, 7svh, 56px);
+      --lb-mobile-align-travel: 0px;
+      --lb-mobile-exit-travel: 0px;
+      --lb-mobile-scroll-range: var(--lb-mobile-travel);
+      --lb-mobile-pan-exit-lead: 0px;
+      --lb-mobile-card-y: 0px;
+      --lb-mobile-bottom-gap: 0px;
       padding: 0 !important;
-      min-height: calc(var(--lb-mobile-pin-h) + var(--lb-mobile-travel)) !important;
-      overflow: clip !important;
+      height: calc(var(--lb-mobile-pin-h) + var(--lb-mobile-scroll-range)) !important;
+      min-height: calc(var(--lb-mobile-pin-h) + var(--lb-mobile-scroll-range)) !important;
+      max-height: none !important;
+      overflow: visible !important;
     }
     #leaderboard .section-wrap {
       position: sticky !important;
-      top: var(--nav-h);
+      top: var(--nav-h) !important;
       height: var(--lb-mobile-pin-h);
       max-width: none;
       padding: var(--section-top-pad) 0 0;
@@ -8439,7 +8484,7 @@
       flex-direction: column;
       gap: 0;
       row-gap: 0;
-      overflow: hidden;
+      overflow: visible;
     }
     #leaderboard .section-head {
       order: 1;
@@ -8481,7 +8526,7 @@
       top: 0;
       left: 0;
       width: 1184px;
-      transform: translate3d(var(--lb-mobile-x), 0, 0) scale(var(--lb-mobile-scale));
+      transform: translate3d(var(--lb-mobile-x), var(--lb-mobile-card-y), 0) scale(var(--lb-mobile-scale));
       transform-origin: 0 0;
       will-change: transform;
       pointer-events: none;
@@ -8718,7 +8763,9 @@
 
     #leaderboard {
       padding: 0 !important;
-      min-height: calc(var(--lb-mobile-pin-h, calc(100svh - var(--nav-h))) + var(--lb-mobile-travel, 0px)) !important;
+      height: calc(var(--lb-mobile-pin-h, 100svh) + var(--lb-mobile-scroll-range, 0px)) !important;
+      min-height: calc(var(--lb-mobile-pin-h, 100svh) + var(--lb-mobile-scroll-range, 0px)) !important;
+      max-height: none !important;
     }
     #leaderboard .section-head {
       margin: 0 var(--lb-mobile-edge, clamp(22px, 6vw, 30px)) !important;
@@ -8959,7 +9006,7 @@
 	      display: none !important;
 	    }
 	    #leaderboard .lb-mobile-bottom-blur {
-	      display: block !important;
+	      display: none !important;
 	      position: absolute !important;
 	      left: 50% !important;
 	      right: auto !important;
@@ -8987,22 +9034,8 @@
 	      border-radius: 18px 18px 0 0 !important;
 	      overflow: hidden !important;
 	      isolation: isolate !important;
-	      mask-image: linear-gradient(
-	        180deg,
-	        #000 0%,
-	        #000 calc(100% - 360px),
-	        rgba(0,0,0,0.90) calc(100% - 270px),
-	        rgba(0,0,0,0.44) calc(100% - 130px),
-	        rgba(0,0,0,0) 100%
-	      ) !important;
-	      -webkit-mask-image: linear-gradient(
-	        180deg,
-	        #000 0%,
-	        #000 calc(100% - 360px),
-	        rgba(0,0,0,0.90) calc(100% - 270px),
-	        rgba(0,0,0,0.44) calc(100% - 130px),
-	        rgba(0,0,0,0) 100%
-	      ) !important;
+	      mask-image: none !important;
+	      -webkit-mask-image: none !important;
 	      box-shadow:
 	        0 30px 76px rgba(2, 16, 20, 0.16),
 	        inset 0 1px 0 rgba(255,255,255,0.90) !important;
@@ -9085,6 +9118,15 @@
     opacity: 0.9;
   }
   #leaderboard .section-wrap { position: relative; z-index: auto; }
+  @media (max-width: 760px) {
+    #leaderboard .lb-aurora {
+      position: sticky !important;
+      inset: auto !important;
+      top: var(--nav-h) !important;
+      height: var(--lb-mobile-pin-h, 100svh) !important;
+      margin-bottom: calc(-1 * var(--lb-mobile-pin-h, 100svh)) !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -9197,11 +9239,20 @@
         View <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i>
       </a>
     </div>
-    <div class="nav-drawer-sep" aria-hidden="true"></div>
-    <button class="nav-drawer-action" type="button" data-open="for-kols">
-      <i class="ph-bold ph-megaphone" aria-hidden="true"></i>
-      <span>For FinTwit Traders</span>
-    </button>
+    <div class="nav-drawer-hero-actions" aria-label="Opening actions">
+      <a class="nav-drawer-action nav-drawer-action-primary" href="#leaderboard" data-scroll-to="leaderboard">
+        <i class="ph-bold ph-trophy" aria-hidden="true"></i>
+        <span>Check Leaderboard</span>
+      </a>
+      <a class="nav-drawer-action nav-drawer-action-secondary" href="#agents" data-scroll-to="agents">
+        <i class="ph ph-squares-four" aria-hidden="true"></i>
+        <span>See Use Cases</span>
+      </a>
+      <button class="nav-drawer-action nav-drawer-action-secondary" type="button" data-open="for-kols">
+        <i class="ph-bold ph-megaphone" aria-hidden="true"></i>
+        <span>For FinTwit Traders</span>
+      </button>
+    </div>
   </div>
 </header>
 
@@ -10723,6 +10774,11 @@
     if (!window.matchMedia('(max-width: 760px)').matches) {
       section.style.removeProperty('--lb-mobile-pin-h');
       section.style.removeProperty('--lb-mobile-travel');
+      section.style.removeProperty('--lb-mobile-align-travel');
+      section.style.removeProperty('--lb-mobile-exit-travel');
+      section.style.removeProperty('--lb-mobile-scroll-range');
+      section.style.removeProperty('--lb-mobile-pan-exit-lead');
+      section.style.removeProperty('--lb-mobile-card-y');
       section.style.removeProperty('--lb-mobile-scale');
       section.style.removeProperty('--lb-mobile-x');
       frame.style.removeProperty('--lb-mobile-scale');
@@ -10748,20 +10804,34 @@
       board.scrollHeight || 0,
       card.scrollHeight || card.getBoundingClientRect().height || 880
     );
-    const scale = Math.max(0.36, Math.min(0.78, shellH / designH));
+    const scale = Math.max(0.36, Math.min(0.82, shellH / designH));
     const mobileCardInset = Math.max(22, Math.min(30, window.innerWidth * 0.06));
     const leftPad = mobileCardInset;
-    const rightPad = mobileCardInset;
     const scaledW = designW * scale;
     const startX = leftPad;
-    const endX = Math.min(startX, window.innerWidth - rightPad - scaledW);
+    const alignX = Math.min(startX, window.innerWidth - scaledW);
+    const alignTravel = Math.max(0, startX - alignX);
+    const exitTravel = alignTravel > 1
+      ? Math.max(28, Math.min(48, window.innerWidth * 0.10, alignTravel * 0.10))
+      : 0;
+    const endX = alignX - exitTravel;
     const travel = Math.max(0, startX - endX);
+    const exitLead = travel > 1
+      ? Math.min(travel * 0.32, Math.max(64, Math.min(112, window.innerHeight * 0.13)))
+      : 0;
+    const scrollRange = alignTravel > 1
+      ? Math.max(330, Math.min(500, pinH * 0.54, alignTravel * 0.78))
+      : 1;
 
     section.style.setProperty('--lb-mobile-left', leftPad + 'px');
-    section.style.setProperty('--lb-mobile-right', rightPad + 'px');
+    section.style.setProperty('--lb-mobile-right', '0px');
     section.style.setProperty('--lb-mobile-scale', scale.toFixed(5));
     section.style.setProperty('--lb-bottom-blur-h', Math.ceil(460 * scale) + 'px');
     section.style.setProperty('--lb-mobile-travel', Math.ceil(travel) + 'px');
+    section.style.setProperty('--lb-mobile-align-travel', Math.ceil(alignTravel) + 'px');
+    section.style.setProperty('--lb-mobile-exit-travel', Math.ceil(exitTravel) + 'px');
+    section.style.setProperty('--lb-mobile-scroll-range', Math.ceil(scrollRange) + 'px');
+    section.style.setProperty('--lb-mobile-pan-exit-lead', Math.ceil(exitLead) + 'px');
     updateMobileLeaderboardPan();
   }
 
@@ -10781,18 +10851,28 @@
       return;
     }
 
-    const rootStyle = getComputedStyle(document.documentElement);
-    const navH = Number.parseFloat(rootStyle.getPropertyValue('--nav-h')) || 65;
-    const leftPad = Number.parseFloat(getComputedStyle(section).getPropertyValue('--lb-mobile-left')) || 18;
-    const travel = Number.parseFloat(getComputedStyle(section).getPropertyValue('--lb-mobile-travel')) || 0;
+    const sectionStyle = getComputedStyle(section);
+    const leftPad = Number.parseFloat(sectionStyle.getPropertyValue('--lb-mobile-left')) || 18;
+    const travel = Number.parseFloat(sectionStyle.getPropertyValue('--lb-mobile-travel')) || 0;
+    const alignTravel = Number.parseFloat(sectionStyle.getPropertyValue('--lb-mobile-align-travel')) || travel;
+    const exitTravel = Number.parseFloat(sectionStyle.getPropertyValue('--lb-mobile-exit-travel')) || Math.max(0, travel - alignTravel);
     const rect = section.getBoundingClientRect();
     if (travel <= 0) {
       section.style.setProperty('--lb-mobile-x', leftPad.toFixed(2) + 'px');
+      section.style.setProperty('--lb-mobile-card-y', '0px');
       return;
     }
-    const progress = Math.max(0, Math.min(1, (navH - rect.top) / travel));
-    const x = leftPad - travel * progress;
+    const scrollRange = Number.parseFloat(sectionStyle.getPropertyValue('--lb-mobile-scroll-range')) || travel;
+    const rootStyle = getComputedStyle(document.documentElement);
+    const navH = Number.parseFloat(rootStyle.getPropertyValue('--nav-h')) || 65;
+    const pinnedProgress = Math.max(0, Math.min(1, (navH - rect.top) / Math.max(1, scrollRange)));
+    const enterProgress = pinnedProgress * pinnedProgress;
+    const exitRange = Math.max(140, Math.min(240, window.innerHeight * 0.24));
+    const exitProgressRaw = Math.max(0, Math.min(1, (navH - scrollRange - rect.top) / exitRange));
+    const exitProgress = 1 - Math.pow(1 - exitProgressRaw, 3);
+    const x = leftPad - alignTravel * enterProgress - exitTravel * exitProgress;
     section.style.setProperty('--lb-mobile-x', x.toFixed(2) + 'px');
+    section.style.setProperty('--lb-mobile-card-y', '0px');
   }
 
   function renderLb(key='allTimeWin') {
