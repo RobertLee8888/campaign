@@ -15020,8 +15020,8 @@
       return {
         persona,
         hue,
-        strong: hsla(hue, sat, light, 0.24),
-        soft: hsla(hue + 24, sat - 7, light + 4, 0.10)
+        strong: hsla(hue, sat, light, 0.40),
+        soft: hsla(hue + 24, sat - 7, light + 4, 0.18)
       };
     }
 
@@ -15395,7 +15395,7 @@
                 '<div class="mq-meta"><b>' + name + '</b><span>' + handle + '</span></div>' +
               '</div>' +
               '<div class="mq-winrate">' +
-                '<span class="mq-winrate-pct" style="color:' + pctColor + '">' + winRate + '%</span>' +
+                '<span class="mq-winrate-main"><span class="mq-winrate-title">Win rate</span><span class="mq-winrate-pct" style="color:' + pctColor + '">' + winRate + '%</span></span>' +
                 '<span class="mq-winrate-sub"><span class="mq-signal-label">signals</span><span class="mq-signal-count">' + winCalls + '/' + totalCalls + '</span></span>' +
               '</div>' +
             '</div>' +
