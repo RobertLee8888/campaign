@@ -1159,9 +1159,10 @@
   }
   @media (min-width: 761px) and (max-width: 1512px), (min-width: 761px) and (max-height: 982px) {
     .stage.stage-marquee {
-      height: calc(100svh - var(--nav-h));
-      min-height: 0;
-      max-height: none;
+      --s2-section-h: calc(100svh - var(--nav-h));
+      height: var(--s2-section-h);
+      min-height: var(--s2-section-h);
+      max-height: var(--s2-section-h);
     }
   }
   /* (3.0 round 43 — S2 background animation removed entirely after
@@ -2177,7 +2178,7 @@
   .mq-card .mq-profile {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
   }
   .mq-card .mq-id {
@@ -2212,10 +2213,24 @@
   }
   .mq-card .mq-winrate {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 10px;
-    margin: 8px 0 0;
+    margin: 5px 0 0;
     line-height: 1;
+  }
+  .mq-card .mq-winrate-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .mq-card .mq-winrate-title {
+    font-family: var(--font);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.11em;
+    color: rgba(255, 255, 255, 0.62);
+    text-transform: uppercase;
   }
   .mq-card .mq-winrate-pct {
     font-family: var(--font);
@@ -2230,10 +2245,11 @@
     justify-content: center;
     gap: 3px;
     font-family: var(--font-mono);
-    color: rgba(255, 255, 255, 0.58);
+    color: rgba(255, 255, 255, 0.76);
     letter-spacing: 0.02em;
     white-space: nowrap;
     line-height: 1;
+    padding-bottom: 3px;
   }
   .mq-card .mq-signal-label {
     font-size: 10px;
@@ -7719,18 +7735,19 @@
     .stage.stage-marquee {
       --s2-card-w: min(330px, calc(100vw - 64px));
       --s2-card-h: calc(var(--s2-card-w) / 1.91);
-      --s2-content-gap: 20px;
+      --s2-content-gap: var(--section-title-content-gap);
       --s2-row-gap: clamp(7px, 1.4svh, 10px);
-      --s2-pad-top: clamp(34px, 5.4svh, 48px);
-      --s2-pad-bottom: var(--s2-pad-top);
+      --s2-pad-top: var(--section-top-pad);
+      --s2-pad-bottom: var(--section-bottom-pad);
+      --s2-section-h: calc(100svh - var(--nav-h));
       display: flex;
       justify-content: center;
       padding: var(--s2-pad-top) 0 var(--s2-pad-bottom);
-      height: calc(100svh - var(--nav-h));
-      max-height: none;
-      min-height: 0;
+      height: var(--s2-section-h);
+      min-height: var(--s2-section-h);
+      max-height: var(--s2-section-h);
       overflow-x: clip;
-      overflow-y: hidden;
+      overflow-y: visible;
     }
     .stage-marquee .stage-header {
       padding: 0 18px;
@@ -8716,11 +8733,14 @@
     .stage.stage-marquee {
       --s2-content-gap: var(--section-title-content-gap);
       --s2-row-gap: clamp(7px, 1.4svh, 10px);
+      --s2-section-h: calc(100svh - var(--nav-h));
       justify-content: flex-start !important;
-      height: calc(100svh - var(--nav-h)) !important;
+      height: var(--s2-section-h) !important;
+      min-height: var(--s2-section-h) !important;
+      max-height: var(--s2-section-h) !important;
       padding-top: var(--s2-pad-top) !important;
       padding-bottom: var(--s2-pad-bottom) !important;
-      overflow-y: hidden !important;
+      overflow-y: visible !important;
     }
     .stage-marquee .card-marquee {
       gap: var(--s2-row-gap) !important;
@@ -14935,19 +14955,75 @@
     // helper, so expose it globally.
     window._tickerLogoUrl = tickerLogoUrl;
 
-    // Per-card corner-gradient palette (mirrors the results-modal card
-    // treatment). Picked deterministically per card so identity stays
-    // stable across reloads.
-    const CARD_TINTS = [
-      'rgba(88,195,198,0.22)',   // alva teal
-      'rgba(122,211,214,0.22)',   // alva-hi
-      'rgba(179,136,255,0.22)',  // purple
-      'rgba(255,138,76,0.20)',   // orange
-      'rgba(96,165,250,0.20)',   // blue
-      'rgba(255,158,200,0.22)',  // pink
-      'rgba(110,231,183,0.20)',  // mint
-      'rgba(255,200,76,0.18)',   // amber
-    ];
+    // Name-driven visual persona tint. This is deliberately a visual
+    // archetype, not a real personality inference: name sound/shape gives
+    // us stable style cues, then color-emotion research keeps the hue in a
+    // plausible range for the card's perceived energy.
+    const KOL_PERSONA_HUES = {
+      analytical:  { hue: 205, sat: 42, light: 55 },
+      steady:      { hue: 166, sat: 44, light: 52 },
+      kinetic:     { hue: 32,  sat: 55, light: 55 },
+      assertive:   { hue: 352, sat: 52, light: 57 },
+      imaginative: { hue: 270, sat: 46, light: 59 },
+      strategic:   { hue: 228, sat: 44, light: 56 }
+    };
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+    function wrapHue(h) { return ((h % 360) + 360) % 360; }
+    function hsla(h, s, l, a) {
+      return 'hsla(' + Math.round(wrapHue(h)) + ', ' + Math.round(s) + '%, ' + Math.round(l) + '%, ' + a + ')';
+    }
+    function kolPersonaTint(name, handle) {
+      const rawName = String(name || '').trim() || String(handle || '').replace(/^@/, '').trim() || 'kol';
+      const seed = rawName + '|' + String(handle || '');
+      const normalized = rawName.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const latin = normalized.replace(/[^a-z]/g, '');
+      const chars = Array.from(normalized.replace(/\s+/g, ''));
+      const totalChars = Math.max(1, chars.length);
+      const latinLen = Math.max(1, latin.length);
+      const first = latin.charAt(0);
+      const vowels = (latin.match(/[aeiouy]/g) || []).length;
+      const hard = (latin.match(/[bdgkpqtxz]/g) || []).length;
+      const soft = (latin.match(/[flmnrsvwh]/g) || []).length;
+      const rare = (latin.match(/[jqxzvk]/g) || []).length;
+      const nonLatin = chars.reduce((n, ch) => n + (/^[a-z0-9_@.-]$/.test(ch) ? 0 : 1), 0);
+      const startsHard = /[bdgkpqtxzc]/.test(first) ? 1 : 0;
+      const startsSoft = /[flmnrsvwhy]/.test(first) ? 1 : 0;
+      const startsVowel = /[aeiou]/.test(first) ? 1 : 0;
+      const r = rand('persona|' + seed);
+      const vowelRatio = vowels / latinLen;
+      const hardRatio = hard / latinLen;
+      const softRatio = soft / latinLen;
+      const rareRatio = rare / latinLen;
+      const nonLatinRatio = nonLatin / totalChars;
+      const shortness = clamp((8 - latin.length) / 8, 0, 1);
+      const lengthFocus = clamp((latin.length - 6) / 16, 0, 1);
+      const energy = clamp(0.24 + hardRatio * 0.52 + shortness * 0.13 + r() * 0.20, 0, 1);
+      const warmth = clamp(0.28 + vowelRatio * 0.42 + softRatio * 0.18 - hardRatio * 0.15 + r() * 0.16, 0, 1);
+      const clarity = clamp(0.30 + (1 - vowelRatio) * 0.20 + hardRatio * 0.22 + lengthFocus * 0.14 + r() * 0.18, 0, 1);
+      const imagination = clamp(0.20 + rareRatio * 0.34 + nonLatinRatio * 0.22 + (1 - Math.abs(vowelRatio - 0.45) * 2) * 0.14 + r() * 0.18, 0, 1);
+      const scores = {
+        analytical:  clarity * 0.44 + (1 - warmth) * 0.18 + lengthFocus * 0.12 + r() * 0.16,
+        steady:      warmth * 0.36 + softRatio * 0.30 + startsSoft * 0.18 + (1 - energy) * 0.08 + r() * 0.08,
+        kinetic:     energy * 0.34 + startsHard * 0.20 + vowelRatio * 0.16 + shortness * 0.14 + r() * 0.16,
+        assertive:   hardRatio * 0.36 + startsHard * 0.22 + energy * 0.24 + (1 - warmth) * 0.08 + r() * 0.10,
+        imaginative: imagination * 0.36 + startsVowel * 0.20 + rareRatio * 0.22 + nonLatinRatio * 0.14 + r() * 0.08,
+        strategic:   lengthFocus * 0.26 + clarity * 0.34 + (1 - vowelRatio) * 0.12 + r() * 0.14
+      };
+      let persona = 'steady';
+      Object.keys(scores).forEach(key => {
+        if (scores[key] > scores[persona]) persona = key;
+      });
+      const base = KOL_PERSONA_HUES[persona];
+      const hue = wrapHue(base.hue + (r() - 0.5) * 30 + (warmth - 0.5) * 10 - (clarity - 0.5) * 6);
+      const sat = clamp(base.sat + (energy - 0.5) * 10 + (r() - 0.5) * 6, 34, 62);
+      const light = clamp(base.light + (warmth - 0.5) * 6 + (r() - 0.5) * 4, 46, 62);
+      return {
+        persona,
+        hue,
+        strong: hsla(hue, sat, light, 0.24),
+        soft: hsla(hue + 24, sat - 7, light + 4, 0.10)
+      };
+    }
 
     function fmtPct(v) { return (v > 0 ? '+' : '') + v.toFixed(0) + '%'; }
     function pad2(n) { return n < 10 ? '0' + n : '' + n; }
@@ -15077,13 +15153,10 @@
       return svgMarkup + axisMarkup + dotMarkup + chipMarkup;
     }
 
-    // donut ring color picks up the win-rate tier so the deck shows
-    // visible chromatic variation across the 32 cards.
-    function donutColor(pct) {
-      if (pct >= 65) return '#5BD9DD';   // strong → alva-hi
-      if (pct >= 50) return '#3CC2C6';   // mid → alva
-      if (pct >= 42) return '#ff8a4c';   // ok → orange
-      return '#b388ff';                  // low → purple
+    function winRateColor(pct) {
+      if (pct > 70) return '#22c55e';    // >70% green
+      if (pct > 50) return '#60a5fa';    // 51-70% blue
+      return '#facc15';                  // <=50% yellow
     }
     function alvaWordmarkHtml() {
       const sourceLogo = document.querySelector('.f-brand .f-logo') || document.querySelector('.brand .brand-mark');
@@ -15295,17 +15368,19 @@
       }
 
       const callsHtml = tickers.map((tk, i) => compactCallHtml(tk, tickerRois[i])).join('');
-      const pctColor = donutColor(winRate);
+      const pctColor = winRateColor(winRate);
       const bestRoi = Math.max(...tickerRois);
       const themePool = ['US Equities', 'AI Infra', 'Macro', 'Semis', 'Crypto', 'Energy', 'Momentum', 'Value'];
       const category = (src.theme || '').trim() || themePool[Math.floor(rng() * themePool.length)];
       const rank = Math.max(1, Math.min(12, Math.round((88 - winRate) / 5 + rng() * 2)));
       const rankSentence = 'Ranked #' + rank + ' in ' + category;
       const chartHtml = makeChart(rng, bestRoi);
-      const tint = CARD_TINTS[Math.floor(rng() * CARD_TINTS.length)];
+      const tint = kolPersonaTint(name, handle);
+      card.dataset.visualPersona = tint.persona;
+      card.style.setProperty('--mq-persona-hue', Math.round(tint.hue));
       card.style.setProperty('--mq-rank-color', rankColor(rank));
       card.style.background =
-        'linear-gradient(135deg, ' + tint + ' 0%, rgba(255,255,255,0) 60%), #1f1f29';
+        'linear-gradient(135deg, ' + tint.strong + ' 0%, ' + tint.soft + ' 42%, rgba(255,255,255,0) 68%), #1f1f29';
 
       card.innerHTML =
         // 4.4 — unified KOL card: top split left/right, middle ROI,
@@ -15461,7 +15536,6 @@
 
       if (mobile || compactDesktop) {
         const viewportW = document.documentElement.clientWidth || window.innerWidth;
-        const maxWForThree = Math.max(MIN_BASE_H * ASPECT, (viewportW - rowGap * 2 - 4) / 3);
         const maxWForMobile = Math.max(MIN_BASE_H * ASPECT, viewportW - 64);
         const visibleRows = Array.from(stage.querySelectorAll('.marquee-row'))
           .filter(row => getComputedStyle(row).display !== 'none');
@@ -15472,25 +15546,11 @@
         const headerH = header.getBoundingClientRect().height;
         const availableForRows = stage.clientHeight - padTop - padBottom -
           headerH - sectionGap - rowGap * Math.max(0, rowCount - 1);
-        const maxHForBottomPad = Math.max(MIN_BASE_H, availableForRows / rowCount);
-        const maxHForWidth = (mobile ? maxWForMobile : maxWForThree) / ASPECT;
-        baseH = Math.max(MIN_BASE_H, Math.min(MAX_BASE_H, maxHForBottomPad, maxHForWidth));
+        const maxHForRows = Math.max(MIN_BASE_H, availableForRows / rowCount);
+        const maxHForWidth = mobile ? maxWForMobile / ASPECT : Number.POSITIVE_INFINITY;
+        baseH = Math.max(MIN_BASE_H, Math.min(MAX_BASE_H, maxHForRows, maxHForWidth));
         cardW = baseH * ASPECT;
-
-        if (mobile) {
-          stage.style.setProperty('--s2-content-gap', sectionGap.toFixed(2) + 'px');
-        } else {
-          const contentGapForBottomPad = stage.clientHeight - padTop - padBottom -
-            headerH - rowGap * Math.max(0, rowCount - 1) - baseH * rowCount;
-          stage.style.setProperty(
-            '--s2-content-gap',
-            Math.max(sectionGap, contentGapForBottomPad).toFixed(2) + 'px'
-          );
-        }
-        if (!mobile && cardW > maxWForThree) {
-          cardW = maxWForThree;
-          baseH = cardW / ASPECT;
-        }
+        stage.style.setProperty('--s2-content-gap', sectionGap.toFixed(2) + 'px');
       } else {
         stage.style.removeProperty('--s2-content-gap');
       }
