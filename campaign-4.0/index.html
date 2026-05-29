@@ -4808,14 +4808,14 @@
     }
   }
 
-  /* Mobile fallback — pin doesn't make sense on narrow screens; the
+  /* Mobile fallback — pin doesn't make sense on handheld screens; the
      section collapses to a static stack. 3.0 round 19 — since each tab
      now carries its own detail (subtitle + CTA), and the right-column
      cards only carry the visual cover, mobile shows ALL tab items as
      "open" (every detail visible) and all card covers stacked beneath.
      Reading order: tab title + subtitle + CTA list on top, card covers
      after — the cover is then a visual recap of each use case. */
-  @media (max-width: 900px) {
+  @media (max-width: 760px) {
     /* ====== AGENTS / USE CASES SECTION — mobile rebuild ======
        Per user feedback (2026-05-25): "第三个 section 在移动端不要 tab,
        改成图+文+按钮 直接纵向往下排. 而且这个 section 左右要撑满."
@@ -14335,7 +14335,7 @@
      clones. Idempotent — checks for a `.mobile-clone` marker so it
      never injects twice. */
   (function setupAgentsMobile() {
-    const MQ = '(max-width: 900px)';
+    const MQ = '(max-width: 760px)';
     function sync() {
       const isMobile = window.matchMedia(MQ).matches;
       const tabs = document.querySelectorAll('.agents-tab-item');
@@ -15816,7 +15816,7 @@
     const N = cards.length;
     if (!track || !N) return;
 
-    const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+    const isMobile = () => window.matchMedia('(max-width: 760px)').matches;
     const isCompactPin = () => window.matchMedia('(min-width: 901px) and (max-width: 1512px), (min-width: 901px) and (max-height: 982px)').matches;
     const navH = () => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 65;
     const COMPACT_ENTRY_START = 0.02;
