@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ALVA · The FinTwit Alpha League — backtested rankings</title>
+<title>FINTWIT ALPHA LEAGUE</title>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg" />
 <meta name="description" content="Alva backtests every public call from FinTwit's most-followed Traders and ranks them by real returns. Wins, misses, even deleted posts." />
 <!-- 3.0 round 6 — Brand-wide swap to Delight (9 weights, locally hosted).
      Google Fonts links removed; Delight covers 100..900 so it replaces
@@ -1111,7 +1112,7 @@
   .stage.stage-marquee {
     --s2-pad-top: var(--section-top-pad);
     --s2-pad-bottom: var(--section-bottom-pad);
-    --s2-content-gap: calc(var(--section-title-content-gap) + 24px);
+    --s2-content-gap: var(--section-title-content-gap);
     --s2-row-gap: clamp(14px, 2.8vh, 24px);
     --s2-card-h: 283px;
     --s2-card-w: 540px;
@@ -1159,9 +1160,10 @@
   }
   @media (min-width: 761px) and (max-width: 1512px), (min-width: 761px) and (max-height: 982px) {
     .stage.stage-marquee {
-      height: calc(100svh - var(--nav-h));
-      min-height: 0;
-      max-height: none;
+      --s2-section-h: calc(100svh - var(--nav-h));
+      height: var(--s2-section-h);
+      min-height: var(--s2-section-h);
+      max-height: var(--s2-section-h);
     }
   }
   /* (3.0 round 43 — S2 background animation removed entirely after
@@ -2177,7 +2179,7 @@
   .mq-card .mq-profile {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
   }
   .mq-card .mq-id {
@@ -2212,10 +2214,24 @@
   }
   .mq-card .mq-winrate {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 10px;
-    margin: 8px 0 0;
+    margin: 5px 0 0;
     line-height: 1;
+  }
+  .mq-card .mq-winrate-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .mq-card .mq-winrate-title {
+    font-family: var(--font);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.11em;
+    color: rgba(255, 255, 255, 0.62);
+    text-transform: uppercase;
   }
   .mq-card .mq-winrate-pct {
     font-family: var(--font);
@@ -2230,21 +2246,22 @@
     justify-content: center;
     gap: 3px;
     font-family: var(--font-mono);
-    color: rgba(255, 255, 255, 0.58);
+    color: rgba(255, 255, 255, 0.76);
     letter-spacing: 0.02em;
     white-space: nowrap;
     line-height: 1;
+    padding-bottom: 3px;
   }
   .mq-card .mq-signal-label {
     font-size: 10px;
     letter-spacing: 0.11em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.44);
+    color: inherit;
   }
   .mq-card .mq-signal-count {
     font-size: 18px;
     letter-spacing: -0.03em;
-    color: rgba(255, 255, 255, 0.72);
+    color: inherit;
   }
   .mq-card .mq-calls {
     display: flex;
@@ -4758,8 +4775,7 @@
       transition: none;
     }
     #agents.compact-pin-active .agents-section-head {
-      opacity: var(--agents-head-opacity, 0);
-      transform: translateY(var(--agents-head-y, -28px));
+      transform: translateY(var(--agents-head-y, 0px));
     }
     #agents .agents-side {
       padding-top: var(--agents-content-top);
@@ -4795,14 +4811,14 @@
     }
   }
 
-  /* Mobile fallback — pin doesn't make sense on narrow screens; the
+  /* Mobile fallback — pin doesn't make sense on handheld screens; the
      section collapses to a static stack. 3.0 round 19 — since each tab
      now carries its own detail (subtitle + CTA), and the right-column
      cards only carry the visual cover, mobile shows ALL tab items as
      "open" (every detail visible) and all card covers stacked beneath.
      Reading order: tab title + subtitle + CTA list on top, card covers
      after — the cover is then a visual recap of each use case. */
-  @media (max-width: 900px) {
+  @media (max-width: 760px) {
     /* ====== AGENTS / USE CASES SECTION — mobile rebuild ======
        Per user feedback (2026-05-25): "第三个 section 在移动端不要 tab,
        改成图+文+按钮 直接纵向往下排. 而且这个 section 左右要撑满."
@@ -7719,18 +7735,19 @@
     .stage.stage-marquee {
       --s2-card-w: min(330px, calc(100vw - 64px));
       --s2-card-h: calc(var(--s2-card-w) / 1.91);
-      --s2-content-gap: 20px;
+      --s2-content-gap: var(--section-title-content-gap);
       --s2-row-gap: clamp(7px, 1.4svh, 10px);
-      --s2-pad-top: clamp(34px, 5.4svh, 48px);
-      --s2-pad-bottom: var(--s2-pad-top);
+      --s2-pad-top: var(--section-top-pad);
+      --s2-pad-bottom: var(--section-bottom-pad);
+      --s2-section-h: calc(100svh - var(--nav-h));
       display: flex;
       justify-content: center;
       padding: var(--s2-pad-top) 0 var(--s2-pad-bottom);
-      height: calc(100svh - var(--nav-h));
-      max-height: none;
-      min-height: 0;
+      height: var(--s2-section-h);
+      min-height: var(--s2-section-h);
+      max-height: var(--s2-section-h);
       overflow-x: clip;
-      overflow-y: hidden;
+      overflow-y: visible;
     }
     .stage-marquee .stage-header {
       padding: 0 18px;
@@ -8716,11 +8733,14 @@
     .stage.stage-marquee {
       --s2-content-gap: var(--section-title-content-gap);
       --s2-row-gap: clamp(7px, 1.4svh, 10px);
+      --s2-section-h: calc(100svh - var(--nav-h));
       justify-content: flex-start !important;
-      height: calc(100svh - var(--nav-h)) !important;
+      height: var(--s2-section-h) !important;
+      min-height: var(--s2-section-h) !important;
+      max-height: var(--s2-section-h) !important;
       padding-top: var(--s2-pad-top) !important;
       padding-bottom: var(--s2-pad-bottom) !important;
-      overflow-y: hidden !important;
+      overflow-y: visible !important;
     }
     .stage-marquee .card-marquee {
       gap: var(--s2-row-gap) !important;
@@ -9105,8 +9125,8 @@
 	      padding: 3px 10px !important;
 	    }
 	  }
-	  @media (max-width: 380px) {
-	    .opening h1 { font-size: 30px; }
+  @media (max-width: 380px) {
+    .opening h1 { font-size: 30px; }
     .opening-sub { font-size: 14px; }
     .nav-cta { font-size: 13px !important; }
 
@@ -9120,6 +9140,239 @@
     .cant-find-sub,
     .dialog-full .dialog-lead { font-size: 12px !important; }
     .connect-perms { font-size: 12px !important; }
+  }
+
+  /* Mobile modal pass — one consistent sheet system for every popup. */
+  @media (max-width: 760px) {
+    .modal {
+      padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) !important;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .modal .dialog:not(.dialog-full) {
+      width: 100% !important;
+      max-width: none !important;
+      max-height: calc(100svh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+      padding: 32px 20px 24px !important;
+      border-radius: 10px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      box-sizing: border-box;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .modal .dialog-head {
+      gap: 12px;
+      padding-right: 44px !important;
+    }
+
+    .modal .close {
+      top: 8px;
+      right: 8px;
+      width: 44px;
+      height: 44px;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .modal .close i {
+      font-size: 18px;
+    }
+
+    .modal .eyebrow {
+      margin-bottom: -4px;
+    }
+
+    .search-dialog,
+    .connect-stage,
+    .fk-state {
+      gap: 16px;
+    }
+
+    :is(.fk-headline, .connect-dialog .connect-title, .cant-find-headline, .dialog-full .dialog-head h3) {
+      font-size: clamp(22px, 6.3vw, 30px) !important;
+      line-height: 1.14 !important;
+    }
+
+    :is(.modal .dialog p, .fk-result-body, .connect-dialog .connect-sub, .cant-find-sub, .dialog-full .dialog-lead) {
+      font-size: 13px !important;
+      line-height: 1.48 !important;
+    }
+
+    :is(.search-form, .modal .bcard-form, .fk-form) {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    :is(.search-form input, .fk-form input, .modal .bcard-form input),
+    #paste-handles-form textarea {
+      width: 100% !important;
+      min-width: 0 !important;
+      flex: 1 1 auto;
+      box-sizing: border-box;
+    }
+
+    :is(.search-form, .fk-form, .modal .bcard-form, .dialog-actions, .fk-actions) .btn-primary,
+    #paste-handles-form .btn-primary {
+      width: 100%;
+      min-height: 44px;
+      justify-content: center;
+      align-self: stretch !important;
+    }
+
+    :is(.dialog-actions, .fk-actions) {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    :is(.dialog-actions .dialog-ghost, .dialog-actions .fk-secondary, .fk-actions .fk-secondary) {
+      width: 100%;
+      min-height: 40px;
+      align-self: stretch;
+      justify-content: center;
+    }
+
+    .connect-perms {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dialog .steps {
+      margin-top: 18px;
+    }
+
+    .step {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      padding: 14px 0;
+    }
+
+    .notice {
+      margin-top: 16px;
+      padding-top: 14px;
+    }
+
+    #modal-for-kols.modal {
+      gap: 10px;
+    }
+
+    .fk-demo-hint {
+      display: none !important;
+    }
+
+    .fk-card-wrap {
+      margin: 0;
+    }
+
+    .fk-card-wrap .mq-card.fk-preview-card {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    #modal-results.modal.modal-full {
+      padding: 0 !important;
+      align-items: stretch;
+      justify-content: stretch;
+    }
+
+    #modal-results .dialog-full {
+      width: 100% !important;
+      height: 100svh !important;
+      max-height: none !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+    }
+
+    #modal-results .dialog-full > .dialog-scroll {
+      padding: calc(56px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom)) !important;
+      gap: 14px !important;
+      scrollbar-gutter: auto;
+    }
+
+    #modal-results .dialog-full-close {
+      top: calc(8px + env(safe-area-inset-top));
+      right: 8px;
+      width: 44px;
+      height: 44px;
+    }
+
+    #modal-results .results-grid {
+      width: 100%;
+      grid-template-columns: minmax(0, 1fr) !important;
+      justify-content: stretch;
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    #modal-results .results-grid > .result-card-wrap,
+    #modal-results .results-grid .mq-card,
+    #modal-results .results-grid .card {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    .results-privacy {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 8px;
+      align-items: flex-start;
+      box-sizing: border-box;
+    }
+
+    .results-request {
+      margin-top: 40px;
+      border-radius: 10px;
+    }
+
+    .results-request .bcard {
+      padding: 22px 16px;
+    }
+
+    .results-request .bcard-form {
+      max-width: none;
+    }
+
+    #modal-card-detail.modal {
+      padding: 0 !important;
+    }
+
+    #modal-card-detail .cd-stage {
+      box-sizing: border-box;
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    #modal-card-detail .cd-anchor,
+    #modal-card-detail .cd-left-col,
+    #modal-card-detail .cd-share {
+      max-width: min(360px, 100%);
+    }
+
+    #modal-card-detail .share-method {
+      width: 100%;
+      min-height: 44px;
+      justify-content: center;
+    }
+
+    #modal-card-detail .cd-more {
+      padding: 18px;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .modal .dialog:not(.dialog-full) {
+      padding: 28px 18px 22px !important;
+    }
+
+    #modal-results .dialog-full > .dialog-scroll {
+      padding-left: 14px !important;
+      padding-right: 14px !important;
+    }
   }
 
   /* Leaderboard · aurora replaces the static cone halo */
@@ -14088,7 +14341,7 @@
      clones. Idempotent — checks for a `.mobile-clone` marker so it
      never injects twice. */
   (function setupAgentsMobile() {
-    const MQ = '(max-width: 900px)';
+    const MQ = '(max-width: 760px)';
     function sync() {
       const isMobile = window.matchMedia(MQ).matches;
       const tabs = document.querySelectorAll('.agents-tab-item');
@@ -14935,19 +15188,75 @@
     // helper, so expose it globally.
     window._tickerLogoUrl = tickerLogoUrl;
 
-    // Per-card corner-gradient palette (mirrors the results-modal card
-    // treatment). Picked deterministically per card so identity stays
-    // stable across reloads.
-    const CARD_TINTS = [
-      'rgba(88,195,198,0.22)',   // alva teal
-      'rgba(122,211,214,0.22)',   // alva-hi
-      'rgba(179,136,255,0.22)',  // purple
-      'rgba(255,138,76,0.20)',   // orange
-      'rgba(96,165,250,0.20)',   // blue
-      'rgba(255,158,200,0.22)',  // pink
-      'rgba(110,231,183,0.20)',  // mint
-      'rgba(255,200,76,0.18)',   // amber
-    ];
+    // Name-driven visual persona tint. This is deliberately a visual
+    // archetype, not a real personality inference: name sound/shape gives
+    // us stable style cues, then color-emotion research keeps the hue in a
+    // plausible range for the card's perceived energy.
+    const KOL_PERSONA_HUES = {
+      analytical:  { hue: 205, sat: 42, light: 55 },
+      steady:      { hue: 166, sat: 44, light: 52 },
+      kinetic:     { hue: 32,  sat: 55, light: 55 },
+      assertive:   { hue: 352, sat: 52, light: 57 },
+      imaginative: { hue: 270, sat: 46, light: 59 },
+      strategic:   { hue: 228, sat: 44, light: 56 }
+    };
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+    function wrapHue(h) { return ((h % 360) + 360) % 360; }
+    function hsla(h, s, l, a) {
+      return 'hsla(' + Math.round(wrapHue(h)) + ', ' + Math.round(s) + '%, ' + Math.round(l) + '%, ' + a + ')';
+    }
+    function kolPersonaTint(name, handle) {
+      const rawName = String(name || '').trim() || String(handle || '').replace(/^@/, '').trim() || 'kol';
+      const seed = rawName + '|' + String(handle || '');
+      const normalized = rawName.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const latin = normalized.replace(/[^a-z]/g, '');
+      const chars = Array.from(normalized.replace(/\s+/g, ''));
+      const totalChars = Math.max(1, chars.length);
+      const latinLen = Math.max(1, latin.length);
+      const first = latin.charAt(0);
+      const vowels = (latin.match(/[aeiouy]/g) || []).length;
+      const hard = (latin.match(/[bdgkpqtxz]/g) || []).length;
+      const soft = (latin.match(/[flmnrsvwh]/g) || []).length;
+      const rare = (latin.match(/[jqxzvk]/g) || []).length;
+      const nonLatin = chars.reduce((n, ch) => n + (/^[a-z0-9_@.-]$/.test(ch) ? 0 : 1), 0);
+      const startsHard = /[bdgkpqtxzc]/.test(first) ? 1 : 0;
+      const startsSoft = /[flmnrsvwhy]/.test(first) ? 1 : 0;
+      const startsVowel = /[aeiou]/.test(first) ? 1 : 0;
+      const r = rand('persona|' + seed);
+      const vowelRatio = vowels / latinLen;
+      const hardRatio = hard / latinLen;
+      const softRatio = soft / latinLen;
+      const rareRatio = rare / latinLen;
+      const nonLatinRatio = nonLatin / totalChars;
+      const shortness = clamp((8 - latin.length) / 8, 0, 1);
+      const lengthFocus = clamp((latin.length - 6) / 16, 0, 1);
+      const energy = clamp(0.24 + hardRatio * 0.52 + shortness * 0.13 + r() * 0.20, 0, 1);
+      const warmth = clamp(0.28 + vowelRatio * 0.42 + softRatio * 0.18 - hardRatio * 0.15 + r() * 0.16, 0, 1);
+      const clarity = clamp(0.30 + (1 - vowelRatio) * 0.20 + hardRatio * 0.22 + lengthFocus * 0.14 + r() * 0.18, 0, 1);
+      const imagination = clamp(0.20 + rareRatio * 0.34 + nonLatinRatio * 0.22 + (1 - Math.abs(vowelRatio - 0.45) * 2) * 0.14 + r() * 0.18, 0, 1);
+      const scores = {
+        analytical:  clarity * 0.44 + (1 - warmth) * 0.18 + lengthFocus * 0.12 + r() * 0.16,
+        steady:      warmth * 0.36 + softRatio * 0.30 + startsSoft * 0.18 + (1 - energy) * 0.08 + r() * 0.08,
+        kinetic:     energy * 0.34 + startsHard * 0.20 + vowelRatio * 0.16 + shortness * 0.14 + r() * 0.16,
+        assertive:   hardRatio * 0.36 + startsHard * 0.22 + energy * 0.24 + (1 - warmth) * 0.08 + r() * 0.10,
+        imaginative: imagination * 0.36 + startsVowel * 0.20 + rareRatio * 0.22 + nonLatinRatio * 0.14 + r() * 0.08,
+        strategic:   lengthFocus * 0.26 + clarity * 0.34 + (1 - vowelRatio) * 0.12 + r() * 0.14
+      };
+      let persona = 'steady';
+      Object.keys(scores).forEach(key => {
+        if (scores[key] > scores[persona]) persona = key;
+      });
+      const base = KOL_PERSONA_HUES[persona];
+      const hue = wrapHue(base.hue + (r() - 0.5) * 30 + (warmth - 0.5) * 10 - (clarity - 0.5) * 6);
+      const sat = clamp(base.sat + (energy - 0.5) * 10 + (r() - 0.5) * 6, 34, 62);
+      const light = clamp(base.light + (warmth - 0.5) * 6 + (r() - 0.5) * 4, 46, 62);
+      return {
+        persona,
+        hue,
+        strong: hsla(hue, sat, light, 0.24),
+        soft: hsla(hue + 24, sat - 7, light + 4, 0.10)
+      };
+    }
 
     function fmtPct(v) { return (v > 0 ? '+' : '') + v.toFixed(0) + '%'; }
     function pad2(n) { return n < 10 ? '0' + n : '' + n; }
@@ -15077,13 +15386,10 @@
       return svgMarkup + axisMarkup + dotMarkup + chipMarkup;
     }
 
-    // donut ring color picks up the win-rate tier so the deck shows
-    // visible chromatic variation across the 32 cards.
-    function donutColor(pct) {
-      if (pct >= 65) return '#5BD9DD';   // strong → alva-hi
-      if (pct >= 50) return '#3CC2C6';   // mid → alva
-      if (pct >= 42) return '#ff8a4c';   // ok → orange
-      return '#b388ff';                  // low → purple
+    function winRateColor(pct) {
+      if (pct > 70) return '#22c55e';    // >70% green
+      if (pct > 50) return '#60a5fa';    // 51-70% blue
+      return '#facc15';                  // <=50% yellow
     }
     function alvaWordmarkHtml() {
       const sourceLogo = document.querySelector('.f-brand .f-logo') || document.querySelector('.brand .brand-mark');
@@ -15295,17 +15601,19 @@
       }
 
       const callsHtml = tickers.map((tk, i) => compactCallHtml(tk, tickerRois[i])).join('');
-      const pctColor = donutColor(winRate);
+      const pctColor = winRateColor(winRate);
       const bestRoi = Math.max(...tickerRois);
       const themePool = ['US Equities', 'AI Infra', 'Macro', 'Semis', 'Crypto', 'Energy', 'Momentum', 'Value'];
       const category = (src.theme || '').trim() || themePool[Math.floor(rng() * themePool.length)];
       const rank = Math.max(1, Math.min(12, Math.round((88 - winRate) / 5 + rng() * 2)));
       const rankSentence = 'Ranked #' + rank + ' in ' + category;
       const chartHtml = makeChart(rng, bestRoi);
-      const tint = CARD_TINTS[Math.floor(rng() * CARD_TINTS.length)];
+      const tint = kolPersonaTint(name, handle);
+      card.dataset.visualPersona = tint.persona;
+      card.style.setProperty('--mq-persona-hue', Math.round(tint.hue));
       card.style.setProperty('--mq-rank-color', rankColor(rank));
       card.style.background =
-        'linear-gradient(135deg, ' + tint + ' 0%, rgba(255,255,255,0) 60%), #1f1f29';
+        'linear-gradient(135deg, ' + tint.strong + ' 0%, ' + tint.soft + ' 42%, rgba(255,255,255,0) 68%), #1f1f29';
 
       card.innerHTML =
         // 4.4 — unified KOL card: top split left/right, middle ROI,
@@ -15320,7 +15628,7 @@
                 '<div class="mq-meta"><b>' + name + '</b><span>' + handle + '</span></div>' +
               '</div>' +
               '<div class="mq-winrate">' +
-                '<span class="mq-winrate-pct" style="color:' + pctColor + '">' + winRate + '%</span>' +
+                '<span class="mq-winrate-main"><span class="mq-winrate-title">Win rate</span><span class="mq-winrate-pct" style="color:' + pctColor + '">' + winRate + '%</span></span>' +
                 '<span class="mq-winrate-sub"><span class="mq-signal-label">signals</span><span class="mq-signal-count">' + winCalls + '/' + totalCalls + '</span></span>' +
               '</div>' +
             '</div>' +
@@ -15461,7 +15769,6 @@
 
       if (mobile || compactDesktop) {
         const viewportW = document.documentElement.clientWidth || window.innerWidth;
-        const maxWForThree = Math.max(MIN_BASE_H * ASPECT, (viewportW - rowGap * 2 - 4) / 3);
         const maxWForMobile = Math.max(MIN_BASE_H * ASPECT, viewportW - 64);
         const visibleRows = Array.from(stage.querySelectorAll('.marquee-row'))
           .filter(row => getComputedStyle(row).display !== 'none');
@@ -15472,25 +15779,11 @@
         const headerH = header.getBoundingClientRect().height;
         const availableForRows = stage.clientHeight - padTop - padBottom -
           headerH - sectionGap - rowGap * Math.max(0, rowCount - 1);
-        const maxHForBottomPad = Math.max(MIN_BASE_H, availableForRows / rowCount);
-        const maxHForWidth = (mobile ? maxWForMobile : maxWForThree) / ASPECT;
-        baseH = Math.max(MIN_BASE_H, Math.min(MAX_BASE_H, maxHForBottomPad, maxHForWidth));
+        const maxHForRows = Math.max(MIN_BASE_H, availableForRows / rowCount);
+        const maxHForWidth = mobile ? maxWForMobile / ASPECT : Number.POSITIVE_INFINITY;
+        baseH = Math.max(MIN_BASE_H, Math.min(MAX_BASE_H, maxHForRows, maxHForWidth));
         cardW = baseH * ASPECT;
-
-        if (mobile) {
-          stage.style.setProperty('--s2-content-gap', sectionGap.toFixed(2) + 'px');
-        } else {
-          const contentGapForBottomPad = stage.clientHeight - padTop - padBottom -
-            headerH - rowGap * Math.max(0, rowCount - 1) - baseH * rowCount;
-          stage.style.setProperty(
-            '--s2-content-gap',
-            Math.max(sectionGap, contentGapForBottomPad).toFixed(2) + 'px'
-          );
-        }
-        if (!mobile && cardW > maxWForThree) {
-          cardW = maxWForThree;
-          baseH = cardW / ASPECT;
-        }
+        stage.style.setProperty('--s2-content-gap', sectionGap.toFixed(2) + 'px');
       } else {
         stage.style.removeProperty('--s2-content-gap');
       }
@@ -15569,7 +15862,7 @@
     const N = cards.length;
     if (!track || !N) return;
 
-    const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+    const isMobile = () => window.matchMedia('(max-width: 760px)').matches;
     const isCompactPin = () => window.matchMedia('(min-width: 901px) and (max-width: 1512px), (min-width: 901px) and (max-height: 982px)').matches;
     const navH = () => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 65;
     const COMPACT_ENTRY_START = 0.02;
@@ -15605,7 +15898,6 @@
       if (isMobile()) {
         section.style.removeProperty('--agents-card-w');
         section.style.removeProperty('--agents-content-top');
-        section.style.removeProperty('--agents-head-opacity');
         section.style.removeProperty('--agents-head-y');
         return;
       }
@@ -15641,10 +15933,8 @@
         contentTop = clearTop + (24 - clearTop) * easedShiftP;
         cardSizingTop = clearTop;
         section.style.setProperty('--agents-content-top', Math.round(contentTop) + 'px');
-        section.style.setProperty('--agents-head-opacity', (1 - easedShiftP).toFixed(3));
-        section.style.setProperty('--agents-head-y', (-28 * easedShiftP).toFixed(2) + 'px');
+        section.style.setProperty('--agents-head-y', (-clearTop * easedShiftP).toFixed(2) + 'px');
       } else if (sectionHead) {
-        section.style.removeProperty('--agents-head-opacity');
         section.style.removeProperty('--agents-head-y');
         const headRect = sectionHead.getBoundingClientRect();
         contentTop = Math.max(0, headRect.bottom - stageRect.top + gap);
@@ -15666,7 +15956,6 @@
         section.style.setProperty('--agents-content-top', Math.round(contentTop) + 'px');
         cardSizingTop = contentTop;
       } else {
-        section.style.removeProperty('--agents-head-opacity');
         section.style.removeProperty('--agents-head-y');
       }
 
