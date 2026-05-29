@@ -9105,8 +9105,8 @@
 	      padding: 3px 10px !important;
 	    }
 	  }
-	  @media (max-width: 380px) {
-	    .opening h1 { font-size: 30px; }
+  @media (max-width: 380px) {
+    .opening h1 { font-size: 30px; }
     .opening-sub { font-size: 14px; }
     .nav-cta { font-size: 13px !important; }
 
@@ -9120,6 +9120,239 @@
     .cant-find-sub,
     .dialog-full .dialog-lead { font-size: 12px !important; }
     .connect-perms { font-size: 12px !important; }
+  }
+
+  /* Mobile modal pass — one consistent sheet system for every popup. */
+  @media (max-width: 760px) {
+    .modal {
+      padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) !important;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .modal .dialog:not(.dialog-full) {
+      width: 100% !important;
+      max-width: none !important;
+      max-height: calc(100svh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+      padding: 32px 20px 24px !important;
+      border-radius: 10px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      box-sizing: border-box;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .modal .dialog-head {
+      gap: 12px;
+      padding-right: 44px !important;
+    }
+
+    .modal .close {
+      top: 8px;
+      right: 8px;
+      width: 44px;
+      height: 44px;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .modal .close i {
+      font-size: 18px;
+    }
+
+    .modal .eyebrow {
+      margin-bottom: -4px;
+    }
+
+    .search-dialog,
+    .connect-stage,
+    .fk-state {
+      gap: 16px;
+    }
+
+    :is(.fk-headline, .connect-dialog .connect-title, .cant-find-headline, .dialog-full .dialog-head h3) {
+      font-size: clamp(22px, 6.3vw, 30px) !important;
+      line-height: 1.14 !important;
+    }
+
+    :is(.modal .dialog p, .fk-result-body, .connect-dialog .connect-sub, .cant-find-sub, .dialog-full .dialog-lead) {
+      font-size: 13px !important;
+      line-height: 1.48 !important;
+    }
+
+    :is(.search-form, .modal .bcard-form, .fk-form) {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    :is(.search-form input, .fk-form input, .modal .bcard-form input),
+    #paste-handles-form textarea {
+      width: 100% !important;
+      min-width: 0 !important;
+      flex: 1 1 auto;
+      box-sizing: border-box;
+    }
+
+    :is(.search-form, .fk-form, .modal .bcard-form, .dialog-actions, .fk-actions) .btn-primary,
+    #paste-handles-form .btn-primary {
+      width: 100%;
+      min-height: 44px;
+      justify-content: center;
+      align-self: stretch !important;
+    }
+
+    :is(.dialog-actions, .fk-actions) {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    :is(.dialog-actions .dialog-ghost, .dialog-actions .fk-secondary, .fk-actions .fk-secondary) {
+      width: 100%;
+      min-height: 40px;
+      align-self: stretch;
+      justify-content: center;
+    }
+
+    .connect-perms {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dialog .steps {
+      margin-top: 18px;
+    }
+
+    .step {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      padding: 14px 0;
+    }
+
+    .notice {
+      margin-top: 16px;
+      padding-top: 14px;
+    }
+
+    #modal-for-kols.modal {
+      gap: 10px;
+    }
+
+    .fk-demo-hint {
+      display: none !important;
+    }
+
+    .fk-card-wrap {
+      margin: 0;
+    }
+
+    .fk-card-wrap .mq-card.fk-preview-card {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    #modal-results.modal.modal-full {
+      padding: 0 !important;
+      align-items: stretch;
+      justify-content: stretch;
+    }
+
+    #modal-results .dialog-full {
+      width: 100% !important;
+      height: 100svh !important;
+      max-height: none !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+    }
+
+    #modal-results .dialog-full > .dialog-scroll {
+      padding: calc(56px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom)) !important;
+      gap: 14px !important;
+      scrollbar-gutter: auto;
+    }
+
+    #modal-results .dialog-full-close {
+      top: calc(8px + env(safe-area-inset-top));
+      right: 8px;
+      width: 44px;
+      height: 44px;
+    }
+
+    #modal-results .results-grid {
+      width: 100%;
+      grid-template-columns: minmax(0, 1fr) !important;
+      justify-content: stretch;
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    #modal-results .results-grid > .result-card-wrap,
+    #modal-results .results-grid .mq-card,
+    #modal-results .results-grid .card {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    .results-privacy {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 8px;
+      align-items: flex-start;
+      box-sizing: border-box;
+    }
+
+    .results-request {
+      margin-top: 40px;
+      border-radius: 10px;
+    }
+
+    .results-request .bcard {
+      padding: 22px 16px;
+    }
+
+    .results-request .bcard-form {
+      max-width: none;
+    }
+
+    #modal-card-detail.modal {
+      padding: 0 !important;
+    }
+
+    #modal-card-detail .cd-stage {
+      box-sizing: border-box;
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    #modal-card-detail .cd-anchor,
+    #modal-card-detail .cd-left-col,
+    #modal-card-detail .cd-share {
+      max-width: min(360px, 100%);
+    }
+
+    #modal-card-detail .share-method {
+      width: 100%;
+      min-height: 44px;
+      justify-content: center;
+    }
+
+    #modal-card-detail .cd-more {
+      padding: 18px;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .modal .dialog:not(.dialog-full) {
+      padding: 28px 18px 22px !important;
+    }
+
+    #modal-results .dialog-full > .dialog-scroll {
+      padding-left: 14px !important;
+      padding-right: 14px !important;
+    }
   }
 
   /* Leaderboard · aurora replaces the static cone halo */
