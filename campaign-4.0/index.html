@@ -1111,7 +1111,7 @@
   .stage.stage-marquee {
     --s2-pad-top: var(--section-top-pad);
     --s2-pad-bottom: var(--section-bottom-pad);
-    --s2-content-gap: calc(var(--section-title-content-gap) + 24px);
+    --s2-content-gap: var(--section-title-content-gap);
     --s2-row-gap: clamp(14px, 2.8vh, 24px);
     --s2-card-h: 283px;
     --s2-card-w: 540px;
@@ -1159,7 +1159,7 @@
   }
   @media (min-width: 761px) and (max-width: 1512px), (min-width: 761px) and (max-height: 982px) {
     .stage.stage-marquee {
-      height: calc(100svh - var(--nav-h));
+      height: auto;
       min-height: 0;
       max-height: none;
     }
@@ -2212,10 +2212,23 @@
   }
   .mq-card .mq-winrate {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 10px;
     margin: 8px 0 0;
     line-height: 1;
+  }
+  .mq-card .mq-winrate-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .mq-card .mq-winrate-title {
+    font-family: var(--font);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.44);
   }
   .mq-card .mq-winrate-pct {
     font-family: var(--font);
@@ -2230,21 +2243,22 @@
     justify-content: center;
     gap: 3px;
     font-family: var(--font-mono);
-    color: rgba(255, 255, 255, 0.58);
+    color: rgba(255, 255, 255, 0.62);
     letter-spacing: 0.02em;
     white-space: nowrap;
     line-height: 1;
+    padding-bottom: 3px;
   }
   .mq-card .mq-signal-label {
     font-size: 10px;
     letter-spacing: 0.11em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.44);
+    color: inherit;
   }
   .mq-card .mq-signal-count {
     font-size: 18px;
     letter-spacing: -0.03em;
-    color: rgba(255, 255, 255, 0.72);
+    color: inherit;
   }
   .mq-card .mq-calls {
     display: flex;
@@ -4758,8 +4772,7 @@
       transition: none;
     }
     #agents.compact-pin-active .agents-section-head {
-      opacity: var(--agents-head-opacity, 0);
-      transform: translateY(var(--agents-head-y, -28px));
+      transform: translateY(var(--agents-head-y, 0px));
     }
     #agents .agents-side {
       padding-top: var(--agents-content-top);
@@ -7719,18 +7732,18 @@
     .stage.stage-marquee {
       --s2-card-w: min(330px, calc(100vw - 64px));
       --s2-card-h: calc(var(--s2-card-w) / 1.91);
-      --s2-content-gap: 20px;
+      --s2-content-gap: var(--section-title-content-gap);
       --s2-row-gap: clamp(7px, 1.4svh, 10px);
-      --s2-pad-top: clamp(34px, 5.4svh, 48px);
-      --s2-pad-bottom: var(--s2-pad-top);
+      --s2-pad-top: var(--section-top-pad);
+      --s2-pad-bottom: var(--section-bottom-pad);
       display: flex;
       justify-content: center;
       padding: var(--s2-pad-top) 0 var(--s2-pad-bottom);
-      height: calc(100svh - var(--nav-h));
+      height: auto;
       max-height: none;
       min-height: 0;
       overflow-x: clip;
-      overflow-y: hidden;
+      overflow-y: visible;
     }
     .stage-marquee .stage-header {
       padding: 0 18px;
@@ -8717,10 +8730,11 @@
       --s2-content-gap: var(--section-title-content-gap);
       --s2-row-gap: clamp(7px, 1.4svh, 10px);
       justify-content: flex-start !important;
-      height: calc(100svh - var(--nav-h)) !important;
+      height: auto !important;
+      max-height: none !important;
       padding-top: var(--s2-pad-top) !important;
       padding-bottom: var(--s2-pad-bottom) !important;
-      overflow-y: hidden !important;
+      overflow-y: visible !important;
     }
     .stage-marquee .card-marquee {
       gap: var(--s2-row-gap) !important;
@@ -15553,7 +15567,7 @@
                 '<div class="mq-meta"><b>' + name + '</b><span>' + handle + '</span></div>' +
               '</div>' +
               '<div class="mq-winrate">' +
-                '<span class="mq-winrate-pct" style="color:' + pctColor + '">' + winRate + '%</span>' +
+                '<span class="mq-winrate-main"><span class="mq-winrate-title">Win rate</span><span class="mq-winrate-pct" style="color:' + pctColor + '">' + winRate + '%</span></span>' +
                 '<span class="mq-winrate-sub"><span class="mq-signal-label">signals</span><span class="mq-signal-count">' + winCalls + '/' + totalCalls + '</span></span>' +
               '</div>' +
             '</div>' +
@@ -15838,7 +15852,6 @@
       if (isMobile()) {
         section.style.removeProperty('--agents-card-w');
         section.style.removeProperty('--agents-content-top');
-        section.style.removeProperty('--agents-head-opacity');
         section.style.removeProperty('--agents-head-y');
         return;
       }
@@ -15874,10 +15887,8 @@
         contentTop = clearTop + (24 - clearTop) * easedShiftP;
         cardSizingTop = clearTop;
         section.style.setProperty('--agents-content-top', Math.round(contentTop) + 'px');
-        section.style.setProperty('--agents-head-opacity', (1 - easedShiftP).toFixed(3));
-        section.style.setProperty('--agents-head-y', (-28 * easedShiftP).toFixed(2) + 'px');
+        section.style.setProperty('--agents-head-y', (-clearTop * easedShiftP).toFixed(2) + 'px');
       } else if (sectionHead) {
-        section.style.removeProperty('--agents-head-opacity');
         section.style.removeProperty('--agents-head-y');
         const headRect = sectionHead.getBoundingClientRect();
         contentTop = Math.max(0, headRect.bottom - stageRect.top + gap);
@@ -15899,7 +15910,6 @@
         section.style.setProperty('--agents-content-top', Math.round(contentTop) + 'px');
         cardSizingTop = contentTop;
       } else {
-        section.style.removeProperty('--agents-head-opacity');
         section.style.removeProperty('--agents-head-y');
       }
 
