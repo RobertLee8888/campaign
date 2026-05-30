@@ -215,10 +215,9 @@
      ============================================================ */
   html.snap-active {
     scroll-snap-type: y mandatory;
-    /* matches the 65px nav-clearance used by smoothScrollTo so snap and
-       programmatic scrolls land at the same Y — no post-scroll jitter.
-       65 = 64px nav-inner height + 1px nav border-bottom. */
-    scroll-padding-top: 65px;
+    /* Panel handoffs should move exactly one visual screen. Navigation
+       clicks still apply nav clearance in smoothScrollTo; snap gestures do not. */
+    scroll-padding-top: 0;
   }
   .opening, .stage, #agents {
     scroll-snap-align: start;
@@ -7463,7 +7462,7 @@
   @media (max-width: 760px) {
     html.snap-active {
       scroll-snap-type: y mandatory;
-      scroll-padding-top: var(--nav-h);
+      scroll-padding-top: 0;
     }
 
     /* ---------------------------------------------------------- */
@@ -8758,6 +8757,9 @@
     }
 
     #agents.agents-pin-section {
+      height: auto !important;
+      min-height: 0 !important;
+      max-height: none !important;
       padding: 0 !important;
       overflow: hidden !important;
     }
@@ -12605,15 +12607,15 @@
     let wheelGestureStartedInAgentsEndZone = false;
     let wheelGestureTimer = 0;
     function stageSnapY() {
-      return Math.max(0, hero.getBoundingClientRect().top + scrollY - 65);
+      return Math.max(0, hero.getBoundingClientRect().top + scrollY);
     }
     function nextSnapY() {
       if (!nextAfterStage) return Infinity;
-      return Math.max(0, nextAfterStage.getBoundingClientRect().top + scrollY - 65);
+      return Math.max(0, nextAfterStage.getBoundingClientRect().top + scrollY);
     }
     function leaderboardSnapY() {
       if (!leaderboardAfterAgents) return Infinity;
-      return Math.max(0, leaderboardAfterAgents.getBoundingClientRect().top + scrollY - 65);
+      return Math.max(0, leaderboardAfterAgents.getBoundingClientRect().top + scrollY);
     }
     function agentsEndHandoffMetrics() {
       return {
