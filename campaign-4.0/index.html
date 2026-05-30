@@ -215,9 +215,9 @@
      ============================================================ */
   html.snap-active {
     scroll-snap-type: y mandatory;
-    /* Panel handoffs should move exactly one visual screen. Navigation
-       clicks still apply nav clearance in smoothScrollTo; snap gestures do not. */
-    scroll-padding-top: 0;
+    /* Desktop/compact snap lands below the fixed nav, matching smoothScrollTo.
+       Mobile overrides this to 0 so the opening handoff moves a full screen. */
+    scroll-padding-top: 65px;
   }
   .opening, .stage, #agents {
     scroll-snap-align: start;
@@ -12606,16 +12606,19 @@
     let wheelGestureStartedInStageZone = false;
     let wheelGestureStartedInAgentsEndZone = false;
     let wheelGestureTimer = 0;
+    function panelSnapOffset() {
+      return mobileSnapMq.matches ? 0 : 65;
+    }
     function stageSnapY() {
-      return Math.max(0, hero.getBoundingClientRect().top + scrollY);
+      return Math.max(0, hero.getBoundingClientRect().top + scrollY - panelSnapOffset());
     }
     function nextSnapY() {
       if (!nextAfterStage) return Infinity;
-      return Math.max(0, nextAfterStage.getBoundingClientRect().top + scrollY);
+      return Math.max(0, nextAfterStage.getBoundingClientRect().top + scrollY - panelSnapOffset());
     }
     function leaderboardSnapY() {
       if (!leaderboardAfterAgents) return Infinity;
-      return Math.max(0, leaderboardAfterAgents.getBoundingClientRect().top + scrollY);
+      return Math.max(0, leaderboardAfterAgents.getBoundingClientRect().top + scrollY - panelSnapOffset());
     }
     function agentsEndHandoffMetrics() {
       return {
