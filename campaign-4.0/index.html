@@ -185,7 +185,7 @@
 
   *, *::before, *::after { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-  html { background: var(--bg); scroll-behavior: smooth; overflow-x: hidden; }
+  html { background: var(--bg); scroll-behavior: smooth; overflow-x: clip; }
 
   /* Balance the wrap on hero-class headings so the last line never ends
      in a one-word orphan. Zero cost, modern browsers only (Chrome 114+,
@@ -230,7 +230,7 @@
     font-family: var(--font);
     background: var(--bg);
     color: var(--text);
-    overflow-x: hidden;
+    overflow-x: clip;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -4418,6 +4418,23 @@
   #agents .agents-pin {
     background: #16161c;
   }
+  @media (min-width: 901px) {
+    #agents.agents-js-pin-active .agents-pin {
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: var(--nav-h);
+      z-index: 2;
+    }
+    #agents.agents-js-pin-after .agents-pin {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: auto;
+      bottom: 0;
+      z-index: 2;
+    }
+  }
   #agents .agents-silk {
     position: absolute;
     inset: 0;
@@ -4728,9 +4745,7 @@
     padding-right: 0;
   }
   .agents-card-cover {
-    /* 3:2 banner — matches the original card cover ratio so the cover
-       reads as a wide product hero, not a tall poster. */
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 4 / 3;
     border-radius: 8px;
     display: grid;
     place-items: center;
@@ -4748,9 +4763,33 @@
   }
   .agents-card-cover i {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     font-size: 104px;
     filter: drop-shadow(0 10px 28px rgba(0,0,0,0.22));
+  }
+  .agents-card-cover.has-video {
+    background: #16161c;
+  }
+  .agents-card-cover.has-video::before {
+    z-index: 1;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.20)),
+      radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1.5px);
+    background-size: auto, 18px 18px;
+    opacity: 1;
+  }
+  .agents-card-cover.has-video i {
+    opacity: 0;
+  }
+  .agents-cover-video {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    background: #16161c;
   }
   .agents-card-cover[data-variant="teal"]   { background: linear-gradient(135deg, #3CC2C6 0%, #5BD9DD 60%, #2a9396 100%); }
   .agents-card-cover[data-variant="dark"]   { background: linear-gradient(135deg, #1a1a1e 0%, #0a0a10 65%, #000 100%); }
@@ -9605,16 +9644,28 @@
           <div class="agents-cards-stage">
             <div class="agents-track" id="agents-track">
               <article class="agents-card">
-                <div class="agents-card-cover" data-variant="teal"><i class="ph ph-chart-bar"></i></div>
+                <div class="agents-card-cover has-video" data-variant="teal">
+                  <video class="agents-cover-video" src="assets/agents/backtest-win-rate.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+                  <i class="ph ph-chart-bar"></i>
+                </div>
               </article>
               <article class="agents-card">
-                <div class="agents-card-cover" data-variant="dark"><i class="ph ph-chart-line-up"></i></div>
+                <div class="agents-card-cover has-video" data-variant="dark">
+                  <video class="agents-cover-video" src="assets/agents/simulate-roi.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+                  <i class="ph ph-chart-line-up"></i>
+                </div>
               </article>
               <article class="agents-card">
-                <div class="agents-card-cover" data-variant="warm"><i class="ph ph-bell-simple-ringing"></i></div>
+                <div class="agents-card-cover has-video" data-variant="warm">
+                  <video class="agents-cover-video" src="assets/agents/signals-alerts.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+                  <i class="ph ph-bell-simple-ringing"></i>
+                </div>
               </article>
               <article class="agents-card">
-                <div class="agents-card-cover" data-variant="teal"><i class="ph ph-scales"></i></div>
+                <div class="agents-card-cover has-video" data-variant="teal">
+                  <video class="agents-cover-video" src="assets/agents/bull-bear-asset.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+                  <i class="ph ph-scales"></i>
+                </div>
               </article>
               <article class="agents-card">
                 <div class="agents-card-cover" data-variant="dark"><i class="ph ph-shield-warning"></i></div>
@@ -14135,6 +14186,8 @@
             if (!srcCover) return;
             const clone = srcCover.cloneNode(true);
             clone.classList.add('mobile-clone');
+            clone.classList.remove('has-video');
+            clone.querySelectorAll('video').forEach(video => video.remove());
             // Strip any data-attrs / ids that the desktop pin-scroll
             // JS might re-query (avoid duplicate-id selectors).
             clone.removeAttribute('id');
@@ -15627,6 +15680,7 @@
     const items = section.querySelectorAll('.agents-tab-item');
     const buttons = section.querySelectorAll('.agents-tab-v');
     const cards = section.querySelectorAll('.agents-card');
+    const cardVideos = Array.from(cards, card => card.querySelector('.agents-cover-video'));
     const side = section.querySelector('.agents-side');
     const pin = section.querySelector('.agents-pin');
     const sectionHead = section.querySelector('.agents-section-head');
@@ -15662,6 +15716,20 @@
       const sectionTop = section.getBoundingClientRect().top + window.scrollY;
       return Math.round(sectionTop - navH() + p * activeRange());
     };
+    function syncPinLock() {
+      if (isMobile()) {
+        section.classList.remove('agents-js-pin-active', 'agents-js-pin-after');
+        return;
+      }
+      const rect = section.getBoundingClientRect();
+      const pinHeight = pinH();
+      const topEdge = navH();
+      const bottomEdge = topEdge + pinHeight;
+      const active = rect.top <= topEdge && rect.bottom >= bottomEdge;
+      const after = rect.bottom < bottomEdge;
+      section.classList.toggle('agents-js-pin-active', active);
+      section.classList.toggle('agents-js-pin-after', after);
+    }
     const stableContentTop = () => Math.max(
       0,
       Number.parseFloat(getComputedStyle(section).getPropertyValue('--agents-content-top')) || 0
@@ -15735,7 +15803,7 @@
         section.style.removeProperty('--agents-head-y');
       }
 
-      const maxByHeight = Math.max(220, (stageRect.height - cardSizingTop - bottomPad) * 1.5);
+      const maxByHeight = Math.max(220, (stageRect.height - cardSizingTop - bottomPad) * (4 / 3));
       const maxByColumn = Math.max(220, stageRect.width);
       const cardW = Math.min(760, maxByColumn, maxByHeight);
       section.style.setProperty('--agents-card-w', Math.round(cardW) + 'px');
@@ -15744,6 +15812,18 @@
 
     let lastIdx = -1;
     let raf = 0;
+
+    function syncCoverVideos(activeIdx = lastIdx) {
+      cardVideos.forEach((video, i) => {
+        if (!video) return;
+        if (isMobile() || i !== activeIdx) {
+          video.pause();
+          return;
+        }
+        const play = video.play();
+        if (play?.catch) play.catch(() => {});
+      });
+    }
 
     // 4.4 round 100 — keep the active tab fully visible without
     // forcing it to the rail center. Centering the first active tab
@@ -15786,9 +15866,11 @@
 
     function update() {
       raf = 0;
+      syncPinLock();
       if (isMobile()) {
         track.style.transform = '';
         section.classList.remove('compact-pin-active');
+        syncCoverVideos(-1);
         return;
       }
       // 4.3 — while the snap animation is running we drive the
@@ -15823,6 +15905,7 @@
         items.forEach((t, i) => t.classList.toggle('active', i === idx));
         lastIdx = idx;
         syncSidePad();
+        syncCoverVideos(idx);
       }
     }
 
@@ -15864,6 +15947,7 @@
       items.forEach((t, i) => t.classList.toggle('active', i === idx));
       lastIdx = idx;
       syncSidePad();
+      syncCoverVideos(idx);
       window.scrollTo({ top: target, behavior: 'smooth' });
       // release the lock once the eased transform completes.
       setTimeout(() => {
@@ -15892,6 +15976,7 @@
     window.addEventListener('resize', () => {
       // Force re-compute (stageH / cardH may have changed)
       lastIdx = -1;
+      syncPinLock();
       syncAgentsLayout();
       syncSidePad();
       schedule();
@@ -15905,6 +15990,7 @@
       }).catch(() => {});
     }
     syncAgentsLayout();
+    syncPinLock();
     syncSidePad();
     schedule();
 
@@ -15931,6 +16017,7 @@
         items.forEach((t, itemIdx) => t.classList.toggle('active', itemIdx === i));
         lastIdx = i;
         syncSidePad();
+        syncCoverVideos(i);
         window.scrollTo({ top: snapStop, behavior: 'smooth' });
         setTimeout(() => {
           snapping = false;
